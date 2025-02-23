@@ -34,7 +34,7 @@ func CheckList(w http.ResponseWriter, r *http.Request){
 
 }
 
-func ShowFormular(w http.ResponseWriter, r *http.Request){
+func FormularNew(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
