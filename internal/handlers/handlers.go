@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+  "encoding/json"
   "github.com/hmaier-dev/checklist-tool/internal/checklist"
   "github.com/hmaier-dev/checklist-tool/internal/database"
 
@@ -78,11 +79,29 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
   http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
-
+// Based on the IMEI a fitting db-entry will get loaded
 func Display(w http.ResponseWriter, r *http.Request){
   id := mux.Vars(r)["id"]
   db := database.Init()
+
+  if database.CheckIMEI(db,id) == false{
+    http.Redirect(w, r, "/checklist/new", http.StatusSeeOther)
+  }
+
   data, err := database.GetDataByIMEI(db, id)
+  if err != nil {
+    http.Error(w, "Database error", http.StatusInternalServerError)
+    log.Println("Database error :", err)
+    return
+  }
+
+  var items []*checklist.ChecklistItem
+  err = json.Unmarshal([]byte(data.Json), &items)
+  if err != nil {
+      http.Error(w, "Invalid JSON", http.StatusInternalServerError)
+      log.Println("JSON unmarshal error: ", err)
+      return
+  }
 
   wd, err := os.Getwd()
   if err != nil{
@@ -92,11 +111,12 @@ func Display(w http.ResponseWriter, r *http.Request){
 	var checklist = filepath.Join(static, "checklist.html")
 
   tmpl, err := template.ParseFiles(checklist)
-
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("error parsing base and new template: ", err)
   }
+
+
 
   err = tmpl.Execute(w, tmpl) // write response to w
   tmpl.ExecuteTemplate(w, "checklist", data)

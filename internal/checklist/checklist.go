@@ -17,3 +17,11 @@ type ChecklistEntry struct {
 	Model  string `json:"model"`
 	Json   string `json:"json"`
 }
+
+// Single checkpoint of the list
+type ChecklistItem struct {
+        Text     string           `json:"text"`
+        Checked  bool             `json:"checked"`
+        Children []*ChecklistItem `json:"children,omitempty"`
+}
+
