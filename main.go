@@ -10,8 +10,9 @@ import (
 
 func main() {
   const port = "8080"
-  srv := server.NewServer()
   host := fmt.Sprintf("0.0.0.0:%s", port)
+
+  srv := server.NewServer()
 	log.Printf("Starting server on %s \n", host)
 
   err := http.ListenAndServe(host, srv.Router)
