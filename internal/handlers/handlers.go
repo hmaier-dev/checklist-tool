@@ -1,23 +1,19 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+  "github.com/hmaier-dev/checklist-tool/internal/checklist"
+  "github.com/hmaier-dev/checklist-tool/internal/database"
 
 	"github.com/gorilla/mux"
 )
 
-func HealthCheck(w http.ResponseWriter, r *http.Request){
-  w.Header().Set("Content-Type", "application/json")
-  w.WriteHeader(http.StatusOK)
-  json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 
-}
 func CheckList(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
@@ -67,12 +63,17 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
     http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
     return
 	}
+  form := checklist.FormularData{
+    Imei : r.FormValue("imei"),
+    Name: r.FormValue("name"),
+    Ticket: r.FormValue("ticket"),
+    Modell: r.FormValue("model"),
+  }
 
-	imei := r.FormValue("imei")
-	name := r.FormValue("name")
-	ticket := r.FormValue("ticket")
-	model := r.FormValue("model")
-  fmt.Printf("Received: IMEI=%s, Name=%s, Ticket=%s, Model=%s \n", imei, name, ticket, model)
+  db := database.Init()
+  defer db.Close() // Make sure to close the database when done
+
+  database.NewEntry(form)
 
   http.Redirect(w, r, "/checklist/new", http.StatusSeeOther)
 }
