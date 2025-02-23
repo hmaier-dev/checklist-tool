@@ -38,10 +38,34 @@ func CheckList(w http.ResponseWriter, r *http.Request){
 
 }
 
-func New(w http.ResponseWriter, r *http.Request){
-  w.WriteHeader(http.StatusOK)
-  json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+func Formular(w http.ResponseWriter, r *http.Request){
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var static = filepath.Join(wd, "static")
+	var base = filepath.Join(static, "base.html")
+	var new_tmpl = filepath.Join(static, "new.html")
+
+  tmpl, err := template.ParseFiles(base, new_tmpl)
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("error parsing base and new template: ", err)
+  }
+
+  err = tmpl.Execute(w, tmpl) // write response to w
+  tmpl.ExecuteTemplate(w, "base", nil)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
 }
+
+func NewEntry(w http.ResponseWriter, r *http.Request){
+}
+
+
 func Display(w http.ResponseWriter, r *http.Request){
   fmt.Println("Displaying...")
   id := mux.Vars(r)["id"]
