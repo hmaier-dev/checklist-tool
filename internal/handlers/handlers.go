@@ -109,6 +109,7 @@ func Display(w http.ResponseWriter, r *http.Request){
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
   }
+
 	var static = filepath.Join(wd, "static")
 	var checklist = filepath.Join(static, "checklist.html")
 
@@ -119,9 +120,9 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 
 
-
-  err = tmpl.Execute(w, tmpl) // write response to w
-  tmpl.ExecuteTemplate(w, "checklist", data)
+  err = tmpl.Execute(w, map[string]interface{}{
+    "Items": items,
+  })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("", err)
