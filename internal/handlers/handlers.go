@@ -80,10 +80,30 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 
 
 func Display(w http.ResponseWriter, r *http.Request){
-  fmt.Println("Displaying...")
   id := mux.Vars(r)["id"]
-  fmt.Printf("Display Checklist IMEI: %s\n", id)
+  db := database.Init()
+  data, err := database.GetDataByIMEI(db, id)
 
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var static = filepath.Join(wd, "static")
+	var checklist = filepath.Join(static, "checklist.html")
+
+  tmpl, err := template.ParseFiles(checklist)
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("error parsing base and new template: ", err)
+  }
+
+  err = tmpl.Execute(w, tmpl) // write response to w
+  tmpl.ExecuteTemplate(w, "checklist", data)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
 }
 
 func Update(w http.ResponseWriter, r *http.Request){
