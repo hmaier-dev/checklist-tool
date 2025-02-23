@@ -35,6 +35,7 @@ func CheckList(w http.ResponseWriter, r *http.Request){
 
 }
 
+// Displays a formular for adding a new Checklist entry
 func FormularNew(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
@@ -58,6 +59,7 @@ func FormularNew(w http.ResponseWriter, r *http.Request){
   }
 }
 
+// POST-Endpoint to receive the request made by the formular
 func NewEntry(w http.ResponseWriter, r *http.Request){
   if r.Method != http.MethodPost {
     http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
