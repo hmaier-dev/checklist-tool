@@ -63,6 +63,18 @@ func Formular(w http.ResponseWriter, r *http.Request){
 }
 
 func NewEntry(w http.ResponseWriter, r *http.Request){
+  if r.Method != http.MethodPost {
+    http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+    return
+	}
+
+	imei := r.FormValue("imei")
+	name := r.FormValue("name")
+	ticket := r.FormValue("ticket")
+	model := r.FormValue("model")
+  fmt.Printf("Received: IMEI=%s, Name=%s, Ticket=%s, Model=%s \n", imei, name, ticket, model)
+
+  http.Redirect(w, r, "/checklist/new", http.StatusSeeOther)
 }
 
 
