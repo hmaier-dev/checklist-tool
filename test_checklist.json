@@ -1,4 +1,5 @@
-{
+[
+  {
   "task": "Task 1",
   "checked": false,
   "subtasks": [
@@ -11,14 +12,15 @@
       "checked": false
     }
   ]
-},
-{
-  "task": "Task 4",
-  "checked": false,
-  "subtasks": [
-    {
-      "task": "Task 5",
-      "checked": false
-    }
-  ]
-}
+  },
+  {
+    "task": "Task 4",
+    "checked": false,
+    "subtasks": [
+      {
+        "task": "Task 5",
+        "checked": false
+      }
+    ]
+  }
+]
