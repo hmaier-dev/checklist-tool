@@ -1,0 +1,99 @@
+package database
+
+import (
+	"database/sql"
+	"log"
+	"os"
+  "github.com/hmaier-dev/checklist-tool/internal/checklist"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+// Initialize database
+func Init() *sql.DB {
+	db, err := sql.Open("sqlite3", "./datenbank_eins.db")
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+
+	// Create the devices table if it doesn't exist
+	createStmt := `
+	CREATE TABLE IF NOT EXISTS checklists (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		imei TEXT NOT NULL,
+		name TEXT,
+		ticket TEXT,
+		model TEXT,
+		json TEXT
+	);
+	`
+	_, err = db.Exec(createStmt)
+	if err != nil {
+		log.Fatal("Failed to create table:", err)
+	}
+  return db
+}
+
+func NewEntry(db *sql.DB ,form checklist.FormularData){
+
+  filename := "./test_checklist.json"
+  emptyJson, err := os.ReadFile(filename)   
+  if err != nil {
+		log.Fatal("Problem reading the empty json:", err)
+  }
+
+  cl := checklist.ChecklistEntry{
+		IMEI:   form.IMEI ,
+		Name:   form.Name,
+		Ticket: form.Ticket,
+		Model:  form.Model,
+		Json:   string(emptyJson),
+	}
+
+  if CheckIMEI(db, cl.IMEI) == true{
+    return
+  }
+
+  // Prepare the INSERT statement
+	insertStmt := `INSERT INTO checklists (imei, name, ticket, model, json) VALUES (?, ?, ?, ?, ?)`
+	_, err = db.Exec(insertStmt, cl.IMEI, cl.Name, cl.Ticket, cl.Model, cl.Json)
+	if err != nil {
+		log.Fatal("Failed to insert entry: ", err)
+	}
+
+}
+
+func CheckIMEI(db *sql.DB, imei string)(bool){
+	var exists int
+	query := `SELECT COUNT(*) FROM checklists WHERE imei = ?`
+  err := db.QueryRow(query, imei).Scan(&exists)
+	if err != nil {
+		log.Fatal("Failed to check if IMEI exists:", err)
+	}
+
+	if exists > 0 {
+    log.Printf("Already exisits: %s", imei)
+    return true
+	}else{
+    return false
+  }
+}
+
+func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
+	query := `SELECT imei, name, ticket, model, json FROM checklists WHERE imei = ?`
+	row := db.QueryRow(query, imei)
+	var cl checklist.ChecklistEntry
+
+	err := row.Scan(&cl.IMEI, &cl.Name, &cl.Ticket, &cl.Model, &cl.Json)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No entry found with the given IMEI
+			log.Printf("No entry found for IMEI %s", imei)
+			return nil, nil
+		}
+		log.Fatal("Failed to scan entry:", err)
+		return nil, err
+	}
+
+	return &cl, nil
+}
