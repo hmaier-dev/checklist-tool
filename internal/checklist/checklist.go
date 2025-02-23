@@ -1,6 +1,6 @@
 package checklist
 
-
+// To received data given in the new-formular
 type FormularData struct{
   IMEI string
   Name string
