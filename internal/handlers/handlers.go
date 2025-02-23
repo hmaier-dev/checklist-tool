@@ -34,7 +34,7 @@ func CheckList(w http.ResponseWriter, r *http.Request){
 
 }
 
-func Formular(w http.ResponseWriter, r *http.Request){
+func ShowFormular(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
@@ -64,18 +64,19 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
     return
 	}
   form := checklist.FormularData{
-    Imei : r.FormValue("imei"),
+    IMEI : r.FormValue("imei"),
     Name: r.FormValue("name"),
     Ticket: r.FormValue("ticket"),
-    Modell: r.FormValue("model"),
+    Model: r.FormValue("model"),
   }
 
   db := database.Init()
   defer db.Close() // Make sure to close the database when done
 
-  database.NewEntry(form)
-
-  http.Redirect(w, r, "/checklist/new", http.StatusSeeOther)
+  database.NewEntry(db, form)
+  
+  redirectTo := fmt.Sprintf("/checklist/%s", form.IMEI)
+  http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
 
