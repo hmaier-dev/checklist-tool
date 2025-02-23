@@ -7,7 +7,7 @@
   <title>Checklist-Tool</title>
 </head>
 <body>
-  {{ define "renderItems" .Items }}
+  {{ define "renderItems" }}
     <ul>
     {{ range . }}
         <li>
@@ -19,6 +19,7 @@
     {{ end }}
     </ul>
   {{ end }}
+
   {{ template "renderItems" .Items }}
 </body>
 </html>
