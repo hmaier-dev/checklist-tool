@@ -88,6 +88,7 @@ func Display(w http.ResponseWriter, r *http.Request){
 
   if database.CheckIMEI(db,id) == false{
     http.Redirect(w, r, "/checklist/new", http.StatusSeeOther)
+    return
   }
 
   data, err := database.GetDataByIMEI(db, id)
@@ -99,6 +100,7 @@ func Display(w http.ResponseWriter, r *http.Request){
 
   var items []*checklist.ChecklistItem
   err = json.Unmarshal([]byte(data.Json), &items)
+
   if err != nil {
       http.Error(w, "Invalid JSON", http.StatusInternalServerError)
       log.Println("JSON unmarshal error: ", err)
@@ -119,10 +121,18 @@ func Display(w http.ResponseWriter, r *http.Request){
     log.Fatal("error parsing base and new template: ", err)
   }
 
+  // Print the unmarshaled JSON
+  jsonData, err := json.MarshalIndent(items, "", "  ")
+  if err != nil {
+          log.Println("JSON marshal error:", err)
+          return
+  }
+  fmt.Println(string(jsonData))
 
   err = tmpl.Execute(w, map[string]interface{}{
     "Items": items,
   })
+
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("", err)
