@@ -40,10 +40,9 @@ func ShowFormular(w http.ResponseWriter, r *http.Request){
     log.Fatal("couldn't get working directory: ", err)
   }
 	var static = filepath.Join(wd, "static")
-	var base = filepath.Join(static, "base.html")
 	var new_tmpl = filepath.Join(static, "new.html")
 
-  tmpl, err := template.ParseFiles(base, new_tmpl)
+  tmpl, err := template.ParseFiles(new_tmpl)
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -51,7 +50,7 @@ func ShowFormular(w http.ResponseWriter, r *http.Request){
   }
 
   err = tmpl.Execute(w, tmpl) // write response to w
-  tmpl.ExecuteTemplate(w, "base", nil)
+  tmpl.ExecuteTemplate(w, "new", nil)
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("", err)

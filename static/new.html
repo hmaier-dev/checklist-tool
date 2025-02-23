@@ -1,4 +1,12 @@
-{{ define "content" }}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Checklist-Tool</title>
+</head>
+<body>
   <form action="/checklist/new" method="POST">
       <label for="imei">IMEI (15-digit number):</label>
       <input type="text" id="imei" name="imei" pattern="\d{15}" required><br><br>
@@ -14,4 +22,5 @@
 
       <button type="submit">Submit</button>
   </form>
-{{ end }}
+</body>
+</html>
