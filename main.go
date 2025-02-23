@@ -1,15 +1,21 @@
 package main
 
 import (
-  "log"
-  "net/http"
-  "github.com/hmaier-dev/checklist-tool/internal/server"
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/hmaier-dev/checklist-tool/internal/server"
 )
 
 func main() {
-  server.Hello()
-
+  const port = "8080"
   srv := server.NewServer()
-	log.Println("Starting server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", srv.Router))
+  host := fmt.Sprintf("0.0.0.0:%s", port)
+	log.Printf("Starting server on %s \n", host)
+
+  err := http.ListenAndServe(host, srv.Router)
+	if err != nil {
+		log.Fatal("cannot listen and server", err)
+	}
 }
