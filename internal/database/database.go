@@ -34,10 +34,10 @@ func Init() *sql.DB {
   return db
 }
 
-func NewEntry(db *sql.DB ,form checklist.FormularData){
+func NewEntry(db *sql.DB, form checklist.FormularData){
 
   filename := "./test_checklist.json"
-  emptyJson, err := os.ReadFile(filename)   
+  emptyJson, err := os.ReadFile(filename)
   if err != nil {
 		log.Fatal("Problem reading the empty json:", err)
   }

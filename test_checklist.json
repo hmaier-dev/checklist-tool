@@ -1,11 +1,11 @@
 [
   {
-  "task": "Task 1",
+  "task": "this is a very special task",
   "checked": false,
   "children": [
     {
-      "task": "Task 2",
-      "checked": false
+      "task": "this one is optional",
+      "checked": true
     },
     {
       "task": "Task 3",
@@ -15,7 +15,7 @@
   },
   {
     "task": "Task 4",
-    "checked": false,
+    "checked": true,
     "children": [
       {
         "task": "Task 5",
