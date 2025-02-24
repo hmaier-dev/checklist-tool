@@ -35,24 +35,25 @@ func CheckList(w http.ResponseWriter, r *http.Request){
 
 }
 
-// Displays a formular for adding a new Checklist entry
-func FormularNew(w http.ResponseWriter, r *http.Request){
+// Displays a form a new checklist-entry
+// and a list with all previous entrys
+func Home(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
   }
 	var static = filepath.Join(wd, "static")
-	var new_tmpl = filepath.Join(static, "new.html")
+	var new_tmpl = filepath.Join(static, "home.html")
 
   tmpl, err := template.ParseFiles(new_tmpl)
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing base and new template: ", err)
+    log.Fatal("error parsing home template: ", err)
   }
 
   err = tmpl.Execute(w, tmpl) // write response to w
-  tmpl.ExecuteTemplate(w, "new", nil)
+  tmpl.ExecuteTemplate(w, "home", nil)
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("", err)
