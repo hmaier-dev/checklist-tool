@@ -14,27 +14,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
-func CheckList(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var static = filepath.Join(wd, "static")
-	var base = filepath.Join(static, "base.html")
-  tmpl, err := template.ParseFiles(base)
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing the base template: ", err)
-  }
-  err = tmpl.Execute(w, nil) // write response to w
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
-  }
-
-}
-
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
 func Home(w http.ResponseWriter, r *http.Request){
