@@ -22,5 +22,30 @@
 
       <button type="submit">Submit</button>
   </form>
+
+
+    {{ range .Entrys }}
+
+      <table>
+          <thead>
+              <tr>
+                  <th>IMEI</th>
+                  <th>Name</th>
+                  <th>Ticket Number</th>
+                  <th>Model</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                  <td>.IMEI</td>
+                  <td>.Name</td>
+                  <td>.Ticket</td>
+                  <td>.Model</td>
+              </tr>
+          </tbody>
+      </table>
+
+    {{ end }}
+
 </body>
 </html>

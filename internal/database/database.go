@@ -97,3 +97,22 @@ func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
 
 	return &cl, nil
 }
+
+func GetAllEntrysReversed(db *sql.DB)([]*checklist.ChecklistEntry, error){
+  query := `SELECT * FROM checklists ORDER BY id DESC`
+  rows, err := db.Query(query)
+  if err != nil {
+    log.Fatalf("Error while doing '%s' the database: %s", query, err)
+    return nil, err
+  }
+  var allEntries []*checklist.ChecklistEntry
+  for rows.Next(){
+   var entry checklist.ChecklistEntry
+    if err := rows.Scan(&entry.IMEI, &entry.Name, &entry.Ticket, &entry.Model); err != nil {
+        log.Fatalf("Error scanning row: %s", err)
+        return nil, err
+    }
+    allEntries = append(allEntries, &entry)
+  }
+  return allEntries, nil
+}
