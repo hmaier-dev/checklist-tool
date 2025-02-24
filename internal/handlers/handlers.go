@@ -31,8 +31,14 @@ func Home(w http.ResponseWriter, r *http.Request){
     log.Fatal("error parsing home template: ", err)
   }
 
-  err = tmpl.Execute(w, tmpl) // write response to w
-  tmpl.ExecuteTemplate(w, "home", nil)
+  db := database.Init()
+  data, err := database.GetAllEntrysReversed(db)
+
+  fmt.Printf("%v \n", data)
+
+  err = tmpl.Execute(w, map[string]interface{}{
+    "Entries" : data,
+  })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("", err)
