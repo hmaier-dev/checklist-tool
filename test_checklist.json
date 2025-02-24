@@ -1,36 +1,239 @@
-[
+[  
   {
-    
-  "task": "Gerät im KNOX Portal prüfen. Tag hinzufügen (z.B.: STS, Mitte)",
-  "checked": false,
-
+    "task": "Gerät in KME-Portal prüfen (ggf. Tag hinzufügen, z.B.: Mitte, STS)",
+    "checked": false
   },
   {
-  "task": "Gerät im datomo anlegen. (IMEI/Benutzer)",
-  "checked": false,
-  "children": [
-    {
-      "task": "Beschreibung (Titel, Ort)",
-      "checked": false
-    },
-    {
-      "task": "Beschr",
-      "checked": false
-    },
-    {
-      "task": "",
-      "checked": false
-    }
-    ]
-  },
-  {
-    "task": "Task 4",
+    "task": "Gerät in Datomo anlegen",
     "checked": false,
     "children": [
       {
-        "task": "Task 5",
+        "task": "IMEI und User eintragen",
+        "checked": false
+      },
+      {
+        "task": "Beschreibung eintragen, z.B.: TF Mitte Halle",
+        "checked": false
+      },
+      {
+        "task": "Custom Fields ausfüllen",
+        "checked": false,
+        "children": [
+          {
+            "task": "KCC-Enrollment Token",
+            "checked": false
+          },
+          {
+            "task": "Standort (Meldestelle des Users)",
+            "checked": false
+          },
+          {
+            "task": "Gerätekennwort (zufälliger 6-stelliger PIN)",
+            "checked": false
+          },
+          {
+            "task": "Inventarnummer (z.B.: ITA-00000xxxx)",
+            "checked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "task": "Gerät installieren (nur notwendige Punkte aktivieren)",
+    "checked": false,
+    "children": [
+      {
+        "task": "Bestätigen von Knox Richtlinien",
+        "checked": false
+      },
+      {
+        "task": "MDM Accessibility aktivieren",
+        "checked": false
+      },
+      {
+        "task": "Zufällige 6-stellige PIN aus dem Custom Field entnehmen und eintragen",
+        "checked": false
+      },
+      {
+        "task": "Bildschirm-Timeout einstellen (5 Min. Smartphone / 10 Min. Tablet TF/KB/IH)",
+        "checked": false
+      },
+      {
+        "task": "Datum und Uhrzeit einstellen",
         "checked": false
       }
     ]
+  },
+  {
+    "task": "Alle Applikationen öffnen und Freigaben bestätigen",
+    "checked": false,
+    "children": [
+      {
+        "task": "Diloc einrichten (TF/KB Tablet)",
+        "checked": false
+      },
+      {
+        "task": "Inline FAS Einrichten und freigeben (TF Handy)",
+        "checked": false
+      },
+      {
+        "task": "Inline Info Einrichten und freigeben (KB Tablet)",
+        "checked": false
+      },
+      {
+        "task": "Adobe Werbung wegklicken",
+        "checked": false
+      },
+      {
+        "task": "Quicksupport spezielle Zugriffe aktivieren",
+        "checked": false
+      },
+      {
+        "task": "KNOX E-FOTA bereitstellen und ausführen",
+        "checked": false
+      }
+    ]
+  },
+  {
+    "task": "IMEI an KNOX E-FOTA Experten übergeben und auf Rückmeldung warten",
+    "checked": false
+  },
+  {
+    "task": "Wenn möglich: Exchange-Konto Konfiguration abschließen",
+    "checked": false
+  },
+  {
+    "task": "Warenausgabe-/Rückgabeschein ausdrucken/beilegen",
+    "checked": false
+  },
+  {
+    "task": "Gerät inventarisieren",
+    "checked": false,
+    "children": [
+      {
+        "task": "Inventarisierungsaufkleber anbringen (Rückfläche, bei herausnehmbarem Akku unter den Akku)",
+        "checked": false
+      },
+      {
+        "task": "Ticket mit Inventarisierungsnummer kommentieren und 1 Tag pausieren",
+        "checked": false,
+        "children": [
+          {
+            "task": "Nach Pause im Matrix42 hinterlegen unter ServiceDesk",
+            "checked": false,
+            "url": "https://servicedesk.abellio.de/wm/app-Assets/searchpage/69cf9ac9-d28b-eb11-7689-005056862d24/nofilter/"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "task": "Überprüfung SIM-Karte im Vodafone-Portal",
+    "checked": false,
+    "children": [
+      {
+        "task": "Rufnummer des Nutzers suchen",
+        "checked": false,
+        "children": [
+          {
+            "task": "Altes System Plugin? Blanko-Karte im MDM anlegen",
+            "checked": false
+          },
+          {
+            "task": "Neues System Plugin? Blanko-Karte im MDM anlegen",
+            "checked": false
+          },
+          {
+            "task": "Altes System Triple? Karte aus dem System übernehmen",
+            "checked": false
+          },
+          {
+            "task": "Neues System Triple? Übertragen ins Gerät",
+            "checked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "task": "SIM-Karte in Datomo anlegen und dem Gerät zuweisen",
+    "checked": false,
+    "children": [
+      {
+        "task": "Bei Tablets überprüfen, ob Ultracard bereits vorhanden ist",
+        "checked": false
+      },
+      {
+        "task": "CDA überprüfen /CDA5 überprüfen",
+        "checked": false
+      },
+      {
+        "task": "Bei neuen Nutzern, Nummer im AD hinterlegen",
+        "checked": false
+      }
+    ]
+  },
+  {
+    "task": "Gerät reinigen und verpacken",
+    "checked": false,
+    "children": [
+      {
+        "task": "Ladegeräte beilegen",
+        "checked": false
+      },
+      {
+        "task": "Ausgabe-/Rückgabeschein beilegen (im datomo ausdrucken)",
+        "checked": false
+      },
+      {
+        "task": "Bei Smartphones -> Blanko-SIM beilegen (nur Plugin SIM-Karten)",
+        "checked": false
+      },
+      {
+        "task": "Bei Tablets -> Vodafone Kärtchen beilegen",
+        "checked": false
+      },
+      {
+        "task": "SIM-Karten-Zettel bereitlegen",
+        "checked": false,
+        "children": [
+          {
+            "task": "Bei neuer Triple-SIM => Aktivierungszettel",
+            "checked": false
+          },
+          {
+            "task": "Bei schon vorhandener Triple-SIM => Tauschzettel",
+            "checked": false
+          },
+          {
+            "task": "Bei Buchung einer Ultracard => Fertigzettel",
+            "checked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "task": "Ticket nach Abgabe bearbeiten",
+    "checked": false,
+    "children": [
+      {
+        "task": "Rückläufer-Ticket erstellen",
+        "checked": false
+      },
+      {
+        "task": "Bei notwendiger Aktivierung der SIM-Karte Ticket für 14 Tage pausieren",
+        "checked": false
+      },
+      {
+        "task": "Bei Tausch der SIM-Karte und fertiger SIM-Karte Ticket nach Inventarisierung schließen",
+        "checked": false
+      }
+    ]
+  },
+  {
+    "task": "Laufzettel einscannen und ablegen unter: O:\\Organisation\\IT\\Workplace\\02_Dokumentation\\27_Laufzettel MDM",
+    "checked": false
   }
 ]
