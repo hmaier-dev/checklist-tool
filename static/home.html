@@ -24,7 +24,7 @@
   </form>
 
 
-    {{ range .Entrys }}
+    {{ range .Entries }}
 
       <table>
           <thead>
@@ -37,10 +37,10 @@
           </thead>
           <tbody>
               <tr>
-                  <td>.IMEI</td>
-                  <td>.Name</td>
-                  <td>.Ticket</td>
-                  <td>.Model</td>
+                <td>{{ .IMEI }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .Ticket }}</td>
+                <td>{{ .Model }}</td>
               </tr>
           </tbody>
       </table>

@@ -99,7 +99,7 @@ func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
 }
 
 func GetAllEntrysReversed(db *sql.DB)([]*checklist.ChecklistEntry, error){
-  query := `SELECT * FROM checklists ORDER BY id DESC`
+  query := `SELECT imei, name, ticket, model FROM checklists ORDER BY id DESC`
   rows, err := db.Query(query)
   if err != nil {
     log.Fatalf("Error while doing '%s' the database: %s", query, err)
