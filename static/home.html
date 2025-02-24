@@ -25,7 +25,7 @@
 
 
     {{ range .Entries }}
-
+    <a href="/checklist/{{ .IMEI }}">
       <table>
           <thead>
               <tr>
@@ -44,6 +44,8 @@
               </tr>
           </tbody>
       </table>
+      </a>
+      <br>
 
     {{ end }}
 
