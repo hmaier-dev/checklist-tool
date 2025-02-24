@@ -1,21 +1,31 @@
 [
   {
-  "task": "this is a very special task",
+    
+  "task": "Gerät im KNOX Portal prüfen. Tag hinzufügen (z.B.: STS, Mitte)",
+  "checked": false,
+
+  },
+  {
+  "task": "Gerät im datomo anlegen. (IMEI/Benutzer)",
   "checked": false,
   "children": [
     {
-      "task": "this one is optional",
-      "checked": true
+      "task": "Beschreibung (Titel, Ort)",
+      "checked": false
     },
     {
-      "task": "Task 3",
+      "task": "Beschr",
+      "checked": false
+    },
+    {
+      "task": "",
       "checked": false
     }
-  ]
+    ]
   },
   {
     "task": "Task 4",
-    "checked": true,
+    "checked": false,
     "children": [
       {
         "task": "Task 5",
