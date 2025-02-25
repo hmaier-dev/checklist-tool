@@ -3,6 +3,7 @@ package server
 import (
   "github.com/gorilla/mux"
   "github.com/hmaier-dev/checklist-tool/internal/handlers"
+  "net/http"
 )
 
 
@@ -18,6 +19,8 @@ func NewServer() *Server {
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
   sub.HandleFunc(`/{id:[0-9]{15}}`, handlers.Display).Methods("GET")
   sub.HandleFunc(`/update-{id:\d{15}}`, handlers.Update).Methods("POST")
+  router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+
 
 	return &Server{Router: router}
 }
