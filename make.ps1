@@ -4,8 +4,8 @@ param(
 )
 
 if($buildGo){
-	mkdir -p ./bin
-	go build -o bin/checklist-tool.exe main.go
+  Remove-Item .\bin\checklist-tool.exe
+	go build -o .\bin\checklist-tool.exe main.go
 
 }
 if($buildDocker){
