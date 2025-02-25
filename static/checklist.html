@@ -34,7 +34,11 @@
     <ul>
     {{ range . }}
         <li>
-            <input type="checkbox" {{ if .Checked }}checked{{ end }}> {{ .Text }}
+            <input type="checkbox"
+              hx-post="/checklist/update_{{ .IMEI }}"
+              hx-trigger="change"
+              {{ if .Checked }}checked{{ end }}> {{ .Text }}
+
             {{ if .Children }}
                 {{ template "renderItems" .Children }}
             {{ end }}

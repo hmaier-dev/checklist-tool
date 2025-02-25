@@ -18,7 +18,7 @@ func NewServer() *Server {
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
   sub.HandleFunc(`/{id:[0-9]{15}}`, handlers.Display).Methods("GET")
-  sub.HandleFunc(`/update-{id:\d{15}}`, handlers.Update).Methods("POST")
+  sub.HandleFunc(`/update_{id:[0-9]{15}}`, handlers.Update).Methods("POST")
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 
