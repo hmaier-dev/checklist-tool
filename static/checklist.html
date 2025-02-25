@@ -37,7 +37,7 @@
             <input type="checkbox"
               hx-post="/checklist/update_{{ .IMEI }}"
               hx-trigger="change"
-              {{ if .Checked }}checked{{ end }}> {{ .Text }}
+              {{ if .Checked }}checked{{ end }}> {{ .Task }}
 
             {{ if .Children }}
                 {{ template "renderItems" .Children }}
