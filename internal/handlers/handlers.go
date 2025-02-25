@@ -70,8 +70,8 @@ func Display(w http.ResponseWriter, r *http.Request){
   id := mux.Vars(r)["id"]
   db := database.Init()
 
-  if database.CheckIMEI(db,id) == false{
-    http.Redirect(w, r, "/checklist/new", http.StatusSeeOther)
+  if database.IMEIalreadyExists(db,id) == false{
+    http.Redirect(w, r, "/checklist", http.StatusSeeOther)
     return
   }
 

@@ -50,7 +50,7 @@ func NewEntry(db *sql.DB, form checklist.FormularData){
 		Json:   string(emptyJson),
 	}
 
-  if CheckIMEI(db, cl.IMEI) == true{
+  if IMEIalreadyExists(db, cl.IMEI) == true{
     return
   }
 
@@ -63,7 +63,7 @@ func NewEntry(db *sql.DB, form checklist.FormularData){
 
 }
 
-func CheckIMEI(db *sql.DB, imei string)(bool){
+func IMEIalreadyExists(db *sql.DB, imei string)(bool){
 	var exists int
 	query := `SELECT COUNT(*) FROM checklists WHERE imei = ?`
   err := db.QueryRow(query, imei).Scan(&exists)
@@ -72,11 +72,11 @@ func CheckIMEI(db *sql.DB, imei string)(bool){
 	}
 
 	if exists > 0 {
-    log.Printf("Already exisits: %s", imei)
     return true
-	}else{
-    return false
-  }
+	}
+  return false
+
+ 
 }
 
 func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
