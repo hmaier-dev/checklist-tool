@@ -37,6 +37,7 @@
             <input type="checkbox"
               hx-post="/checklist/update_{{ .IMEI }}"
               hx-trigger="change"
+              hx-vals='{"task": "{{ .Task }}", "checked" : "change" }'
               {{ if .Checked }}checked{{ end }}> {{ .Task }}
 
             {{ if .Children }}

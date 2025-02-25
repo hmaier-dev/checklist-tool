@@ -133,11 +133,6 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 }
 
-func Update(w http.ResponseWriter, r *http.Request){
-  fmt.Println("Updating...")
-  id := mux.Vars(r)["id"]
-  fmt.Printf("Update Checklist for: %s \n", id)
-}
 
 
 func DisplayBlanko(w http.ResponseWriter, r *http.Request){
@@ -187,5 +182,20 @@ func DisplayBlanko(w http.ResponseWriter, r *http.Request){
     log.Fatal("", err)
   }
 
+}
+
+func Update(w http.ResponseWriter, r *http.Request){
+  fmt.Println("Updating...")
+	// Parse form data
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+	// Print received key-value pairs
+	fmt.Println("Received Data:")
+	for key, values := range r.Form {
+		fmt.Printf("%s: %v\n", key, values)
+	}
 }
 
