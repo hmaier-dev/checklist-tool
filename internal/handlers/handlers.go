@@ -113,8 +113,21 @@ func Display(w http.ResponseWriter, r *http.Request){
   // }
   // fmt.Println(string(jsonData))
 
+  info := struct{
+    IMEI string
+    Name string
+    Ticket  string
+    Model string
+  }{
+    IMEI: data.IMEI,
+    Name: data.Name,
+    Ticket: data.Ticket, 
+    Model: data.Model, 
+  }
+
   err = tmpl.Execute(w, map[string]interface{}{
     "Items": items,
+    "Info": info,
   })
 
   if err != nil {
