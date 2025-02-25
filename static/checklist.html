@@ -8,6 +8,28 @@
   <title>Checklist-Tool</title>
 </head>
 <body>
+  
+    <table>
+      <thead>
+          <tr>
+              <th>IMEI</th>
+              <th>Name</th>
+              <th>Ticket Number</th>
+              <th>Model</th>
+          </tr>
+      </thead>
+      <tbody>
+          <tr>
+            <td>{{ .Info.IMEI }}</td>
+            <td>{{ .Info.Name }}</td>
+            <td>{{ .Info.Ticket }}</td>
+            <td>{{ .Info.Model }}</td>
+          </tr>
+      </tbody>
+  </table>
+  <br>
+
+
   {{ define "renderItems" }}
     <ul>
     {{ range . }}
