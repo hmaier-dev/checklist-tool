@@ -23,5 +23,6 @@ type ChecklistItem struct {
         Text     string           `json:"task"`
         Checked  bool             `json:"checked"`
         Children []*ChecklistItem `json:"children,omitempty"`
+        IMEI     string           `json:"imei"`
 }
 
