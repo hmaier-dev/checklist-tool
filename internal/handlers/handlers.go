@@ -192,10 +192,15 @@ func Update(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-	// Print received key-value pairs
-	fmt.Println("Received Data:")
-	for key, values := range r.Form {
-		fmt.Printf("%s: %v\n", key, values)
-	}
+	// // Print received key-value pairs
+	// fmt.Println("Received Data:")
+	// for key, values := range r.Form {
+	// 	fmt.Printf("%s: %v\n", key, values)
+	// }
+  if _, ok := r.Form["checked"]; ok{
+    fmt.Println("is checked!")
+  }else{
+    fmt.Println("not checked")
+  }
 }
 
