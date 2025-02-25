@@ -34,8 +34,6 @@ func Home(w http.ResponseWriter, r *http.Request){
   db := database.Init()
   data, err := database.GetAllEntrysReversed(db)
 
-  fmt.Printf("%v \n", data)
-
   err = tmpl.Execute(w, map[string]interface{}{
     "Entries" : data,
   })
@@ -108,12 +106,12 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 
   // Print the unmarshaled JSON
-  jsonData, err := json.MarshalIndent(items, "", "  ")
-  if err != nil {
-          log.Println("JSON marshal error:", err)
-          return
-  }
-  fmt.Println(string(jsonData))
+  // jsonData, err := json.MarshalIndent(items, "", "  ")
+  // if err != nil {
+  //         log.Println("JSON marshal error:", err)
+  //         return
+  // }
+  // fmt.Println(string(jsonData))
 
   err = tmpl.Execute(w, map[string]interface{}{
     "Items": items,
