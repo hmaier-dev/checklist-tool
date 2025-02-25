@@ -131,3 +131,53 @@ func Update(w http.ResponseWriter, r *http.Request){
   fmt.Printf("Update Checklist for: %s \n", id)
 }
 
+
+func DisplayBlanko(w http.ResponseWriter, r *http.Request){
+  filename := "./test_checklist.json"
+  blankoChecklist, err := os.ReadFile(filename)
+  if err != nil {
+		log.Fatal("Problem reading the empty json:", err)
+  }
+
+  var items []*checklist.ChecklistItem
+  err = json.Unmarshal([]byte(blankoChecklist), &items)
+
+  if err != nil {
+      http.Error(w, "Invalid JSON", http.StatusInternalServerError)
+      log.Println("JSON unmarshal error: ", err)
+      return
+  }
+
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+
+	var static = filepath.Join(wd, "static")
+	var checklist = filepath.Join(static, "checklist.html")
+
+  tmpl, err := template.ParseFiles(checklist)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("error parsing base and new template: ", err)
+  }
+
+  // Print the unmarshaled JSON
+  jsonData, err := json.MarshalIndent(items, "", "  ")
+  if err != nil {
+          log.Println("JSON marshal error:", err)
+          return
+  }
+  fmt.Println(string(jsonData))
+
+  err = tmpl.Execute(w, map[string]interface{}{
+    "Items": items,
+  })
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
+
+}
+
