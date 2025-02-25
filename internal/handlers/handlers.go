@@ -1,15 +1,17 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-  "encoding/json"
-  "github.com/hmaier-dev/checklist-tool/internal/checklist"
-  "github.com/hmaier-dev/checklist-tool/internal/database"
+
+	"github.com/hmaier-dev/checklist-tool/internal/checklist"
+	"github.com/hmaier-dev/checklist-tool/internal/database"
+	"github.com/hmaier-dev/checklist-tool/internal/helper"
 
 	"github.com/gorilla/mux"
 )
@@ -85,6 +87,8 @@ func Display(w http.ResponseWriter, r *http.Request){
   var items []*checklist.ChecklistItem
   err = json.Unmarshal([]byte(data.Json), &items)
 
+  helper.AddDataToEveryEntry(data.IMEI, items)
+
   if err != nil {
       http.Error(w, "Invalid JSON", http.StatusInternalServerError)
       log.Println("JSON unmarshal error: ", err)
@@ -105,13 +109,6 @@ func Display(w http.ResponseWriter, r *http.Request){
     log.Fatal("error parsing base and new template: ", err)
   }
 
-  // Print the unmarshaled JSON
-  // jsonData, err := json.MarshalIndent(items, "", "  ")
-  // if err != nil {
-  //         log.Println("JSON marshal error:", err)
-  //         return
-  // }
-  // fmt.Println(string(jsonData))
 
   info := struct{
     IMEI string
