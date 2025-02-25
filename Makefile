@@ -5,3 +5,8 @@ go-build:
 
 docker-build:
 	docker build -t checklist-tool .
+
+clean:
+	rm ./bin/*
+	rm datenbank_eins.db
+	touch datenbank_eins.db
