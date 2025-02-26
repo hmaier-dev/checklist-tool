@@ -1,23 +1,23 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-  "strings"
-  "io"
-  "bytes"
+	"strings"
 
 	"github.com/hmaier-dev/checklist-tool/internal/checklist"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/helper"
 
+	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/gorilla/mux"
-  wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 // Displays a form a new checklist-entry
@@ -278,14 +278,42 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request){
   }
   pdfg.AddPage(wkhtml.NewPageReader(body))
 
-  // Create PDF document in internal buffer
   err = pdfg.Create()
   if err != nil {
-    log.Fatal(err)
-  }
-  err = pdfg.WriteFile("./test.pdf")
-  if err != nil {
-    log.Fatal(err)
+          log.Println(err)
+          http.Error(w, "PDF creation error", http.StatusInternalServerError)
+          return
   }
 
+  // now := time.Now()
+  // formattedDate := now.Format("20060102")
+  pdfName := "test.pdf"
+  err = pdfg.WriteFile(pdfName)
+  if err != nil {
+          http.Error(w, "Failed to write PDF to file", http.StatusInternalServerError)
+          return
+  }
+  // A redirect does not open a new windows with a pdf
+  // so I need to do this hacky stuff with js
+  fmt.Fprintf(w, "<script>window.open('/checklist/serve-pdf', '_blank');</script>")
+}
+
+func ServeStaticPDF(w http.ResponseWriter, r *http.Request) {
+    filePath := "test.pdf" // Path to your static PDF
+
+    file, err := os.Open(filePath)
+    if err != nil {
+        http.Error(w, "File not found", http.StatusNotFound)
+        return
+    }
+    defer file.Close()
+
+    w.Header().Set("Content-Type", "application/pdf")
+    w.Header().Set("Content-Disposition", "attachment; filename=test.pdf")
+
+    _, err = io.Copy(w, file)
+    if err != nil {
+        http.Error(w, "Error sending file", http.StatusInternalServerError)
+        return
+    }
 }
