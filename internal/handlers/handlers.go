@@ -231,9 +231,6 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-  fmt.Println("got id")
-  fmt.Println(imei)
-
   wd, err := os.Getwd()
 	var static = filepath.Join(wd, "static")
 	var print_tmpl = filepath.Join(static, "print.html")
@@ -286,11 +283,9 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request){
   if err != nil {
     log.Fatal(err)
   }
-  err = pdfg.WriteFile(".\\test.pdf")
+  err = pdfg.WriteFile("./test.pdf")
   if err != nil {
     log.Fatal(err)
   }
-
-  fmt.Println("Done")
 
 }
