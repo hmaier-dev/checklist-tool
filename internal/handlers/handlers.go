@@ -223,85 +223,86 @@ func Update(w http.ResponseWriter, r *http.Request){
 
 }
 
-func GeneratePDF(w http.ResponseWriter, r *http.Request){
+// Maybe this function is unnecessary,
+// and I can call GET from the button
+func RedirectToDownload(w http.ResponseWriter, r *http.Request){
   imei :=  mux.Vars(r)["id"]
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
-		return
-	}
-
-  wd, err := os.Getwd()
-	var static = filepath.Join(wd, "static")
-	var print_tmpl = filepath.Join(static, "print.html")
-
-  tmpl, err := template.ParseFiles(print_tmpl)
-
-  db := database.Init()
-  row, err := database.GetDataByIMEI(db, imei)
-
-  var items []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(row.Json), &items)
-
-  info := struct{
-    IMEI string
-    Name string
-    Ticket  string
-    Model string
-  }{
-    IMEI: row.IMEI,
-    Name: row.Name,
-    Ticket: row.Ticket, 
-    Model: row.Model, 
-  }
-
-  // Generate html body into buffer
-  var buf bytes.Buffer
-  err = tmpl.Execute(&buf, map[string]any{
-    "Items": items,
-    "Info": info,
-  })
-
-  bodyBytes, err := io.ReadAll(&buf) 
-	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusBadRequest)
-		return
-	}
-  defer r.Body.Close() // Close the body after reading
-
-  body := strings.NewReader(string(bodyBytes))
-
-  pdfg, err :=  wkhtml.NewPDFGenerator()
-  if err != nil{
-    log.Fatalf("problem with pdf generator: %q", err)
-    return
-  }
-  pdfg.AddPage(wkhtml.NewPageReader(body))
-
-  err = pdfg.Create()
-  if err != nil {
-          log.Println(err)
-          http.Error(w, "PDF creation error", http.StatusInternalServerError)
-          return
-  }
-
-  // now := time.Now()
-  // formattedDate := now.Format("20060102")
-  pdfName := "test.pdf"
-  err = pdfg.WriteFile(pdfName)
-  if err != nil {
-          http.Error(w, "Failed to write PDF to file", http.StatusInternalServerError)
-          return
-  }
   // A redirect does not open a new windows with a pdf
   // so I need to do this hacky stuff with js
-  fmt.Fprintf(w, "<script>window.open('/checklist/serve-pdf', '_blank');</script>")
+	cmd := fmt.Sprintf("<script>window.open('/checklist/download_%s', '_blank');</script>", imei)
+  fmt.Fprintf(w, cmd)
 }
 
-func ServeStaticPDF(w http.ResponseWriter, r *http.Request) {
-    filePath := "test.pdf" // Path to your static PDF
+func GeneratePDF(w http.ResponseWriter, r *http.Request) {
+		imei :=  mux.Vars(r)["id"]
 
-    file, err := os.Open(filePath)
+		wd, err := os.Getwd()
+		var static = filepath.Join(wd, "static")
+		var print_tmpl = filepath.Join(static, "print.html")
+
+		tmpl, err := template.ParseFiles(print_tmpl)
+
+		db := database.Init()
+		row, err := database.GetDataByIMEI(db, imei)
+
+		var items []*checklist.ChecklistItem
+		err = json.Unmarshal([]byte(row.Json), &items)
+		
+
+		// What is this??? can't I just give row to Info??
+		info := struct{
+			IMEI string
+			Name string
+			Ticket  string
+			Model string
+		}{
+			IMEI: row.IMEI,
+			Name: row.Name,
+			Ticket: row.Ticket, 
+			Model: row.Model, 
+		}
+
+		// Generate html body into buffer
+		var buf bytes.Buffer
+		err = tmpl.Execute(&buf, map[string]any{
+			"Items": items,
+			"Info": info,
+		})
+
+		bodyBytes, err := io.ReadAll(&buf) 
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close() // Close the body after reading
+
+		body := strings.NewReader(string(bodyBytes))
+
+		pdfg, err :=  wkhtml.NewPDFGenerator()
+		if err != nil{
+			log.Fatalf("problem with pdf generator: %q", err)
+			return
+		}
+		pdfg.AddPage(wkhtml.NewPageReader(body))
+
+		err = pdfg.Create()
+		if err != nil {
+						log.Println(err)
+						http.Error(w, "PDF creation error", http.StatusInternalServerError)
+						return
+		}
+		now := time.Now()
+		fDate := now.Format("20060102")
+		parts := strings.Fields(info.Name)
+		pdfName := fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.imei)
+
+		err = pdfg.WriteFile(pdfName)
+		if err != nil {
+						http.Error(w, "Failed to write PDF to file", http.StatusInternalServerError)
+						return
+		}
+
+    file, err := os.Open(pdfName)
     if err != nil {
         http.Error(w, "File not found", http.StatusNotFound)
         return
@@ -309,11 +310,13 @@ func ServeStaticPDF(w http.ResponseWriter, r *http.Request) {
     defer file.Close()
 
     w.Header().Set("Content-Type", "application/pdf")
-    w.Header().Set("Content-Disposition", "attachment; filename=test.pdf")
+		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
+    w.Header().Set("Content-Disposition", disposition)
 
     _, err = io.Copy(w, file)
     if err != nil {
         http.Error(w, "Error sending file", http.StatusInternalServerError)
         return
     }
+		// Maybe remove the file??
 }
