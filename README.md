@@ -29,3 +29,4 @@ The goal of this project is to implement several functions, which will make my w
 - [ ] Add styling to home.html
 - [ ] Add styling to checklist.html
 - [ ] Optional: Different Checklists for different Jobs
+
