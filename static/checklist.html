@@ -55,10 +55,13 @@
   {{ template "renderItems" .Items }}
 
   <input 
-    type="button"
-    hx-post="/checklist/generate_{{ .Info.IMEI }}"
-    hx-trigger="click"
-    value="Export to pdf">
+    type="button" 
+    value="Export to PDF" 
+    hx-post="/checklist/generate_{{ .Info.IMEI }}" 
+    hx-trigger="click" 
+    class="mt-4 mb-4 ml-4 w-full md:w-auto px-6 py-3 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded-lg shadow-md transition duration-200"
+  >
+
 
 </body>
 </html>
