@@ -165,14 +165,6 @@ func DisplayBlanko(w http.ResponseWriter, r *http.Request){
     log.Fatal("error parsing base and new template: ", err)
   }
 
-  // Print the unmarshaled JSON
-  jsonData, err := json.MarshalIndent(items, "", "  ")
-  if err != nil {
-          log.Println("JSON marshal error:", err)
-          return
-  }
-  fmt.Println(string(jsonData))
-
   err = tmpl.Execute(w, map[string]interface{}{
     "Items": items,
   })
@@ -193,7 +185,6 @@ func Update(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-  fmt.Printf("%#v \n", r.Form)
   
   var checked bool
   // if ["checked"] isset

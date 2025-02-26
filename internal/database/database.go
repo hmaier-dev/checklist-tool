@@ -118,7 +118,6 @@ func GetAllEntrysReversed(db *sql.DB)([]*checklist.ChecklistEntry, error){
 }
 
 func UpdateJsonByIMEI(db *sql.DB, imei string, json string){
-  // Update the JSON field in the database
   _, err := db.Exec("UPDATE checklists SET json = ? WHERE imei = ?", json, imei)
 	if err != nil {
 		log.Fatal("Error updating database:", err)
