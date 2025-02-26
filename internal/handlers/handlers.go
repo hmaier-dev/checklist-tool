@@ -10,6 +10,7 @@ import (
 	"path/filepath"
   "strings"
   "io"
+  "bytes"
 
 	"github.com/hmaier-dev/checklist-tool/internal/checklist"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
@@ -233,14 +234,38 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request){
   fmt.Println("got id")
   fmt.Println(imei)
 
-  url := "http://localhost:8080/checklist/" + imei
-  
-  resp, err := http.Get(url)
-  if err != nil{
-    log.Fatalf("Error making GET request to %s: %q", url, err)
+  wd, err := os.Getwd()
+	var static = filepath.Join(wd, "static")
+	var print_tmpl = filepath.Join(static, "print.html")
+
+  tmpl, err := template.ParseFiles(print_tmpl)
+
+  db := database.Init()
+  row, err := database.GetDataByIMEI(db, imei)
+
+  var items []*checklist.ChecklistItem
+  err = json.Unmarshal([]byte(row.Json), &items)
+
+  info := struct{
+    IMEI string
+    Name string
+    Ticket  string
+    Model string
+  }{
+    IMEI: row.IMEI,
+    Name: row.Name,
+    Ticket: row.Ticket, 
+    Model: row.Model, 
   }
 
-  bodyBytes, err := io.ReadAll(resp.Body) // Read the request body
+  // Generate html body into buffer
+  var buf bytes.Buffer
+  err = tmpl.Execute(&buf, map[string]any{
+    "Items": items,
+    "Info": info,
+  })
+
+  bodyBytes, err := io.ReadAll(&buf) 
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
@@ -248,8 +273,6 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request){
   defer r.Body.Close() // Close the body after reading
 
   body := strings.NewReader(string(bodyBytes))
-
-  fmt.Printf("%#v \n", string(bodyBytes))
 
   pdfg, err :=  wkhtml.NewPDFGenerator()
   if err != nil{
