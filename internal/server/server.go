@@ -18,6 +18,7 @@ func NewServer() *Server {
   // GET
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
   sub.HandleFunc(`/{id:[0-9]{15}}`, handlers.Display).Methods("GET")
+  sub.HandleFunc("/serve-pdf", handlers.ServeStaticPDF).Methods("GET")
   
   // POST
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
