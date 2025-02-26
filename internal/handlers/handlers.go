@@ -219,5 +219,16 @@ func Update(w http.ResponseWriter, r *http.Request){
 
 }
 
+func GeneratePDF(w http.ResponseWriter, r *http.Request){
+  imei :=  mux.Vars(r)["id"]
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+
+  fmt.Println("got id")
+  fmt.Println(imei)
 
 
+}
