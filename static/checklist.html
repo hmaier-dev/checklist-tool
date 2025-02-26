@@ -5,27 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="/static/htmx.min.js"></script>
+  <link href="/static/style.css" rel="stylesheet">
   <title>Checklist-Tool</title>
 </head>
 <body>
-  
-    <table>
-      <thead>
-          <tr>
-              <th>IMEI</th>
-              <th>Name</th>
-              <th>Ticket Number</th>
-              <th>Model</th>
-          </tr>
-      </thead>
-      <tbody>
-          <tr>
-            <td>{{ .Info.IMEI }}</td>
-            <td>{{ .Info.Name }}</td>
-            <td>{{ .Info.Ticket }}</td>
-            <td>{{ .Info.Model }}</td>
-          </tr>
-      </tbody>
+
+  <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-md">
+    <thead class="bg-gray-100 text-gray-700 uppercase text-sm">
+      <tr>
+        <th class="px-6 py-3 text-left border-b">IMEI</th>
+        <th class="px-6 py-3 text-left border-b">Name</th>
+        <th class="px-6 py-3 text-left border-b">Ticket Number</th>
+        <th class="px-6 py-3 text-left border-b">Model</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4 border-b">{{ .Info.IMEI }}</td>
+        <td class="px-6 py-4 border-b">{{ .Info.Name }}</td>
+        <td class="px-6 py-4 border-b">{{ .Info.Ticket }}</td>
+        <td class="px-6 py-4 border-b">{{ .Info.Model }}</td>
+      </tr>
+    </tbody>
   </table>
   <br>
 

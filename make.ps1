@@ -1,6 +1,8 @@
 param(
   [switch]$buildDocker = $False,
-  [switch]$buildGo = $False
+  [switch]$buildGo = $False,
+  [switch]$buildCss = $False
+
 )
 
 if($buildGo){
@@ -10,4 +12,7 @@ if($buildGo){
 }
 if($buildDocker){
 	docker build -t "checklist-tool" .
+}
+if($buildCss){
+	tailwindcss -i ./static/base.css -o ./static/style.css
 }
