@@ -7,11 +7,15 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY internal/ .
-COPY main.go .
+COPY . .
 
-# Build the Go application
-RUN go build -o main 
+RUN go build -o checklist-tool main.go
+
+RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.0.0-beta.8/tailwindcss-linux-x64 && \
+    chmod +x tailwindcss-linux-x64 && \
+    mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+
+RUN tailwindcss -i ./static/base.css -o ./static/style.css
 
 # Start from a minimal image
 FROM gcr.io/distroless/base-debian12
@@ -19,11 +23,10 @@ FROM gcr.io/distroless/base-debian12
 # Set working directory
 WORKDIR /root/
 
-# Copy the compiled binary
-COPY --from=builder /app/main .
+COPY --from=builder /app/sqlite.db .
+COPY --from=builder /app/static .
+COPY --from=builder /app/test_checklist.json .
+COPY --from=builder /app/checklist-tool .
 
-# Expose port
 EXPOSE 8080
-
-# Run the application
-CMD ["./main"]
+CMD ["./checklist-tool"]

@@ -11,7 +11,7 @@ import (
 
 // Initialize database
 func Init() *sql.DB {
-	db, err := sql.Open("sqlite3", "./datenbank_eins.db")
+	db, err := sql.Open("sqlite3", "./sqlite.db")
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
