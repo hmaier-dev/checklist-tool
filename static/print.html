@@ -34,7 +34,20 @@
     <ul>
     {{ range . }}
         <li>
-          <input {{ if .Checked }}checked{{ end }}> {{ .Task }}
+          <style>
+            label.checkbox:before {
+                content: "☐ ";
+            }
+            label.checkbox.checked:before {
+                content: "☑ ";
+            }
+            </style>
+            {{ if .Checked }}
+            <label class="checkbox checked"></label>
+            {{ else }}
+            <label class="checkbox"></label>
+            {{ end }}
+            {{ .Task }}
             {{ if .Children }}
                 {{ template "renderItems" .Children }}
             {{ end }}
