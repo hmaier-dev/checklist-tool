@@ -18,12 +18,12 @@ func NewServer() *Server {
   // GET
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
   sub.HandleFunc(`/{id:[0-9]{15}}`, handlers.Display).Methods("GET")
-  sub.HandleFunc("/serve-pdf", handlers.ServeStaticPDF).Methods("GET")
+  sub.HandleFunc(`/download_{id:[0-9]{15}}`, handlers.GeneratePDF).Methods("GET")
   
   // POST
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
   sub.HandleFunc(`/update_{id:[0-9]{15}}`, handlers.Update).Methods("POST")
-  sub.HandleFunc(`/generate_{id:[0-9]{15}}`, handlers.GeneratePDF).Methods("POST")
+  sub.HandleFunc(`/goto_{id:[0-9]{15}}`, handlers.RedirectToDownload).Methods("POST")
 
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
