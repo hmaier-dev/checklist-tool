@@ -8,12 +8,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+  "strings"
+  "io"
 
 	"github.com/hmaier-dev/checklist-tool/internal/checklist"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/helper"
 
 	"github.com/gorilla/mux"
+  wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 // Displays a form a new checklist-entry
@@ -230,5 +233,41 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request){
   fmt.Println("got id")
   fmt.Println(imei)
 
+  url := "http://localhost:8080/checklist/" + imei
+  
+  resp, err := http.Get(url)
+  if err != nil{
+    log.Fatalf("Error making GET request to %s: %q", url, err)
+  }
+
+  bodyBytes, err := io.ReadAll(resp.Body) // Read the request body
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+  defer r.Body.Close() // Close the body after reading
+
+  body := strings.NewReader(string(bodyBytes))
+
+  fmt.Printf("%#v \n", string(bodyBytes))
+
+  pdfg, err :=  wkhtml.NewPDFGenerator()
+  if err != nil{
+    log.Fatalf("problem with pdf generator: %q", err)
+    return
+  }
+  pdfg.AddPage(wkhtml.NewPageReader(body))
+
+  // Create PDF document in internal buffer
+  err = pdfg.Create()
+  if err != nil {
+    log.Fatal(err)
+  }
+  err = pdfg.WriteFile(".\\test.pdf")
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  fmt.Println("Done")
 
 }
