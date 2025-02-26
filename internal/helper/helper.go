@@ -31,3 +31,16 @@ func prettyPrintJSON(jsonArray any){
   fmt.Println(string(jsonData))
 
 }
+
+
+func ChangeCheckedStatus(newItem checklist.ChecklistItem, oldChecklist []*checklist.ChecklistItem){
+  for _, item := range oldChecklist{
+    if newItem.Task == item.Task{
+      item.Checked = newItem.Checked     
+      return
+    }
+    if len(item.Children) > 0 {
+			ChangeCheckedStatus(newItem, item.Children)
+		}
+  }
+}

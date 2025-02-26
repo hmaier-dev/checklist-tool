@@ -185,22 +185,48 @@ func DisplayBlanko(w http.ResponseWriter, r *http.Request){
 }
 
 func Update(w http.ResponseWriter, r *http.Request){
-  fmt.Println("Updating...")
-	// Parse form data
+
+  // Parse form
+  imei :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-	// // Print received key-value pairs
-	// fmt.Println("Received Data:")
-	// for key, values := range r.Form {
-	// 	fmt.Printf("%s: %v\n", key, values)
-	// }
+  fmt.Printf("%#v \n", r.Form)
+  
+  var checked bool
+  // if ["checked"] isset
   if _, ok := r.Form["checked"]; ok{
-    fmt.Println("is checked!")
+    checked = true
   }else{
-    fmt.Println("not checked")
+    checked = false
   }
+  alteredItem := checklist.ChecklistItem{
+    Task: r.Form.Get("task"),
+    Checked: checked,
+  }
+  
+  // Fetch Row from Database
+  db := database.Init()
+  row, err := database.GetDataByIMEI(db, imei)
+  if err != nil{
+    log.Fatalf("error fetching data by imei: %q", err)
+  }
+  var oldItems []*checklist.ChecklistItem
+  err = json.Unmarshal([]byte(row.Json), &oldItems)
+
+  helper.ChangeCheckedStatus(alteredItem, oldItems)
+
+  jsonBytes, err := json.Marshal(oldItems)
+  if err != nil {
+      log.Println("Error marshaling JSON:", err)
+      return
+  }
+  // Submit Altered Row to database
+  database.UpdateJsonByIMEI(db, imei, string(jsonBytes))
+
 }
+
+
 
