@@ -18,7 +18,9 @@ The goal of this project is to implement several functions, which will make my w
 
 ## Roadmap
 
-- [ ] Building a UI with Golang (templates/html)
-- [ ] Add SQLite-Database for saving JSON-Structs
-- [ ] Convert JSON-Structs to PDF
+- [x] Building a UI with Golang (templates/html)
+- [x] Add SQLite-Database for saving JSON-Structs
+- [ ] Convert html to pdf
+- [ ] Add styling to home.html
+- [ ] Add styling to checklist.html
 - [ ] Optional: Different Checklists for different Jobs
