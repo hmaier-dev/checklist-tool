@@ -3,3 +3,9 @@
 /* @tailwind base; */
 /* @tailwind components; */
 /* @tailwind utilities; */
+
+ul, ol, li {
+  list-style-type: revert; /* Restore the browser's default styling */
+  padding-left: revert;   /* Restore default indentation */
+  margin: revert;         /* Restore default margin */
+}
