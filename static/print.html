@@ -62,6 +62,10 @@
   </table>
   <br>
 
+  <p>
+  Exportiert am {{ .Date }}
+  </p>
+
 
   {{ define "renderItems" }}
     <ul>
@@ -95,6 +99,8 @@
   {{ end }}
 
   {{ template "renderItems" .Items }}
+  
+  
 
 </body>
 </html>

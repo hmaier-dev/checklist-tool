@@ -263,11 +263,15 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 			Model: row.Model, 
 		}
 
+		now := time.Now()
+    curr_date := now.Format("02.01.2006, 15:04:05")
+
 		// Generate html body into buffer
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, map[string]any{
 			"Items": items,
 			"Info": info,
+      "Date": curr_date,
 		})
 
 		bodyBytes, err := io.ReadAll(&buf) 
@@ -292,7 +296,6 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 						http.Error(w, "PDF creation error", http.StatusInternalServerError)
 						return
 		}
-		now := time.Now()
 		fDate := now.Format("20060102")
 		parts := strings.Fields(info.Name)
 		pdfName := fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.IMEI)
