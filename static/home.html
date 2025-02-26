@@ -27,24 +27,24 @@
 
     {{ range .Entries }}
     <a href="/checklist/{{ .IMEI }}">
-      <table>
-          <thead>
-              <tr>
-                  <th>IMEI</th>
-                  <th>Name</th>
-                  <th>Ticket Number</th>
-                  <th>Model</th>
-              </tr>
-          </thead>
-          <tbody>
-              <tr>
-                <td>{{ .IMEI }}</td>
-                <td>{{ .Name }}</td>
-                <td>{{ .Ticket }}</td>
-                <td>{{ .Model }}</td>
-              </tr>
-          </tbody>
-      </table>
+    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
+      <thead class="bg-gray-100 text-gray-700 uppercase text-sm">
+        <tr>
+          <th class="px-5 py-2 text-left border-b">IMEI</th>
+          <th class="px-5 py-2 text-left border-b">Name</th>
+          <th class="px-5 py-2 text-left border-b">Ticket Number</th>
+          <th class="px-5 py-2 text-left border-b">Model</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <tr class="hover:bg-gray-100">
+          <td class="px-5 py-3 border-b">{{ .IMEI }}</td>
+          <td class="px-5 py-3 border-b">{{ .Name }}</td>
+          <td class="px-5 py-3 border-b">{{ .Ticket }}</td>
+          <td class="px-5 py-3 border-b">{{ .Model }}</td>
+        </tr>
+      </tbody>
+    </table>
       </a>
       <br>
 
