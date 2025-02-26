@@ -3,11 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checklist-Tool</title>
+  <title>Laufzettel</title>
 </head>
 <body>
 
   <h1>Abellio MDM Laufzettel</h1>
+
+  <style>
+    table {
+      min-width: 33.33%;
+      border: 1px solid #d1d5db; /* gray-300 */
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-collapse: collapse;
+    }
+
+    thead {
+      background-color: #f3f4f6; /* gray-100 */
+      color: #374151; /* gray-700 */
+      text-transform: uppercase;
+      font-size: 0.875rem; /* text-sm */
+    }
+
+    th, td {
+      padding: 16px 24px; /* px-6 py-3/py-4 */
+      text-align: left;
+      border-bottom: 1px solid #d1d5db; /* gray-300 */
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #e5e7eb; /* gray-200 */
+    }
+
+    tbody tr:hover {
+      background-color: #f9fafb; /* gray-50 */
+    }
+
+  </style>
 
   <table>
     <thead>
@@ -37,9 +70,14 @@
           <style>
             label.checkbox:before {
                 content: "☐ ";
+                width: 1rem;  /* w-4 */
+                height: 1rem; /* h-4 */
             }
             label.checkbox.checked:before {
                 content: "☑ ";
+                width: 1rem;  /* w-4 */
+                height: 1rem; /* h-4 */
+                color: #3b82f6; /* text-blue-500 */
             }
             </style>
             {{ if .Checked }}

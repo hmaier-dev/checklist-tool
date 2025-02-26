@@ -319,5 +319,5 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Error sending file", http.StatusInternalServerError)
         return
     }
-		// Maybe remove the file??
+    os.Remove(pdfName)
 }
