@@ -16,6 +16,11 @@ The goal of this project is to implement several functions, which will make my w
   - Device-Type (de. Modell)
 - PDF-creation with a good name-schema  
 
+## Dependencys
+
+- `scoop install wkhtmltopdf`
+- `scoop install tailwindcss`
+
 ## Roadmap
 
 - [x] Building a UI with Golang (templates/html)
