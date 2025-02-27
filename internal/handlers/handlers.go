@@ -21,6 +21,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var ChecklistJsonFile string
+
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
 func Home(w http.ResponseWriter, r *http.Request){
@@ -141,7 +143,7 @@ func Display(w http.ResponseWriter, r *http.Request){
 
 
 func DisplayBlanko(w http.ResponseWriter, r *http.Request){
-  filename := "./test_checklist.json"
+  filename := ChecklistJsonFile
   blankoChecklist, err := os.ReadFile(filename)
   if err != nil {
 		log.Fatal("Problem reading the empty json:", err)

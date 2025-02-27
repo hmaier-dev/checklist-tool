@@ -10,6 +10,7 @@ import (
 )
 
 var DBfilePath string
+var ChecklistJsonFile string
 
 // Initialize database
 func Init() *sql.DB {
@@ -38,7 +39,7 @@ func Init() *sql.DB {
 
 func NewEntry(db *sql.DB, form checklist.FormularData){
 
-  filename := "./test_checklist.json"
+  filename := ChecklistJsonFile
   emptyJson, err := os.ReadFile(filename)
   if err != nil {
 		log.Fatal("Problem reading the empty json:", err)
