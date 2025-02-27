@@ -18,9 +18,11 @@ func main() {
   jsonArg := flag.String("json", "", "Path to json file representing checklist")
   flag.Parse()
   if *dbArg == "" {
+    flag.Usage()
     log.Fatalln("database file is mandatory")
   }
   if *jsonArg == "" {
+    flag.Usage()
     log.Fatalln("json checklist is mandatory")
   }
 
