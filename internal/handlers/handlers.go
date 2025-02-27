@@ -288,7 +288,12 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 			log.Fatalf("problem with pdf generator: %q", err)
 			return
 		}
-		pdfg.AddPage(wkhtml.NewPageReader(body))
+    pdfg.PageSize.Set(wkhtml.PageSizeLetter)
+    
+    page := wkhtml.NewPageReader(body)
+    page.Zoom.Set(0.95)
+
+		pdfg.AddPage(page)
 
 		err = pdfg.Create()
 		if err != nil {
