@@ -3,6 +3,8 @@ FROM golang:1.24 AS builder
 # Set the working directory
 WORKDIR /app
 
+RUN touch sqlite.db
+
 # Copy the Go module files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
@@ -17,16 +19,15 @@ RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.0
 
 RUN tailwindcss -i ./static/base.css -o ./static/style.css
 
-# Start from a minimal image
-FROM gcr.io/distroless/base-debian12
+FROM debian:bookworm
 
 # Set working directory
 WORKDIR /root/
 
 COPY --from=builder /app/sqlite.db .
 COPY --from=builder /app/static .
-COPY --from=builder /app/test_checklist.json .
+COPY --from=builder /app/checklist_allgemein.json .
 COPY --from=builder /app/checklist-tool .
 
 EXPOSE 8080
-CMD ["./checklist-tool"]
+CMD /root/checklist-tool -db=/root/sqlite.db -json=/root/checklist_allgemein.json
