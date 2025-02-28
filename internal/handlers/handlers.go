@@ -19,9 +19,12 @@ import (
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/gorilla/mux"
+
+	"gopkg.in/yaml.v3"
 )
 
-var ChecklistJsonFile string
+var EmptyChecklist []byte
+var EmptyChecklistItemsArray []*checklist.ChecklistItem
 
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
@@ -92,7 +95,11 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 
   var items []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(data.Json), &items)
+	err = yaml.Unmarshal([]byte(data.Yaml), &items)
+	if err != nil {
+		fmt.Println("Error parsing YAML:", err)
+		return
+	}
 
   helper.AddDataToEveryEntry(data.IMEI, items)
 
@@ -140,21 +147,13 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 }
 
-
-
+// Show the blanko checklist
 func DisplayBlanko(w http.ResponseWriter, r *http.Request){
-  filename := ChecklistJsonFile
-  blankoChecklist, err := os.ReadFile(filename)
-  if err != nil {
-		log.Fatal("Problem reading the empty json:", err)
-  }
-
   var items []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(blankoChecklist), &items)
-
+  err := yaml.Unmarshal([]byte(EmptyChecklist), &items)
   if err != nil {
-      http.Error(w, "Invalid JSON", http.StatusInternalServerError)
-      log.Println("JSON unmarshal error: ", err)
+      http.Error(w, "Invalid Yaml", http.StatusInternalServerError)
+      log.Println("Yaml unmarshal error: ", err)
       return
   }
 
@@ -212,13 +211,13 @@ func Update(w http.ResponseWriter, r *http.Request){
     log.Fatalf("error fetching data by imei: %q", err)
   }
   var oldItems []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(row.Json), &oldItems)
+  err = yaml.Unmarshal([]byte(row.Yaml), &oldItems)
 
   helper.ChangeCheckedStatus(alteredItem, oldItems)
 
   jsonBytes, err := json.Marshal(oldItems)
   if err != nil {
-      log.Println("Error marshaling JSON:", err)
+      log.Println("Error marshaling Yaml: ", err)
       return
   }
   // Submit Altered Row to database
@@ -249,7 +248,7 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		row, err := database.GetDataByIMEI(db, imei)
 
 		var items []*checklist.ChecklistItem
-		err = json.Unmarshal([]byte(row.Json), &items)
+		err = yaml.Unmarshal([]byte(row.Yaml), &items)
 		
 
 		// What is this??? can't I just give row to Info??

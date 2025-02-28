@@ -27,10 +27,9 @@ WORKDIR /root/
 RUN apt-get update && apt-get install -y wkhtmltopdf
 
 COPY --from=builder /app/static/ ./static/
-COPY --from=builder /app/checklist_allgemein.json .
 COPY --from=builder /app/checklist-tool .
 
 EXPOSE 8080
 
 # You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
-CMD /root/checklist-tool -db=/root/sqlite.db -json=/root/checklist_allgemein.json
+CMD /root/checklist-tool -db=/root/sqlite.db
