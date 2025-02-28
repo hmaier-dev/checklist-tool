@@ -3,14 +3,14 @@ package database
 import (
 	"database/sql"
 	"log"
-	"os"
   "github.com/hmaier-dev/checklist-tool/internal/checklist"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var DBfilePath string
-var ChecklistJsonFile string
+var EmptyChecklist []byte
+var EmptyChecklistItemsArray []*checklist.ChecklistItem
 
 // Initialize database
 func Init() *sql.DB {
@@ -39,18 +39,12 @@ func Init() *sql.DB {
 
 func NewEntry(db *sql.DB, form checklist.FormularData){
 
-  filename := ChecklistJsonFile
-  emptyJson, err := os.ReadFile(filename)
-  if err != nil {
-		log.Fatal("Problem reading the empty json:", err)
-  }
-
   cl := checklist.ChecklistEntry{
 		IMEI:   form.IMEI ,
 		Name:   form.Name,
 		Ticket: form.Ticket,
 		Model:  form.Model,
-		Json:   string(emptyJson),
+		Yaml:   string(EmptyChecklist),
 	}
 
   if IMEIalreadyExists(db, cl.IMEI) == true{
@@ -59,7 +53,7 @@ func NewEntry(db *sql.DB, form checklist.FormularData){
 
   // Prepare the INSERT statement
 	insertStmt := `INSERT INTO checklists (imei, name, ticket, model, json) VALUES (?, ?, ?, ?, ?)`
-	_, err = db.Exec(insertStmt, cl.IMEI, cl.Name, cl.Ticket, cl.Model, cl.Json)
+  _, err := db.Exec(insertStmt, cl.IMEI, cl.Name, cl.Ticket, cl.Model, cl.Yaml)
 	if err != nil {
 		log.Fatal("Failed to insert entry: ", err)
 	}
@@ -87,7 +81,7 @@ func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
 	row := db.QueryRow(query, imei)
 	var cl checklist.ChecklistEntry
 
-	err := row.Scan(&cl.IMEI, &cl.Name, &cl.Ticket, &cl.Model, &cl.Json)
+	err := row.Scan(&cl.IMEI, &cl.Name, &cl.Ticket, &cl.Model, &cl.Yaml)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// No entry found with the given IMEI
