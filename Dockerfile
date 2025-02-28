@@ -24,10 +24,11 @@ FROM debian:bookworm
 # Set working directory
 WORKDIR /root/
 
-COPY --from=builder /app/sqlite.db .
 COPY --from=builder /app/static .
 COPY --from=builder /app/checklist_allgemein.json .
 COPY --from=builder /app/checklist-tool .
 
 EXPOSE 8080
+
+# You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
 CMD /root/checklist-tool -db=/root/sqlite.db -json=/root/checklist_allgemein.json
