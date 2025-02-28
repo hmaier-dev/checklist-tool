@@ -10,6 +10,14 @@
 </head>
 <body>
 
+  <script>
+    function copy(event) {
+    const text = event.target.innerText;
+    navigator.clipboard.writeText(text).catch(err => console.error("Failed to copy:", err));
+}
+
+  </script>
+
   <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
     <thead class="bg-gray-100 text-gray-700 uppercase text-sm">
       <tr>
@@ -21,10 +29,10 @@
     </thead>
     <tbody class="divide-y divide-gray-200">
       <tr class="hover:bg-gray-50">
-        <td class="px-6 py-4 border-b">{{ .Info.IMEI }}</td>
-        <td class="px-6 py-4 border-b">{{ .Info.Name }}</td>
-        <td class="px-6 py-4 border-b">{{ .Info.Ticket }}</td>
-        <td class="px-6 py-4 border-b">{{ .Info.Model }}</td>
+        <td onclick="copy(event)" class="px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.IMEI }}</td>
+        <td onclick="copy(event)" class="px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.Name }}</td>
+        <td onclick="copy(event)" class="px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.Ticket }}</td>
+        <td onclick="copy(event)" class="px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.Model }}</td>
       </tr>
     </tbody>
   </table>
