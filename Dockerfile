@@ -24,7 +24,9 @@ FROM debian:bookworm
 # Set working directory
 WORKDIR /root/
 
-COPY --from=builder /app/static .
+RUN apt-get update && apt-get install -y wkhtmltopdf
+
+COPY --from=builder /app/static/ ./static/
 COPY --from=builder /app/checklist_allgemein.json .
 COPY --from=builder /app/checklist-tool .
 
