@@ -11,11 +11,11 @@ type FormularData struct{
 
 // Represents a single checklist
 type ChecklistEntry struct {
-	IMEI   string `json:"imei"`
-	Name   string `json:"name"`
-	Ticket string `json:"ticket"`
-	Model  string `json:"model"`
-	Json   string `json:"json"`
+	IMEI   string `yaml:"imei"`
+	Name   string `yaml:"name"`
+	Ticket string `yaml:"ticket"`
+	Model  string `yaml:"model"`
+	Yaml   string `yaml:"yaml"`
 }
 
 // Single checkpoint of the list
