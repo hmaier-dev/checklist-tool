@@ -304,7 +304,12 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		}
 		fDate := now.Format("20060102")
 		parts := strings.Fields(info.Name)
-		pdfName := fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.IMEI)
+    var pdfName string 
+    if len(parts) > 1 {
+      pdfName = fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.IMEI)
+    }else{
+      pdfName = fmt.Sprintf("%s_%s_%s_%s.pdf",fDate,parts[0],info.Model,info.IMEI)
+    }
 
 		err = pdfg.WriteFile(pdfName)
 		if err != nil {
