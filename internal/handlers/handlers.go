@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -215,13 +214,13 @@ func Update(w http.ResponseWriter, r *http.Request){
 
   helper.ChangeCheckedStatus(alteredItem, oldItems)
 
-  jsonBytes, err := json.Marshal(oldItems)
+  yamlBytes, err := yaml.Marshal(oldItems)
   if err != nil {
       log.Println("Error marshaling Yaml: ", err)
       return
   }
   // Submit Altered Row to database
-  database.UpdateJsonByIMEI(db, imei, string(jsonBytes))
+  database.UpdateYamlByIMEI(db, imei, string(yamlBytes))
 
 }
 

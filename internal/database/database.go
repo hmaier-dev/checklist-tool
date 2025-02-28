@@ -27,7 +27,7 @@ func Init() *sql.DB {
 		name TEXT,
 		ticket TEXT,
 		model TEXT,
-		json TEXT
+		yaml TEXT
 	);
 	`
 	_, err = db.Exec(createStmt)
@@ -52,7 +52,7 @@ func NewEntry(db *sql.DB, form checklist.FormularData){
   }
 
   // Prepare the INSERT statement
-	insertStmt := `INSERT INTO checklists (imei, name, ticket, model, json) VALUES (?, ?, ?, ?, ?)`
+	insertStmt := `INSERT INTO checklists (imei, name, ticket, model, yaml) VALUES (?, ?, ?, ?, ?)`
   _, err := db.Exec(insertStmt, cl.IMEI, cl.Name, cl.Ticket, cl.Model, cl.Yaml)
 	if err != nil {
 		log.Fatal("Failed to insert entry: ", err)
@@ -77,7 +77,7 @@ func IMEIalreadyExists(db *sql.DB, imei string)(bool){
 }
 
 func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
-	query := `SELECT imei, name, ticket, model, json FROM checklists WHERE imei = ?`
+	query := `SELECT imei, name, ticket, model, yaml FROM checklists WHERE imei = ?`
 	row := db.QueryRow(query, imei)
 	var cl checklist.ChecklistEntry
 
@@ -114,8 +114,8 @@ func GetAllEntrysReversed(db *sql.DB)([]*checklist.ChecklistEntry, error){
   return allEntries, nil
 }
 
-func UpdateJsonByIMEI(db *sql.DB, imei string, json string){
-  _, err := db.Exec("UPDATE checklists SET json = ? WHERE imei = ?", json, imei)
+func UpdateYamlByIMEI(db *sql.DB, imei string, yamlData string){
+  _, err := db.Exec("UPDATE checklists SET yaml = ? WHERE imei = ?", yamlData, imei)
 	if err != nil {
 		log.Fatal("Error updating database:", err)
 	}
