@@ -1,19 +1,16 @@
 ## Motivation
-I am writing this project in order to get rid of the tiresome _windows-explorer-pdf-template-workflow_. Right now, there is a checlist-template which I alter in the browser and save on a Windows-Share.
-There are multiple things I do not like about it:
-
-- Working with an PDF-Editor Editor
-- No Autosave-Function
-- No searchability, because of bad pdf-name-schema and pdf format itself
-- Moving template files through the windows filesystem
+At work I'm dealing with mobile devices, whose setup require multiple steps I need to keep track of. This is not just for me but also for quality assurance.
+Working with/in PDFs is tireseome in serveral ways. So I decided to write this small project, which should ease my time setup up the devices.
 
 ## Vision
-The goal of this project is to implement several functions, which will make my work-life a lot easier:
+The goal of this project is to implement several things like:
+
+- Autosave function
 - Searchability by
-  - Name (of the Person)
-  - IMEI (of the device)
-  - Ticket-Number
-  - Device-Type (de. Modell)
+  - full name of a person
+  - IMEI
+  - ticket-Number
+  - device-Type (de. Modell)
 - PDF-creation with a good name-schema  
 
 ## Dependencys
@@ -25,8 +22,8 @@ The goal of this project is to implement several functions, which will make my w
 
 - [x] Building a UI with Golang (templates/html)
 - [x] Add SQLite-Database for saving JSON-Structs
-- [ ] Convert html to pdf
-- [ ] Add styling to home.html
-- [ ] Add styling to checklist.html
+- [x] Convert html to pdf
+- [x] Add styling to home.html
+- [x] Add styling to checklist.html
 - [ ] Optional: Different Checklists for different Jobs
 
