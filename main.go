@@ -7,13 +7,14 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hmaier-dev/checklist-tool/internal/checklist"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
 	"github.com/hmaier-dev/checklist-tool/internal/server"
 
 	"gopkg.in/yaml.v3"
 )
+
 
 //go:embed checklists/*
 var embedFS embed.FS
@@ -37,7 +38,7 @@ func main() {
     log.Fatalf("could not read embedded file: ", err)
   }
 
-	var clDefault []*checklist.ChecklistItem
+	var clDefault []*structs.ChecklistItem
 	err = yaml.Unmarshal(clDefaultFile, &clDefault)
 	if err != nil {
 		fmt.Println("Error parsing YAML:", err)

@@ -3,14 +3,14 @@ package database
 import (
 	"database/sql"
 	"log"
-  "github.com/hmaier-dev/checklist-tool/internal/checklist"
+  "github.com/hmaier-dev/checklist-tool/internal/structs"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var DBfilePath string
 var EmptyChecklist []byte
-var EmptyChecklistItemsArray []*checklist.ChecklistItem
+var EmptyChecklistItemsArray []*structs.ChecklistItem
 
 // Initialize database
 func Init() *sql.DB {
@@ -37,9 +37,9 @@ func Init() *sql.DB {
   return db
 }
 
-func NewEntry(db *sql.DB, form checklist.FormularData){
+func NewEntry(db *sql.DB, form structs.FormularData){
 
-  cl := checklist.ChecklistEntry{
+  cl := structs.ChecklistEntry{
 		IMEI:   form.IMEI ,
 		Name:   form.Name,
 		Ticket: form.Ticket,
@@ -76,10 +76,10 @@ func IMEIalreadyExists(db *sql.DB, imei string)(bool){
  
 }
 
-func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
+func GetDataByIMEI(db *sql.DB, imei string)(*structs.ChecklistEntry, error){
 	query := `SELECT imei, name, ticket, model, yaml FROM checklists WHERE imei = ?`
 	row := db.QueryRow(query, imei)
-	var cl checklist.ChecklistEntry
+	var cl structs.ChecklistEntry
 
 	err := row.Scan(&cl.IMEI, &cl.Name, &cl.Ticket, &cl.Model, &cl.Yaml)
 	if err != nil {
@@ -95,16 +95,16 @@ func GetDataByIMEI(db *sql.DB, imei string)(*checklist.ChecklistEntry, error){
 	return &cl, nil
 }
 
-func GetAllEntrysReversed(db *sql.DB)([]*checklist.ChecklistEntry, error){
+func GetAllEntrysReversed(db *sql.DB)([]*structs.ChecklistEntry, error){
   query := `SELECT imei, name, ticket, model FROM checklists ORDER BY id DESC`
   rows, err := db.Query(query)
   if err != nil {
     log.Fatalf("Error while doing '%s' the database: %s", query, err)
     return nil, err
   }
-  var allEntries []*checklist.ChecklistEntry
+  var allEntries []*structs.ChecklistEntry
   for rows.Next(){
-   var entry checklist.ChecklistEntry
+   var entry structs.ChecklistEntry
     if err := rows.Scan(&entry.IMEI, &entry.Name, &entry.Ticket, &entry.Model); err != nil {
         log.Fatalf("Error scanning row: %s", err)
         return nil, err

@@ -12,7 +12,7 @@ import (
 	"strings"
   "time"
 
-	"github.com/hmaier-dev/checklist-tool/internal/checklist"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/helper"
 
@@ -23,7 +23,7 @@ import (
 )
 
 var EmptyChecklist []byte
-var EmptyChecklistItemsArray []*checklist.ChecklistItem
+var EmptyChecklistItemsArray []*structs.ChecklistItem
 
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
@@ -60,7 +60,7 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
     http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
     return
 	}
-  form := checklist.FormularData{
+  form := structs.FormularData{
     IMEI : r.FormValue("imei"),
     Name: r.FormValue("name"),
     Ticket: r.FormValue("ticket"),
@@ -93,7 +93,7 @@ func Display(w http.ResponseWriter, r *http.Request){
     return
   }
 
-  var items []*checklist.ChecklistItem
+  var items []*structs.ChecklistItem
 	err = yaml.Unmarshal([]byte(data.Yaml), &items)
 	if err != nil {
 		fmt.Println("Error parsing YAML:", err)
@@ -148,7 +148,7 @@ func Display(w http.ResponseWriter, r *http.Request){
 
 // Show the blanko checklist
 func DisplayBlanko(w http.ResponseWriter, r *http.Request){
-  var items []*checklist.ChecklistItem
+  var items []*structs.ChecklistItem
   err := yaml.Unmarshal([]byte(EmptyChecklist), &items)
   if err != nil {
       http.Error(w, "Invalid Yaml", http.StatusInternalServerError)
@@ -198,7 +198,7 @@ func Update(w http.ResponseWriter, r *http.Request){
   }else{
     checked = false
   }
-  alteredItem := checklist.ChecklistItem{
+  alteredItem := structs.ChecklistItem{
     Task: r.Form.Get("task"),
     Checked: checked,
   }
@@ -209,7 +209,7 @@ func Update(w http.ResponseWriter, r *http.Request){
   if err != nil{
     log.Fatalf("error fetching data by imei: %q", err)
   }
-  var oldItems []*checklist.ChecklistItem
+  var oldItems []*structs.ChecklistItem
   err = yaml.Unmarshal([]byte(row.Yaml), &oldItems)
 
   helper.ChangeCheckedStatus(alteredItem, oldItems)
@@ -246,7 +246,7 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		db := database.Init()
 		row, err := database.GetDataByIMEI(db, imei)
 
-		var items []*checklist.ChecklistItem
+		var items []*structs.ChecklistItem
 		err = yaml.Unmarshal([]byte(row.Yaml), &items)
 		
 
