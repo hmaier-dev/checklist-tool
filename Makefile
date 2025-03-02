@@ -3,6 +3,9 @@ go-build:
 	mkdir -p ./bin
 	go build -o bin/checklist-tool main.go
 
+go-run:
+	./bin/checklist-tool -db="sqlite.db"
+
 docker-build:
 	docker build -t checklist-tool .
 
