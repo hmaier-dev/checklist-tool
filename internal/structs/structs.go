@@ -1,4 +1,4 @@
-package checklist
+package structs
 
 // To received data given in the new-formular
 type FormularData struct{
