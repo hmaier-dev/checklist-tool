@@ -4,12 +4,12 @@ import (
   "github.com/hmaier-dev/checklist-tool/internal/structs"
 )
 
-// I use this function to add the IMEI to every ChecklistItem
+// I use this function to add the Path to every ChecklistItem
 // so I can reference it in the template.
 // I know, this is not efficient but it works.
 func AddDataToEveryEntry(toAdd string, clArray []*structs.ChecklistItem ){
   for _, item := range clArray{
-    item.IMEI = toAdd
+    item.Path = toAdd
     if len(item.Children) > 0 {
 			AddDataToEveryEntry(toAdd, item.Children)
 		}

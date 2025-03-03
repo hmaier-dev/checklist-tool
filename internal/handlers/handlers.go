@@ -60,12 +60,18 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
     http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
     return
 	}
+  now := time.Now()
+  curr_date := now.Format("20060102150405")
+  imei := r.FormValue("imei")
+  path := fmt.Sprintf("%s_%s", curr_date, imei)
+
   form := structs.FormularData{
     IMEI : r.FormValue("imei"),
     ITA : r.FormValue("ita"),
     Name: r.FormValue("name"),
     Ticket: r.FormValue("ticket"),
     Model: r.FormValue("model"),
+    Path: path,
   }
 
   db := database.Init()
@@ -73,7 +79,7 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 
   database.NewEntry(db, form)
   
-  redirectTo := fmt.Sprintf("/checklist/%s", form.IMEI)
+  redirectTo := fmt.Sprintf("/checklist/%s", form.Path)
   http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
@@ -82,15 +88,17 @@ func Display(w http.ResponseWriter, r *http.Request){
   id := mux.Vars(r)["id"]
   db := database.Init()
 
-  if database.IMEIalreadyExists(db,id) == false{
+  fmt.Printf("%#v \n", id)
+
+  if database.PathAlreadyExists(db,id) == false{
     http.Redirect(w, r, "/checklist", http.StatusSeeOther)
     return
   }
 
-  data, err := database.GetDataByIMEI(db, id)
+  data, err := database.GetDataByPath(db, id)
   if err != nil {
     http.Error(w, "Database error", http.StatusInternalServerError)
-    log.Println("Database error :", err)
+    log.Println("Database error: ", err)
     return
   }
 
@@ -101,13 +109,7 @@ func Display(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-  helper.AddDataToEveryEntry(data.IMEI, items)
-
-  if err != nil {
-      http.Error(w, "Invalid JSON", http.StatusInternalServerError)
-      log.Println("JSON unmarshal error: ", err)
-      return
-  }
+  helper.AddDataToEveryEntry(data.Path, items)
 
   wd, err := os.Getwd()
   if err != nil{
@@ -130,12 +132,14 @@ func Display(w http.ResponseWriter, r *http.Request){
     Name string
     Ticket  string
     Model string
+    Path string
   }{
     IMEI: data.IMEI,
     ITA: data.ITA,
     Name: data.Name,
     Ticket: data.Ticket, 
     Model: data.Model, 
+    Path: data.Path, 
   }
 
   err = tmpl.Execute(w, map[string]interface{}{
@@ -185,9 +189,7 @@ func DisplayBlanko(w http.ResponseWriter, r *http.Request){
 }
 
 func Update(w http.ResponseWriter, r *http.Request){
-
-  // Parse form
-  imei :=  mux.Vars(r)["id"]
+  path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
@@ -208,9 +210,9 @@ func Update(w http.ResponseWriter, r *http.Request){
   
   // Fetch Row from Database
   db := database.Init()
-  row, err := database.GetDataByIMEI(db, imei)
+  row, err := database.GetDataByPath(db, path)
   if err != nil{
-    log.Fatalf("error fetching data by imei: %q", err)
+    log.Fatalf("error fetching data by path: %q", err)
   }
   var oldItems []*structs.ChecklistItem
   err = yaml.Unmarshal([]byte(row.Yaml), &oldItems)
@@ -223,22 +225,22 @@ func Update(w http.ResponseWriter, r *http.Request){
       return
   }
   // Submit Altered Row to database
-  database.UpdateYamlByIMEI(db, imei, string(yamlBytes))
+  database.UpdateYamlByPath(db, path, string(yamlBytes))
 
 }
 
 // Maybe this function is unnecessary,
 // and I can call GET from the button
 func RedirectToDownload(w http.ResponseWriter, r *http.Request){
-  imei :=  mux.Vars(r)["id"]
+  path :=  mux.Vars(r)["id"]
   // A redirect does not open a new windows with a pdf
   // so I need to do this hacky stuff with js
-	cmd := fmt.Sprintf("<script>window.open('/checklist/download_%s', '_blank');</script>", imei)
+	cmd := fmt.Sprintf("<script>window.open('/checklist/download_%s', '_blank');</script>", path)
   fmt.Fprintf(w, cmd)
 }
 
 func GeneratePDF(w http.ResponseWriter, r *http.Request) {
-		imei :=  mux.Vars(r)["id"]
+		path :=  mux.Vars(r)["id"]
 
 		wd, err := os.Getwd()
 		var static = filepath.Join(wd, "static")
@@ -247,7 +249,7 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		tmpl, err := template.ParseFiles(print_tmpl)
 
 		db := database.Init()
-		row, err := database.GetDataByIMEI(db, imei)
+		row, err := database.GetDataByPath(db, path)
 
 		var items []*structs.ChecklistItem
 		err = yaml.Unmarshal([]byte(row.Yaml), &items)
