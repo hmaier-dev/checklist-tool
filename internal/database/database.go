@@ -24,10 +24,12 @@ func Init() *sql.DB {
 	CREATE TABLE IF NOT EXISTS checklists (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		imei TEXT NOT NULL,
-		name TEXT,
+		ita TEXT, 
+		name TEXT NOT NULL,
 		ticket TEXT,
 		model TEXT,
-		yaml TEXT
+		password TEXT,
+		yaml TEXT,
 	);
 	`
 	_, err = db.Exec(createStmt)
