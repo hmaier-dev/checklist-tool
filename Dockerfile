@@ -24,10 +24,12 @@ FROM debian:bookworm
 # Set working directory
 WORKDIR /root/
 
-COPY --from=builder /app/sqlite.db .
-COPY --from=builder /app/static .
-COPY --from=builder /app/checklist_allgemein.json .
+RUN apt-get update && apt-get install -y wkhtmltopdf
+
+COPY --from=builder /app/static/ ./static/
 COPY --from=builder /app/checklist-tool .
 
 EXPOSE 8080
-CMD /root/checklist-tool -db=/root/sqlite.db -json=/root/checklist_allgemein.json
+
+# You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
+CMD /root/checklist-tool -db=/root/sqlite.db
