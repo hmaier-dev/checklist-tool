@@ -17,15 +17,15 @@ func NewServer() *Server {
   sub := router.PathPrefix("/checklist").Subrouter()
   // GET
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
-  sub.HandleFunc(`/{id:[0-9]{15}}`, handlers.Display).Methods("GET")
-  sub.HandleFunc(`/download_{id:[0-9]{15}}`, handlers.GeneratePDF).Methods("GET")
+  sub.HandleFunc(`/{id:\d{14}_\d{15}}`, handlers.Display).Methods("GET")
+  sub.HandleFunc(`/download_{id:\d{14}_\d{15}}`, handlers.GeneratePDF).Methods("GET")
   
   // POST
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
-  sub.HandleFunc(`/update_{id:[0-9]{15}}`, handlers.Update).Methods("POST")
-  sub.HandleFunc(`/goto_{id:[0-9]{15}}`, handlers.RedirectToDownload).Methods("POST")
+  sub.HandleFunc(`/update_{id:\d{14}_\d{15}}`, handlers.Update).Methods("POST")
+  sub.HandleFunc(`/goto_{id:\d{14}_\d{15}}`, handlers.RedirectToDownload).Methods("POST")
 
-  router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+  router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
 
 
 	return &Server{Router: router}

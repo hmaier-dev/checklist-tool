@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -13,15 +12,18 @@ import (
 	"strings"
   "time"
 
-	"github.com/hmaier-dev/checklist-tool/internal/checklist"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/helper"
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/gorilla/mux"
+
+	"gopkg.in/yaml.v3"
 )
 
-var ChecklistJsonFile string
+var EmptyChecklist []byte
+var EmptyChecklistItemsArray []*structs.ChecklistItem
 
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
@@ -58,11 +60,18 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
     http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
     return
 	}
-  form := checklist.FormularData{
+  now := time.Now()
+  curr_date := now.Format("20060102150405")
+  imei := r.FormValue("imei")
+  path := fmt.Sprintf("%s_%s", curr_date, imei)
+
+  form := structs.FormularData{
     IMEI : r.FormValue("imei"),
+    ITA : r.FormValue("ita"),
     Name: r.FormValue("name"),
     Ticket: r.FormValue("ticket"),
     Model: r.FormValue("model"),
+    Path: path,
   }
 
   db := database.Init()
@@ -70,7 +79,7 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 
   database.NewEntry(db, form)
   
-  redirectTo := fmt.Sprintf("/checklist/%s", form.IMEI)
+  redirectTo := fmt.Sprintf("/checklist/%s", form.Path)
   http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
@@ -79,28 +88,26 @@ func Display(w http.ResponseWriter, r *http.Request){
   id := mux.Vars(r)["id"]
   db := database.Init()
 
-  if database.IMEIalreadyExists(db,id) == false{
+  if database.PathAlreadyExists(db,id) == false{
     http.Redirect(w, r, "/checklist", http.StatusSeeOther)
     return
   }
 
-  data, err := database.GetDataByIMEI(db, id)
+  data, err := database.GetDataByPath(db, id)
   if err != nil {
     http.Error(w, "Database error", http.StatusInternalServerError)
-    log.Println("Database error :", err)
+    log.Println("Database error: ", err)
     return
   }
 
-  var items []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(data.Json), &items)
+  var items []*structs.ChecklistItem
+	err = yaml.Unmarshal([]byte(data.Yaml), &items)
+	if err != nil {
+		fmt.Println("Error parsing YAML:", err)
+		return
+	}
 
-  helper.AddDataToEveryEntry(data.IMEI, items)
-
-  if err != nil {
-      http.Error(w, "Invalid JSON", http.StatusInternalServerError)
-      log.Println("JSON unmarshal error: ", err)
-      return
-  }
+  helper.AddDataToEveryEntry(data.Path, items)
 
   wd, err := os.Getwd()
   if err != nil{
@@ -119,14 +126,18 @@ func Display(w http.ResponseWriter, r *http.Request){
 
   info := struct{
     IMEI string
+    ITA string
     Name string
     Ticket  string
     Model string
+    Path string
   }{
     IMEI: data.IMEI,
+    ITA: data.ITA,
     Name: data.Name,
     Ticket: data.Ticket, 
     Model: data.Model, 
+    Path: data.Path, 
   }
 
   err = tmpl.Execute(w, map[string]interface{}{
@@ -140,21 +151,13 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 }
 
-
-
+// Show the blanko checklist
 func DisplayBlanko(w http.ResponseWriter, r *http.Request){
-  filename := ChecklistJsonFile
-  blankoChecklist, err := os.ReadFile(filename)
+  var items []*structs.ChecklistItem
+  err := yaml.Unmarshal([]byte(EmptyChecklist), &items)
   if err != nil {
-		log.Fatal("Problem reading the empty json:", err)
-  }
-
-  var items []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(blankoChecklist), &items)
-
-  if err != nil {
-      http.Error(w, "Invalid JSON", http.StatusInternalServerError)
-      log.Println("JSON unmarshal error: ", err)
+      http.Error(w, "Invalid Yaml", http.StatusInternalServerError)
+      log.Println("Yaml unmarshal error: ", err)
       return
   }
 
@@ -184,9 +187,7 @@ func DisplayBlanko(w http.ResponseWriter, r *http.Request){
 }
 
 func Update(w http.ResponseWriter, r *http.Request){
-
-  // Parse form
-  imei :=  mux.Vars(r)["id"]
+  path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
@@ -200,44 +201,44 @@ func Update(w http.ResponseWriter, r *http.Request){
   }else{
     checked = false
   }
-  alteredItem := checklist.ChecklistItem{
+  alteredItem := structs.ChecklistItem{
     Task: r.Form.Get("task"),
     Checked: checked,
   }
   
   // Fetch Row from Database
   db := database.Init()
-  row, err := database.GetDataByIMEI(db, imei)
+  row, err := database.GetDataByPath(db, path)
   if err != nil{
-    log.Fatalf("error fetching data by imei: %q", err)
+    log.Fatalf("error fetching data by path: %q", err)
   }
-  var oldItems []*checklist.ChecklistItem
-  err = json.Unmarshal([]byte(row.Json), &oldItems)
+  var oldItems []*structs.ChecklistItem
+  err = yaml.Unmarshal([]byte(row.Yaml), &oldItems)
 
   helper.ChangeCheckedStatus(alteredItem, oldItems)
 
-  jsonBytes, err := json.Marshal(oldItems)
+  yamlBytes, err := yaml.Marshal(oldItems)
   if err != nil {
-      log.Println("Error marshaling JSON:", err)
+      log.Println("Error marshaling Yaml: ", err)
       return
   }
   // Submit Altered Row to database
-  database.UpdateJsonByIMEI(db, imei, string(jsonBytes))
+  database.UpdateYamlByPath(db, path, string(yamlBytes))
 
 }
 
 // Maybe this function is unnecessary,
 // and I can call GET from the button
 func RedirectToDownload(w http.ResponseWriter, r *http.Request){
-  imei :=  mux.Vars(r)["id"]
+  path :=  mux.Vars(r)["id"]
   // A redirect does not open a new windows with a pdf
   // so I need to do this hacky stuff with js
-	cmd := fmt.Sprintf("<script>window.open('/checklist/download_%s', '_blank');</script>", imei)
+	cmd := fmt.Sprintf("<script>window.open('/checklist/download_%s', '_blank');</script>", path)
   fmt.Fprintf(w, cmd)
 }
 
 func GeneratePDF(w http.ResponseWriter, r *http.Request) {
-		imei :=  mux.Vars(r)["id"]
+		path :=  mux.Vars(r)["id"]
 
 		wd, err := os.Getwd()
 		var static = filepath.Join(wd, "static")
@@ -246,20 +247,21 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		tmpl, err := template.ParseFiles(print_tmpl)
 
 		db := database.Init()
-		row, err := database.GetDataByIMEI(db, imei)
+		row, err := database.GetDataByPath(db, path)
 
-		var items []*checklist.ChecklistItem
-		err = json.Unmarshal([]byte(row.Json), &items)
-		
+		var items []*structs.ChecklistItem
+		err = yaml.Unmarshal([]byte(row.Yaml), &items)
 
 		// What is this??? can't I just give row to Info??
 		info := struct{
 			IMEI string
+			ITA string
 			Name string
 			Ticket  string
 			Model string
 		}{
 			IMEI: row.IMEI,
+			ITA: row.ITA,
 			Name: row.Name,
 			Ticket: row.Ticket, 
 			Model: row.Model, 
@@ -305,7 +307,12 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		}
 		fDate := now.Format("20060102")
 		parts := strings.Fields(info.Name)
-		pdfName := fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.IMEI)
+    var pdfName string 
+    if len(parts) > 1 {
+      pdfName = fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.IMEI)
+    }else{
+      pdfName = fmt.Sprintf("%s_%s_%s_%s.pdf",fDate,parts[0],info.Model,info.IMEI)
+    }
 
 		err = pdfg.WriteFile(pdfName)
 		if err != nil {
