@@ -62,6 +62,7 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 	}
   form := structs.FormularData{
     IMEI : r.FormValue("imei"),
+    ITA : r.FormValue("ita"),
     Name: r.FormValue("name"),
     Ticket: r.FormValue("ticket"),
     Model: r.FormValue("model"),
@@ -125,11 +126,13 @@ func Display(w http.ResponseWriter, r *http.Request){
 
   info := struct{
     IMEI string
+    ITA string
     Name string
     Ticket  string
     Model string
   }{
     IMEI: data.IMEI,
+    ITA: data.ITA,
     Name: data.Name,
     Ticket: data.Ticket, 
     Model: data.Model, 
@@ -248,16 +251,17 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 
 		var items []*structs.ChecklistItem
 		err = yaml.Unmarshal([]byte(row.Yaml), &items)
-		
 
 		// What is this??? can't I just give row to Info??
 		info := struct{
 			IMEI string
+			ITA string
 			Name string
 			Ticket  string
 			Model string
 		}{
 			IMEI: row.IMEI,
+			ITA: row.ITA,
 			Name: row.Name,
 			Ticket: row.Ticket, 
 			Model: row.Model, 
