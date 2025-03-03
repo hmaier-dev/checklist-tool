@@ -93,6 +93,6 @@
       checked: false
     - task: "Gerät inventarisieren"
       checked: false
-- task: "Dieses Dokument ablegen unter O:\\Organisation\\IT\\Workplace\\02_Dokumentation\\27_Laufzettel MDM"
+- task: "Dieses Dokument ablegen unter O:/Organisation/IT/Workplace/02_Dokumentation/27_Laufzettel MDM"
   checked: false
 
