@@ -25,7 +25,7 @@ func NewServer() *Server {
   sub.HandleFunc(`/update_{id:[0-9]{15}}`, handlers.Update).Methods("POST")
   sub.HandleFunc(`/goto_{id:[0-9]{15}}`, handlers.RedirectToDownload).Methods("POST")
 
-  router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+  router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
 
 
 	return &Server{Router: router}
