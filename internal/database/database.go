@@ -28,7 +28,7 @@ func Init() *sql.DB {
 		name TEXT NOT NULL,
 		ticket TEXT,
 		model TEXT,
-		path TEXT NOT NULL UNIQUE,
+		path TEXT NOT NULL UNIQUE CHECK (length(path) == 30),
 		yaml TEXT
 	);
 	`
