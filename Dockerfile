@@ -32,4 +32,4 @@ COPY --from=builder /app/checklist-tool .
 EXPOSE 8080
 
 # You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
-CMD /root/checklist-tool -db=/root/sqlite.db
+ENTRYPOINT ["./checklist-tool", "-db=sqlite.db"]
