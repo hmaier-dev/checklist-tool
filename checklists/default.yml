@@ -11,10 +11,10 @@
       checked: false
     - task: "Custom Fields ausfüllen (KCC-Enrollment Token, Standort (Meldestelle), Gerätekennwort (6-stelliger PIN), Inventarnummer)"
       checked: false
-- task: "Gerät installieren"
+- task: "Basis Installation des Geräts wurde durchgeführt"
   checked: false
   children:
-    - task: "Bestätigen von Knox Richtlinien"
+    - task: "Knox Richtlinien bestätigen"
       checked: false
     - task: "MDM Accessibility aktivieren"
       checked: false
@@ -24,60 +24,48 @@
       checked: false
     - task: "Datum und Uhrzeit einstellen"
       checked: false
-- task: "Alle Applikationen öffnen und Freigaben bestätigen"
+- task: "Folgende Anwendungen sind installiert, konfiguriert und ausführbar:"
   checked: false
   children:
-    - task: "Diloc einrichten (TF/KB Tablet)"
+    - task: "DiLoc (TF/KB Tablet)"
       checked: false
-    - task: "Inline FAS Einrichten und freigeben (TF Handy)"
+    - task: "Inline Info (KB Tablet)"
       checked: false
-    - task: "Inline Info Einrichten und freigeben (KB Tablet)"
+    - task: "Inline FAS (TF Handy)"
       checked: false
-    - task: "Adobe Werbung wegklicken"
+    - task: "IVU (Tablet und Handy)"
       checked: false
-    - task: "Teamviewer Quicksupport Remote-Control-Feature aktivieren"
+    - task: "Adobe Acrobat"
       checked: false
-    - task: "KNOX E-FOTA bereitstellen und ausführen"
+    - task: "Teamviewer Quicksupport"
       checked: false
-- task: "IMEI an KNOX E-FOTA Experten übergeben und auf Rückmeldung warten"
+    - task: "KNOX E-FOTA"
+      checked: false
+    - task: "E-Mails/Adressbuch (Exchange-Konto)"
+      checked: false
+- task: "IMEI wurde an KNOX E-FOTA Experten übergeben (IMEI, Job, Modell)."
   checked: false
-- task: "Wenn möglich: Exchange-Konto Konfiguration abschließen"
+- task: "Rufnummer wurde im Vodafone-Portal überprüft und im datomo als SIM-Karte angelegt."
   checked: false
-- task: "Überprüfung SIM-Karte im Vodafone-Portal (via Rufnummer)"
+- task: "Rufnummer wurde dem CDA/CDA5 hinzugefügt."
   checked: false
-  children:
-    - task: "Rufnummer des Nutzers suchen"
-      checked: false
-      children:
-        - task: "Altes System Plugin? Blanko-Karte im MDM anlegen"
-          checked: false
-        - task: "Neues System Plugin? Blanko-Karte im MDM anlegen"
-          checked: false
-        - task: "Altes System Triple? Karte aus dem System übernehmen"
-          checked: false
-        - task: "Neues System Triple? Übertragen ins Gerät"
-          checked: false
-- task: "SIM-Karte in Datomo anlegen und dem Gerät zuweisen"
+- task: "SIM-Karte wurde durch einlegen ins Gerät getestet."
   checked: false
   children:
-    - task: "Bei Tablets überprüfen, ob Ultracard bereits vorhanden ist"
+    - task: "Nicht möglich, da SIM-Tausch."
       checked: false
-    - task: "Handys/Tablets im cda-Portal auf cda/cda5 überprüfen"
-      checked: false
-    - task: "Bei neuen Nutzern, Nummer im AD hinterlegen"
-      checked: false
-- task: "Gerät reinigen und verpacken"
+- task: "Gerät wurde gereinigt und mit folgenden Gegenständen verpackt:"
   checked: false
   children:
-    - task: "Ladegeräte beilegen"
+    - task: "Ladegerät"
       checked: false
-    - task: "SIM-Karten-Nadel beilegen"
+    - task: "SIM-Karten-Nadel"
       checked: false
-    - task: "Ausgabe-/und Rückgabeprotokoll ausdrucken und beilegen (im datomo ausdrucken)"
+    - task: "SIM-Karte (bei SIM-Tausch)"
       checked: false
-    - task: "SIM-Karten einlegen oder beilegen"
+    - task: "Ausgabe-/und Rückgabeprotokoll"
       checked: false
-    - task: "SIM-Karten-Zettel bereitlegen"
+    - task: "SIM-Karten-Info-Zettel"
       checked: false
       children:
         - task: "Bei neuer Triple-SIM => Aktivierungszettel"
