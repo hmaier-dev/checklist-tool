@@ -49,6 +49,8 @@
   checked: false
 - task: "Rufnummer wurde dem CDA/CDA5 hinzugefügt."
   checked: false
+- task: "CDA-Zugangspunkt wurde mithilfe der Richtlinie ausgerollt und auf dem Gerät geprüft."
+  checked: false
 - task: "SIM-Karte wurde durch einlegen ins Gerät getestet."
   checked: false
   children:
