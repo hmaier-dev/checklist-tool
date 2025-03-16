@@ -19,17 +19,16 @@ RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.0
 
 RUN tailwindcss -i ./static/base.css -o ./static/style.css
 
-FROM debian:bookworm
+FROM debian:bookworm AS runner
 
-# Set working directory
 WORKDIR /root/
-
-RUN apt-get update && apt-get install -y wkhtmltopdf
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wkhtmltopdf && \
+    rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
+    apt-get clean
 
 COPY --from=builder /app/static/ ./static/
 COPY --from=builder /app/checklist-tool .
-
 EXPOSE 8080
-
 # You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
 ENTRYPOINT ["./checklist-tool", "-db=sqlite.db"]
