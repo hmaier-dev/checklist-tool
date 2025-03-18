@@ -338,3 +338,42 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
     }
     os.Remove(pdfName)
 }
+
+// Displays a page where existing database
+// entrys can be altered
+func DisplayAlter(w http.ResponseWriter, r *http.Request){
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var static = filepath.Join(wd, "static")
+	var new_tmpl = filepath.Join(static, "alter.html")
+
+  tmpl, err := template.ParseFiles(new_tmpl)
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("error parsing home template: ", err)
+  }
+
+  db := database.Init()
+  data, err := database.GetAllEntrysReversed(db)
+
+  err = tmpl.Execute(w, map[string]any{
+    "Entries" : data,
+  })
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
+}
+
+// Handle a POST-Request to a path
+func DeleteEntry(w http.ResponseWriter, r *http.Request){
+  path :=  mux.Vars(r)["id"]
+  db := database.Init()
+  defer db.Close() // Make sure to close the database when done
+  database.DeleteEntryByPath(db, path)
+  http.Redirect(w, r, "/checklist/alter", http.StatusSeeOther)
+}
+

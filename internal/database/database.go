@@ -123,3 +123,9 @@ func UpdateYamlByPath(db *sql.DB, path string, yamlData string) {
 	}
 
 }
+func DeleteEntryByPath(db *sql.DB, path string) {
+	_, err := db.Exec("DELETE FROM checklists WHERE path = ?", path)
+	if err != nil {
+		log.Fatal("Error updating database:", err)
+	}
+}
