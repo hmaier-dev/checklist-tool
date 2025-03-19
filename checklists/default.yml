@@ -29,6 +29,9 @@
   children:
     - task: "DiLoc (TF/KB Tablet)"
       checked: false
+      children:
+        - task: Synchronisation angestoßen
+          checked: false
     - task: "Inline Info (KB Tablet)"
       checked: false
     - task: "Inline FAS (TF Handy)"
