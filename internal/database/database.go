@@ -129,3 +129,10 @@ func DeleteEntryByPath(db *sql.DB, path string) {
 		log.Fatal("Error updating database:", err)
 	}
 }
+
+func ResetChecklistEntryByPath(db *sql.DB, path string) {
+	_, err := db.Exec("UPDATE checklists SET yaml = ? WHERE path = ?", string(EmptyChecklist) , path)
+	if err != nil {
+		log.Fatal("Error updating database:", err)
+	}
+}
