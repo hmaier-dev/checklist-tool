@@ -1,28 +1,28 @@
-- task: "Gerät in KME-Portal prüfen (ggf. Tag hinzufügen, z.B.: Mitte, STS)"
+- task: "Gerät wurde im KME-Portal überprüft (ggf. Tag hinzufügen, z.B.: Mitte, STS)"
   checked: false
-- task: "Gerät inventarisieren (Inventar-Nummer ankleben)"
+- task: "Gerät wurde inventarisiert (Inventar-Nummer ankleben)."
   checked: false
-- task: "Gerät in Datomo anlegen"
+- task: "Gerät wurde im datomo anlegen."
   checked: false
   children:
-    - task: "IMEI und User eintragen"
+    - task: "IMEI und User eintragen."
       checked: false
     - task: "Beschreibung eintragen, z.B.: TF Mitte Halle"
       checked: false
-    - task: "Custom Fields ausfüllen (KCC-Enrollment Token, Standort (Meldestelle), Gerätekennwort (6-stelliger PIN), Inventarnummer)"
+    - task: "Custom Fields wurden ausgefüllt (KCC-Enrollment Token, Standort (Meldestelle), Gerätekennwort (6-stelliger PIN), Inventarnummer)"
       checked: false
 - task: "Basis Installation des Geräts wurde durchgeführt"
   checked: false
   children:
     - task: "Knox Richtlinien bestätigen"
       checked: false
-    - task: "MDM Accessibility aktivieren"
+    - task: "MDM Accessibility aktivieren."
       checked: false
-    - task: "Zufällige 6-stellige PIN aus dem Custom Field entnehmen und eintragen"
+    - task: "Zufällige 6-stellige PIN aus dem Custom Field entnehmen und eintragen."
       checked: false
-    - task: "Bildschirm-Timeout einstellen (auf Maximum)"
+    - task: "Bildschirm-Timeout einstellen (auf Maximum)."
       checked: false
-    - task: "Datum und Uhrzeit einstellen"
+    - task: "Datum und Uhrzeit einstellen."
       checked: false
 - task: "Folgende Anwendungen sind installiert, konfiguriert und ausführbar:"
   checked: false
@@ -86,6 +86,3 @@
       checked: false
     - task: "Gerät inventarisieren"
       checked: false
-- task: "Dieses Dokument ablegen unter O:/Organisation/IT/Workplace/02_Dokumentation/27_Laufzettel MDM"
-  checked: false
-
