@@ -377,3 +377,39 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request){
   http.Redirect(w, r, "/checklist/alter", http.StatusSeeOther)
 }
 
+func DisplayReset(w http.ResponseWriter, r *http.Request){
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var static = filepath.Join(wd, "static")
+	var new_tmpl = filepath.Join(static, "reset.html")
+
+  tmpl, err := template.ParseFiles(new_tmpl)
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("error parsing home template: ", err)
+  }
+
+  db := database.Init()
+  data, err := database.GetAllEntrysReversed(db)
+
+  err = tmpl.Execute(w, map[string]any{
+    "Entries" : data,
+  })
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
+
+}
+
+// Handle POST-Request for resetting a checklist
+func ResetChecklistForEntry(w http.ResponseWriter, r *http.Request){
+  path :=  mux.Vars(r)["id"]
+  db := database.Init()
+  defer db.Close() // Make sure to close the database when done
+  database.ResetChecklistEntryByPath(db, path)
+  http.Redirect(w, r, "/checklist/reset", http.StatusSeeOther)
+}
