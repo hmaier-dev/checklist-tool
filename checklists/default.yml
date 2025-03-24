@@ -48,6 +48,9 @@
       checked: false
 - task: "IMEI wurde an KNOX E-FOTA Experten übergeben (IMEI, Job, Modell)."
   checked: false
+  children:
+    - task: "Gerät ist schon Mitglied einer Kampagne."
+      checked: false
 - task: "Rufnummer wurde im Vodafone-Portal überprüft und im datomo als SIM-Karte angelegt."
   checked: false
 - task: "Rufnummer wurde dem CDA/CDA5 hinzugefügt."
