@@ -7,7 +7,7 @@ go-run:
 	./bin/checklist-tool -db="sqlite.db"
 
 docker-build:
-	docker build -t checklist-tool .
+	docker build . -t ghcr.io/hmaier-dev/checklist-tool:latest
 
 docker-run:
 	docker run -d  --name checklist-tool -v /opt/checklist-tool/sqlite.db:/root/sqlite.db -p 8181:8080 checklist-tool:latest
