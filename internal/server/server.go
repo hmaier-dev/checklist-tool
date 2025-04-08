@@ -17,7 +17,7 @@ func NewServer() *Server {
   sub := router.PathPrefix("/checklist").Subrouter()
   // GET
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
-  sub.HandleFunc("/alter", handlers.DisplayAlter).Methods("Get")
+  sub.HandleFunc("/delete", handlers.DisplayDelete).Methods("Get")
   sub.HandleFunc("/reset", handlers.DisplayReset).Methods("Get")
   sub.HandleFunc(`/{id:\d{14}_\d{15}}`, handlers.Display).Methods("GET")
   sub.HandleFunc(`/download_{id:\d{14}_\d{15}}`, handlers.GeneratePDF).Methods("GET")

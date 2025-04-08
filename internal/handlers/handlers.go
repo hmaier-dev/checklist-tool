@@ -341,7 +341,7 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 
 // Displays a page where existing database
 // entrys can be altered
-func DisplayAlter(w http.ResponseWriter, r *http.Request){
+func DisplayDelete(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
@@ -374,7 +374,7 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request){
   db := database.Init()
   defer db.Close() // Make sure to close the database when done
   database.DeleteEntryByPath(db, path)
-  http.Redirect(w, r, "/checklist/alter", http.StatusSeeOther)
+  http.Redirect(w, r, "/checklist/delete", http.StatusSeeOther)
 }
 
 func DisplayReset(w http.ResponseWriter, r *http.Request){
