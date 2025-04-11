@@ -79,8 +79,7 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 
   database.NewEntry(db, form)
   
-  redirectTo := fmt.Sprintf("/checklist/%s", form.Path)
-  http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+  http.Redirect(w, r, "/checklist", http.StatusSeeOther)
 }
 
 // Based on the IMEI a fitting db-entry will get loaded
