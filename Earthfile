@@ -20,6 +20,7 @@ build:
 
 run:
   FROM debian:bookworm
+  ARG tag
   WORKDIR /root
   COPY +build/static /root/static/
   COPY +build/checklist-tool .
@@ -30,5 +31,5 @@ run:
   EXPOSE 8080
   # You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
   ENTRYPOINT ["./checklist-tool", "-db=sqlite.db"]
-  SAVE IMAGE ghcr.io/hmaier-dev/checklist-tool/checklist-tool
+  SAVE IMAGE ghcr.io/hmaier-dev/checklist-tool:$tag
 
