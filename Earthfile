@@ -13,7 +13,7 @@ build:
   COPY go.mod go.sum ./
   RUN go mod download
   COPY . .
-  RUN go build -o checklist-tool main.go
+  RUN GOOS=linux go build -o checklist-tool main.go
   RUN tailwindcss -i ./static/base.css -o ./static/style.css
   SAVE ARTIFACT ./checklist-tool AS LOCAL ./bin/checklist-tool
   SAVE ARTIFACT ./static
@@ -29,7 +29,7 @@ run:
       rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
       apt-get clean
   EXPOSE 8080
-  # You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'
+  RUN echo "You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'"
   ENTRYPOINT ["./checklist-tool", "-db=sqlite.db"]
   SAVE IMAGE ghcr.io/hmaier-dev/checklist-tool:$tag
 
