@@ -10,9 +10,9 @@ tailwindcss:
 build:
   FROM golang:1.24
   COPY +tailwindcss/tailwindcss /usr/local/bin/tailwindcss
-  COPY go.mod go.sum ./
+  COPY go.mod go.sum *.go internal/ ./
+  COPY --dir internal/ checklists/ static/ ./
   RUN go mod download
-  COPY . .
   RUN GOOS=linux go build -o checklist-tool main.go
   RUN tailwindcss -i ./static/base.css -o ./static/style.css
   SAVE ARTIFACT ./checklist-tool AS LOCAL ./bin/checklist-tool
