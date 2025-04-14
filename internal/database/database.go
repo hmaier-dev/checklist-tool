@@ -21,7 +21,7 @@ func Init() *sql.DB {
 
 	// Create the devices table if it doesn't exist
 	createStmt := `
-	CREATE TABLE IF NOT EXISTS checklists (
+	CREATE TABLE IF NOT EXISTS entries (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		imei TEXT NOT NULL,
 		ita TEXT, 
@@ -29,6 +29,11 @@ func Init() *sql.DB {
 		ticket TEXT,
 		model TEXT,
 		path TEXT NOT NULL UNIQUE CHECK (length(path) == 30),
+		yaml TEXT
+	);
+	CREATE TABLE IF NOT EXISTS templates (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
 		yaml TEXT
 	);
 	`
@@ -56,7 +61,7 @@ func NewEntry(db *sql.DB, form structs.FormularData) {
 	}
 
 	// Prepare the INSERT statement
-	insertStmt := `INSERT INTO checklists (imei, ita, name, ticket, model, path, yaml) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	insertStmt := `INSERT INTO entries (imei, ita, name, ticket, model, path, yaml) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	_, err := db.Exec(insertStmt, cl.IMEI, cl.ITA, cl.Name, cl.Ticket, cl.Model, cl.Path, cl.Yaml)
 	if err != nil {
 		log.Fatal("Failed to insert entry: ", err)
@@ -66,7 +71,7 @@ func NewEntry(db *sql.DB, form structs.FormularData) {
 
 func PathAlreadyExists(db *sql.DB, imei string) bool {
 	var exists int
-	query := `SELECT COUNT(*) FROM checklists WHERE path = ?`
+	query := `SELECT COUNT(*) FROM entries WHERE path = ?`
 	err := db.QueryRow(query, imei).Scan(&exists)
 	if err != nil {
 		log.Fatal("Failed to check if Path exists: ", err)
@@ -80,7 +85,7 @@ func PathAlreadyExists(db *sql.DB, imei string) bool {
 }
 
 func GetDataByPath(db *sql.DB, path string) (*structs.ChecklistEntry, error) {
-	query := `SELECT imei, ita, name, ticket, model, path, yaml FROM checklists WHERE path = ?`
+	query := `SELECT imei, ita, name, ticket, model, path, yaml FROM entries WHERE path = ?`
 	row := db.QueryRow(query, path)
 	var cl structs.ChecklistEntry
 
@@ -98,7 +103,7 @@ func GetDataByPath(db *sql.DB, path string) (*structs.ChecklistEntry, error) {
 }
 
 func GetAllEntrysReversed(db *sql.DB) ([]*structs.ChecklistEntry, error) {
-	query := `SELECT imei, ita, name, ticket, model, path FROM checklists ORDER BY id DESC`
+	query := `SELECT imei, ita, name, ticket, model, path FROM entries ORDER BY id DESC`
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatalf("Error while doing '%s' the database: %s", query, err)
@@ -117,21 +122,21 @@ func GetAllEntrysReversed(db *sql.DB) ([]*structs.ChecklistEntry, error) {
 }
 
 func UpdateYamlByPath(db *sql.DB, path string, yamlData string) {
-	_, err := db.Exec("UPDATE checklists SET yaml = ? WHERE path = ?", yamlData, path)
+	_, err := db.Exec("UPDATE entries SET yaml = ? WHERE path = ?", yamlData, path)
 	if err != nil {
 		log.Fatal("Error updating database:", err)
 	}
 
 }
 func DeleteEntryByPath(db *sql.DB, path string) {
-	_, err := db.Exec("DELETE FROM checklists WHERE path = ?", path)
+	_, err := db.Exec("DELETE FROM entries WHERE path = ?", path)
 	if err != nil {
 		log.Fatal("Error updating database:", err)
 	}
 }
 
 func ResetChecklistEntryByPath(db *sql.DB, path string) {
-	_, err := db.Exec("UPDATE checklists SET yaml = ? WHERE path = ?", string(EmptyChecklist) , path)
+	_, err := db.Exec("UPDATE entries SET yaml = ? WHERE path = ?", string(EmptyChecklist) , path)
 	if err != nil {
 		log.Fatal("Error updating database:", err)
 	}
