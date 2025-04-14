@@ -24,8 +24,8 @@ run:
   WORKDIR /root
   COPY +build/static /root/static/
   COPY +build/checklist-tool .
-  RUN apt-get update && apt-get install -y --no-install-recommends \
-      wkhtmltopdf && \
+  RUN apt-get update > /dev/null && apt-get install -y --no-install-recommends \
+      wkhtmltopdf > /dev/null && \
       rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
       apt-get clean
   EXPOSE 8080
