@@ -34,8 +34,9 @@ func Home(w http.ResponseWriter, r *http.Request){
   }
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "home.html")
+	var nav_tmpl = filepath.Join(static, "nav.html")
 
-  tmpl, err := template.ParseFiles(new_tmpl)
+  tmpl, err := template.ParseFiles(new_tmpl, nav_tmpl)
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
