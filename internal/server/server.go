@@ -3,6 +3,7 @@ package server
 import (
   "github.com/gorilla/mux"
   "github.com/hmaier-dev/checklist-tool/internal/handlers"
+  "github.com/hmaier-dev/checklist-tool/internal/structs"
   "net/http"
 )
 
@@ -10,6 +11,8 @@ import (
 type Server struct {
 	Router *mux.Router
 }
+
+var NavList []*structs.NavItem
 
 func NewServer() *Server {
 	router := mux.NewRouter()
@@ -30,7 +33,18 @@ func NewServer() *Server {
   sub.HandleFunc(`/reset_{id:\d{14}_\d{15}}`, handlers.ResetChecklistForEntry).Methods("POST")
 
   router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
-
+	
+	IndexRoute(router)
 
 	return &Server{Router: router}
+}
+
+// Populates the NavList
+func IndexRoute(router *mux.Router){
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+    met, err := route.GetMethods()
+    fmt.Println(met)
+    return nil
+	})
+
 }
