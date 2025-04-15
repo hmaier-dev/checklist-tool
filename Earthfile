@@ -19,15 +19,11 @@ build:
   SAVE ARTIFACT ./static
 
 run:
-  FROM debian:bookworm
+  FROM ghcr.io/hmaier-dev/docker-wkhtmltopdf:v0.1
   ARG tag
   WORKDIR /root
   COPY +build/static /root/static/
   COPY +build/checklist-tool .
-  RUN apt-get update > /dev/null && apt-get install -y --no-install-recommends \
-      wkhtmltopdf > /dev/null && \
-      rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
-      apt-get clean
   EXPOSE 8080
   RUN echo "You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'"
   ENTRYPOINT ["./checklist-tool", "-db=sqlite.db"]
