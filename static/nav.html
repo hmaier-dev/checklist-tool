@@ -1,0 +1,6 @@
+{{ define "nav.html" }}
+<nav class="flex">
+  {{ range .Nav }}
+  <a href="{{ .BaseURL }}">{{ .Name }}</a>
+</nav>
+{{ end }}
