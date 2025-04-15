@@ -1,18 +1,19 @@
 package server
 
 import (
-  "github.com/gorilla/mux"
-  "github.com/hmaier-dev/checklist-tool/internal/handlers"
-  "github.com/hmaier-dev/checklist-tool/internal/structs"
-  "net/http"
+	"net/http"
+	"regexp"
+	"log"
+
+	"github.com/gorilla/mux"
+	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 )
 
 
 type Server struct {
 	Router *mux.Router
 }
-
-var NavList []*structs.NavItem
 
 func NewServer() *Server {
 	router := mux.NewRouter()
@@ -42,8 +43,25 @@ func NewServer() *Server {
 // Populates the NavList
 func IndexRoute(router *mux.Router){
 	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-    met, err := route.GetMethods()
-    fmt.Println(met)
+		path, _ := route.GetPathTemplate()
+    method, _ := route.GetMethods()
+		
+		// Exclude routes which do not display anything
+		r, err := regexp.Compile("id")
+		if err != nil {
+			log.Println("Error compiling regex:", err)
+			return err
+		}
+		match := r.MatchString(path)
+
+		if len(method) > 0 && method[0] == "GET" && match != true{
+			entry := structs.NavItem{
+				Name: path,
+				Path: path,
+			}
+			handlers.NavList = append(handlers.NavList, entry)
+
+		}
     return nil
 	})
 
