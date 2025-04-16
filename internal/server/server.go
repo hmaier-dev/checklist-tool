@@ -20,11 +20,11 @@ func NewServer() *Server {
 	router.HandleFunc("/checklist", handlers.Home).Methods("GET")
   sub := router.PathPrefix("/checklist").Subrouter()
   // GET
-  sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
   sub.HandleFunc("/delete", handlers.DisplayDelete).Methods("Get")
   sub.HandleFunc("/reset", handlers.DisplayReset).Methods("Get")
   sub.HandleFunc(`/{id:\d{14}_\d{15}}`, handlers.Display).Methods("GET")
   sub.HandleFunc(`/download_{id:\d{14}_\d{15}}`, handlers.GeneratePDF).Methods("GET")
+  sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
   
   // POST
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")

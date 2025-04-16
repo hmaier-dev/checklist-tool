@@ -43,8 +43,6 @@ func Home(w http.ResponseWriter, r *http.Request){
   db := database.Init()
   data, err := database.GetAllEntrysReversed(db)
 
-	fmt.Printf("%#v\n", NavList)
-
   err = tmpl.Execute(w, map[string]interface{}{
     "Entries" : data,
 		"Nav": NavList,
@@ -348,8 +346,9 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
   }
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "alter.html")
+	var nav_tmpl = filepath.Join(static, "nav.html")
 
-  tmpl, err := template.ParseFiles(new_tmpl)
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -361,6 +360,7 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
 
   err = tmpl.Execute(w, map[string]any{
     "Entries" : data,
+    "Nav" : NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -385,7 +385,9 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "reset.html")
 
-  tmpl, err := template.ParseFiles(new_tmpl)
+	var nav_tmpl = filepath.Join(static, "nav.html")
+
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -397,6 +399,7 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
 
   err = tmpl.Execute(w, map[string]any{
     "Entries" : data,
+		"Nav": NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
