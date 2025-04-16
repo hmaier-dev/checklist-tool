@@ -28,3 +28,8 @@ type ChecklistItem struct {
 	Children []*ChecklistItem `yaml:"children,omitempty"`
 	Path     string           `yaml:"Path"`
 }
+
+type NavItem struct {
+	Name string
+	Path string
+}

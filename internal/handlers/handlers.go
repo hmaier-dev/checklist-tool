@@ -25,6 +25,8 @@ import (
 var EmptyChecklist []byte
 var EmptyChecklistItemsArray []*structs.ChecklistItem
 
+var NavList []structs.NavItem
+
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
 func Home(w http.ResponseWriter, r *http.Request){
@@ -34,19 +36,16 @@ func Home(w http.ResponseWriter, r *http.Request){
   }
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "home.html")
+	var nav_tmpl = filepath.Join(static, "nav.html")
 
-  tmpl, err := template.ParseFiles(new_tmpl)
-
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing home template: ", err)
-  }
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
   db := database.Init()
   data, err := database.GetAllEntrysReversed(db)
 
   err = tmpl.Execute(w, map[string]interface{}{
     "Entries" : data,
+		"Nav": NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -347,8 +346,9 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
   }
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "alter.html")
+	var nav_tmpl = filepath.Join(static, "nav.html")
 
-  tmpl, err := template.ParseFiles(new_tmpl)
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -360,6 +360,7 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
 
   err = tmpl.Execute(w, map[string]any{
     "Entries" : data,
+    "Nav" : NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -384,7 +385,9 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "reset.html")
 
-  tmpl, err := template.ParseFiles(new_tmpl)
+	var nav_tmpl = filepath.Join(static, "nav.html")
+
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -396,6 +399,7 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
 
   err = tmpl.Execute(w, map[string]any{
     "Entries" : data,
+		"Nav": NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -7,7 +7,10 @@
   <link href="/checklist/static/style.css" rel="stylesheet">
   <title>Checklist-Tool</title>
 </head>
-<body class="bg-slate-300 p-10">
+<body class="bg-slate-300 p-5">
+
+  {{ template "nav.html" . }}
+
   <form action="/checklist/new" method="POST" class="p-4 mb-4 max-w-100 bg-gray-200">
 
       <label for="imei">IMEI (15-digit number):</label>
