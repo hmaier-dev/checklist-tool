@@ -416,3 +416,43 @@ func ResetChecklistForEntry(w http.ResponseWriter, r *http.Request){
   database.ResetChecklistEntryByPath(db, path)
   http.Redirect(w, r, "/checklist/reset", http.StatusSeeOther)
 }
+
+func DisplayUpload(w http.ResponseWriter, r *http.Request){
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var static = filepath.Join(wd, "static")
+	var new_tmpl = filepath.Join(static, "upload.html")
+	var nav_tmpl = filepath.Join(static, "nav.html")
+
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
+
+  err = tmpl.Execute(w, map[string]any{
+    "Nav" : NavList,
+  })
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
+
+}
+func ReceiveUpload(w http.ResponseWriter, r *http.Request){
+	r.ParseMultipartForm(1 << 20)
+	var buf bytes.Buffer
+	file, header, err := r.FormFile("yaml")
+	if err != nil {
+		panic(err)
+	}
+	name := strings.Split(header.Filename, ".")
+	fmt.Printf("File name %s\n", name[0])
+	// Copy the file data to my buffer
+	io.Copy(&buf, file)
+	// do something with the contents...
+	// I normally have a struct defined and unmarshal into a struct, but this will
+	// work as an example
+	contents := buf.String()
+	fmt.Println(contents)
+
+}
