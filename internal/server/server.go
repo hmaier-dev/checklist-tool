@@ -22,6 +22,7 @@ func NewServer() *Server {
   // GET
   sub.HandleFunc("/delete", handlers.DisplayDelete).Methods("Get")
   sub.HandleFunc("/reset", handlers.DisplayReset).Methods("Get")
+  sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
   sub.HandleFunc(`/{id:\d{14}_\d{15}}`, handlers.Display).Methods("GET")
   sub.HandleFunc(`/download_{id:\d{14}_\d{15}}`, handlers.GeneratePDF).Methods("GET")
   sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
@@ -32,6 +33,7 @@ func NewServer() *Server {
   sub.HandleFunc(`/goto_{id:\d{14}_\d{15}}`, handlers.RedirectToDownload).Methods("POST")
   sub.HandleFunc(`/delete_{id:\d{14}_\d{15}}`, handlers.DeleteEntry).Methods("POST")
   sub.HandleFunc(`/reset_{id:\d{14}_\d{15}}`, handlers.ResetChecklistForEntry).Methods("POST")
+  sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
 
   router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
 	
