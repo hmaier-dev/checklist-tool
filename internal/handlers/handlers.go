@@ -47,6 +47,7 @@ func Home(w http.ResponseWriter, r *http.Request){
 
   err = tmpl.Execute(w, map[string]interface{}{
     "Entries" : data,
+		"Nav": NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
