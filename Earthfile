@@ -7,13 +7,19 @@ tailwindcss:
       mv tailwindcss-linux-x64 tailwindcss
   SAVE ARTIFACT ./tailwindcss
 
-build:
+deps:
   FROM golang:1.24
-  COPY +tailwindcss/tailwindcss /usr/local/bin/tailwindcss
-  COPY go.mod go.sum *.go internal/ ./
-  COPY --dir internal/ checklists/ static/ ./
+  WORKDIR /src
+  COPY go.mod go.sum ./
   RUN go mod download
-  RUN GOOS=linux go build -o checklist-tool main.go
+
+build:
+  FROM +deps
+  COPY +tailwindcss/tailwindcss /usr/local/bin/tailwindcss
+  COPY *.go internal/ ./
+  COPY --dir internal/ checklists/ static/ ./
+  RUN --mount=type=cache,id=go-build-cache,target=/root/.cache/go-build \
+      GOOS=linux go build -o checklist-tool main.go
   RUN tailwindcss -i ./static/base.css -o ./static/style.css
   SAVE ARTIFACT ./checklist-tool AS LOCAL ./bin/checklist-tool
   SAVE ARTIFACT ./static
