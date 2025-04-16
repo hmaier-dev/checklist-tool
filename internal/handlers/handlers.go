@@ -345,7 +345,7 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
     log.Fatal("couldn't get working directory: ", err)
   }
 	var static = filepath.Join(wd, "static")
-	var new_tmpl = filepath.Join(static, "alter.html")
+	var new_tmpl = filepath.Join(static, "delete.html")
 	var nav_tmpl = filepath.Join(static, "nav.html")
 
   tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
