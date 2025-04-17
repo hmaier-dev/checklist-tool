@@ -21,20 +21,27 @@ func Init() *sql.DB {
 
 	// Create the devices table if it doesn't exist
 	createStmt := `
-	CREATE TABLE IF NOT EXISTS entries (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		imei TEXT NOT NULL,
-		ita TEXT, 
-		name TEXT NOT NULL,
-		ticket TEXT,
-		model TEXT,
-		path TEXT NOT NULL UNIQUE CHECK (length(path) == 30),
-		yaml TEXT
-	);
 	CREATE TABLE IF NOT EXISTS templates (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
-		yaml TEXT
+		empty_yaml TEXT
+	);
+	CREATE TABLE IF NOT EXISTS entries (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		checklist_id INTEGER NOT NULL,
+		data TEXT NOT NULL,
+		path TEXT NOT NULL UNIQUE CHECK (length(path) == 30),
+		yaml TEXT,
+		FOREIGN KEY (checklist_id)
+			REFERENCES templates (id)
+	);
+	CREATE TABLE IF NOT EXISTS custom_keys (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		checklist_id INTEGER NOT NULL,
+		desc TEXT NOT NULL,
+		key TEXT NOT NULL,
+		FOREIGN KEY (checklist_id)
+			REFERENCES templates (id)
 	);
 	`
 	_, err = db.Exec(createStmt)
