@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
   "time"
+	"encoding/csv"
 
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
@@ -446,8 +447,8 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 		panic(err)
 	}
 
-	fields_csv := r.FormValue("fields_csv")
-	desc_csv := r.FormValue("desc_csv")
+	fields_raw := r.FormValue("fields_csv")
+	desc_raw := r.FormValue("desc_csv")
 
 	name := strings.Split(header.Filename, ".")
 	fmt.Printf("File name %s\n", name[0])
@@ -458,7 +459,27 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 	// work as an example
 	contents := buf.String()
 	fmt.Println(contents)
-	fmt.Println(fields_csv)
-	fmt.Println(desc_csv)
+	fmt.Println(fields_raw)
+	fmt.Println(desc_raw)
+
+	fields_parsed := csv.NewReader(strings.NewReader(fields_raw))
+	desc_parsed := csv.NewReader(strings.NewReader(desc_raw))
+
+	// Read returns a slice of fields
+	fields, err := fields_parsed.Read()
+	if err != nil {
+		panic(err)
+	}
+	desc, err := desc_parsed.Read()
+	if err != nil {
+		panic(err)
+	}
+
+	for i, field := range fields {
+		fmt.Printf("Field %d: %s\n", i+1, field)
+	}
+	for i, field := range desc {
+		fmt.Printf("Field %d: %s\n", i+1, field)
+	}
 
 }
