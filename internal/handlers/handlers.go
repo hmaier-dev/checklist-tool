@@ -445,6 +445,10 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 	if err != nil {
 		panic(err)
 	}
+
+	fields_csv := r.FormValue("fields_csv")
+	desc_csv := r.FormValue("desc_csv")
+
 	name := strings.Split(header.Filename, ".")
 	fmt.Printf("File name %s\n", name[0])
 	// Copy the file data to my buffer
@@ -454,5 +458,7 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 	// work as an example
 	contents := buf.String()
 	fmt.Println(contents)
+	fmt.Println(fields_csv)
+	fmt.Println(desc_csv)
 
 }
