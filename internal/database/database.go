@@ -2,8 +2,8 @@ package database
 
 import (
 	"database/sql"
-	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"log"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -28,19 +28,19 @@ func Init() *sql.DB {
 	);
 	CREATE TABLE IF NOT EXISTS entries (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		checklist_id INTEGER NOT NULL,
+		template_id INTEGER NOT NULL,
 		data TEXT NOT NULL,
 		path TEXT NOT NULL UNIQUE CHECK (length(path) == 30),
 		yaml TEXT,
-		FOREIGN KEY (checklist_id)
+		FOREIGN KEY (template_id)
 			REFERENCES templates (id)
 	);
-	CREATE TABLE IF NOT EXISTS custom_keys (
+	CREATE TABLE IF NOT EXISTS custom_fields (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		checklist_id INTEGER NOT NULL,
-		desc TEXT NOT NULL,
+		template_id INTEGER NOT NULL,
 		key TEXT NOT NULL,
-		FOREIGN KEY (checklist_id)
+		desc TEXT NOT NULL,
+		FOREIGN KEY (template_id)
 			REFERENCES templates (id)
 	);
 	`
@@ -50,6 +50,43 @@ func Init() *sql.DB {
 	}
 	return db
 }
+
+func NewChecklistTemplate(db *sql.DB, template_name string, file_content string, fields []string, desc []string){
+	// Is there already a template with the same name?
+	checkStmt := `SELECT name FROM templates WHERE name = ?`
+	var exist string
+	result := db.QueryRow(checkStmt, template_name)
+	err := result.Scan(&exist)
+	if err != sql.ErrNoRows {
+		log.Printf("A template with the name '%s' is already present. \n Error: %q", template_name, err)
+		return 
+	}
+	// Add a new entry in templates (the main table)
+	newTemplateStmt := `INSERT INTO templates (name, empty_yaml) VALUES (?, ?)`
+	_, err = db.Exec(newTemplateStmt, template_name, file_content)
+	if err != nil{
+		log.Fatalf("Couldn't insert a new template.\n Error: %q \n", err)
+	}
+	// Get the id of the newly 
+	selectStmt := `SELECT id FROM templates WHERE name = ?`
+	row := db.QueryRow(selectStmt, template_name)
+	var id int
+	err = row.Scan(&id)
+	if err != nil {
+		log.Fatal("Failed to scan entry: ", err)
+		return
+	}
+	// Add custom input fields including description
+	for i := range fields{
+		newFieldStmt := `INSERT INTO custom_fields (template_id, key, desc) VALUES (?, ?, ?)`
+		_, err = db.Exec(newFieldStmt, id, fields[i], desc[i])
+		if err != nil{
+			log.Fatalf("Error while inserting custom fields: %q\n", err)
+		}
+	}
+
+}
+
 
 func NewEntry(db *sql.DB, form structs.FormularData) {
 
