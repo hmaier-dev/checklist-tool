@@ -87,6 +87,27 @@ func NewChecklistTemplate(db *sql.DB, template_name string, file_content string,
 
 }
 
+func GetAllTemplates(db *sql.DB) []structs.ChecklistTemplate{
+	selectStmt := `SELECT * FROM templates`
+	rows, err := db.Query(selectStmt)
+	if err != nil{
+		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
+	}
+	var all []structs.ChecklistTemplate
+	for rows.Next() {
+		var tmpl structs.ChecklistTemplate
+		if err := rows.Scan(&tmpl.Id,&tmpl.Name,&tmpl.Empty_yaml); err != nil {
+					 log.Fatalf("Error scanning row: %s", err)
+					 return nil
+		}
+		all = append(all, tmpl)
+	}
+	return all
+}
+
+
+// ------------------------------------------------------------------------------------
+// Old Functions
 
 func NewEntry(db *sql.DB, form structs.FormularData) {
 
