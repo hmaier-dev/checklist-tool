@@ -146,25 +146,6 @@ func GetDataByPath(db *sql.DB, path string) (*structs.ChecklistEntry, error) {
 	return &cl, nil
 }
 
-func GetAllEntrysReversed(db *sql.DB) ([]*structs.ChecklistEntry, error) {
-	query := `SELECT imei, ita, name, ticket, model, path FROM entries ORDER BY id DESC`
-	rows, err := db.Query(query)
-	if err != nil {
-		log.Fatalf("Error while doing '%s' the database: %s", query, err)
-		return nil, err
-	}
-	var allEntries []*structs.ChecklistEntry
-	for rows.Next() {
-		var entry structs.ChecklistEntry
-		if err := rows.Scan(&entry.IMEI, &entry.ITA, &entry.Name, &entry.Ticket, &entry.Model, &entry.Path); err != nil {
-			log.Fatalf("Error scanning row: %s", err)
-			return nil, err
-		}
-		allEntries = append(allEntries, &entry)
-	}
-	return allEntries, nil
-}
-
 func UpdateYamlByPath(db *sql.DB, path string, yamlData string) {
 	_, err := db.Exec("UPDATE entries SET yaml = ? WHERE path = ?", yamlData, path)
 	if err != nil {
