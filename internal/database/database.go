@@ -106,6 +106,30 @@ func GetAllTemplates(db *sql.DB) []structs.ChecklistTemplate{
 }
 
 
+func GetAllFieldsForChecklist(db *sql.DB, template_name string)[]structs.CustomFields{
+	selectStmt := `SELECT cf.*
+								FROM custom_fields cf
+								JOIN templates t ON cf.template_id = t.id
+								WHERE t.name = ?;`
+	rows, err := db.Query(selectStmt, template_name)
+	if err != nil{
+		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
+	}
+	var all []structs.CustomFields
+	for rows.Next() {
+		var fields structs.CustomFields
+		if err := rows.Scan(&fields.Id, &fields.Template_id, &fields.Key, &fields.Desc); err != nil {
+					 log.Fatalf("Error scanning row: %s", err)
+					 return nil
+		}
+		all = append(all, fields)
+	}
+	return all
+
+
+}
+
+
 // ------------------------------------------------------------------------------------
 // Old Functions
 

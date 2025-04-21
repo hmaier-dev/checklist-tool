@@ -67,6 +67,35 @@ func Home(w http.ResponseWriter, r *http.Request){
   }
 }
 
+func Options(w http.ResponseWriter, r *http.Request){
+	template := r.URL.Query().Get("template")
+	db := database.Init()
+	custom_fields := database.GetAllFieldsForChecklist(db, template)
+	if len(custom_fields) == 0{
+		 fmt.Fprintf(w, "'%s' is not existent.", template)
+		 return
+	}
+	html := ""
+	for _, field := range custom_fields{
+		html += ReturnInputTagHTML(field.Desc, field.Key)	
+	}
+	html += `<button class="mr-8 mb-4 px-10 py-3 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded relative float-right" type="submit">Submit</button><br><br>`
+  fmt.Fprintf(w, html)
+
+}
+
+// Outputs a single input-tag with label as HTML
+func ReturnInputTagHTML(label string, name string) string{
+		return fmt.Sprintf(`
+		<label for='%s'>%s</label>
+		<input class='border bg-white relative float-right focus:ring-blue-300'
+		type='text' id='%s' name='%s' required>
+		<br><br>`, name, label, name, name)
+
+}
+
+
+
 // POST-Endpoint to receive the request made by the formular
 func NewEntry(w http.ResponseWriter, r *http.Request){
   if r.Method != http.MethodPost {

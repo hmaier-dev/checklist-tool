@@ -21,7 +21,7 @@ func NewServer() *Server {
   sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
   sub.HandleFunc(`/{id:\d{14}_\d{15}}`, handlers.Display).Methods("GET")
   sub.HandleFunc(`/download_{id:\d{14}_\d{15}}`, handlers.GeneratePDF).Methods("GET")
-  sub.HandleFunc("/blanko", handlers.DisplayBlanko).Methods("Get")
+  sub.HandleFunc("/option", handlers.Options).Methods("GET")
   
   // POST
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")

@@ -39,3 +39,10 @@ type ChecklistTemplate struct {
 	Name       string
 	Empty_yaml string
 }
+
+type CustomFields struct {
+	Id          int
+	Template_id int
+	Key         string
+	Desc        string
+}
