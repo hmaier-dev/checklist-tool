@@ -54,8 +54,11 @@ func Home(w http.ResponseWriter, r *http.Request){
 
   tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
-  err = tmpl.Execute(w, map[string]interface{}{
-		"Nav": NavList,
+	db := database.Init()
+	AllChecklistTemplates := database.GetAllTemplates(db)
+  err = tmpl.Execute(w, map[string]any{
+    "Nav" : NavList,
+		"Templates": AllChecklistTemplates,
   })
 
   if err != nil {

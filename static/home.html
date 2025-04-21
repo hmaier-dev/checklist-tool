@@ -5,11 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="/checklist/static/style.css" rel="stylesheet">
+  <script src="/checklist/static/htmx.min.js"></script>
   <title>Checklist-Tool</title>
 </head>
 <body class="bg-slate-300 p-5">
 
   {{ template "nav.html" . }}
+
+  <div class="p-4 mb-4 max-w-100 bg-gray-200">
+    
+    <select id="templates" class="w-full">
+      {{ range .Templates }}
+      <option value="{{ .Name }}">{{ .Name }}</option>
+      {{ end }}
+    </select>
+
+  </div>
 
   <form action="/checklist/new" method="POST" class="p-4 mb-4 max-w-100 bg-gray-200">
 

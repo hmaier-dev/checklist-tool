@@ -33,3 +33,9 @@ type NavItem struct {
 	Name string
 	Path string
 }
+
+type ChecklistTemplate struct {
+	Id         int
+	Name       string
+	Empty_yaml string
+}
