@@ -14,7 +14,7 @@
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
     
-    <select id="templates" class="w-full">
+    <select id="templates" name="template" class="w-full" hx-get="/checklist/option" hx-trigger="load, change" hx-target="#prompt">
       {{ range .Templates }}
       <option value="{{ .Name }}">{{ .Name }}</option>
       {{ end }}
@@ -22,71 +22,8 @@
 
   </div>
 
-  <form action="/checklist/new" method="POST" class="p-4 mb-4 max-w-100 bg-gray-200">
-
-      <label for="imei">IMEI (15-digit number):</label>
-      <input class="border bg-white relative float-right focus:ring-blue-300"
-        type="text" id="imei" name="imei" pattern="\d{15}" required>
-
-      <br><br>
-
-      <label for="imei">ITA:</label>
-      <input class="border bg-white relative float-right focus:ring-blue-300"
-        type="text" id="ita" name="ita" required>
-
-      <br><br>
-
-      <label for="name">Name:</label>
-      <input class="border bg-white relative float-right focus:ring-blue-300"
-        type="text" id="name" name="name" required>
-
-      <br><br>
-
-      <label for="ticket">Ticket Nummer:</label>
-      <input class="border bg-white relative float-right focus:ring-blue-300"
-        type="text" id="ticket" name="ticket" required>
-
-      <br><br>
-
-      <label for="model">Model:</label>
-      <input class="border bg-white relative float-right focus:ring-blue-300"
-        type="text" id="model" name="model" required>
-
-      <br><br>
-
-      <button class="mr-8 mb-4 px-10 py-3 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded relative float-right" type="submit">Submit</button>
-
-      <br><br>
-
+  <form id="prompt" action="/checklist/new" method="POST" class="p-4 mb-4 max-w-100 bg-gray-200">
   </form>
-
-
-    {{ range .Entries }}
-    <a href="/checklist/{{ .Path }}" target="_blank" >
-    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
-      <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
-        <tr>
-          <th class="px-5 py-0 text-left border-b">IMEI</th>
-          <th class="px-5 py-0 text-left border-b w-48">ITA</th>
-          <th class="px-5 py-0 text-left border-b w-64">Name</th>
-          <th class="px-5 py-0 text-left border-b w-48">Ticket Number</th>
-          <th class="px-5 py-0 text-left border-b w-32">Model</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y bg-gray-200">
-        <tr class="hover:bg-gray-100 ">
-          <td class="px-5 py-2 border-b">{{ .IMEI }}</td>
-          <td class="px-5 py-2 border-b">{{ .ITA }}</td>
-          <td class="px-5 py-2 border-b">{{ .Name }}</td>
-          <td class="px-5 py-2 border-b">{{ .Ticket }}</td>
-          <td class="px-5 py-2 border-b">{{ .Model }}</td>
-        </tr>
-      </tbody>
-    </table>
-      </a>
-      <br>
-
-    {{ end }}
 
 </body>
 </html>
