@@ -463,36 +463,31 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 	fields_raw := r.FormValue("fields_csv")
 	desc_raw := r.FormValue("desc_csv")
 
-	name := strings.Split(header.Filename, ".")
-	fmt.Printf("File name %s\n", name[0])
-	// Copy the file data to my buffer
+	template_name := strings.Split(header.Filename, ".")[0]
 	io.Copy(&buf, file)
-	// do something with the contents...
-	// I normally have a struct defined and unmarshal into a struct, but this will
-	// work as an example
-	contents := buf.String()
-	fmt.Println(contents)
-	fmt.Println(fields_raw)
-	fmt.Println(desc_raw)
+	file_contents := buf.String()
+
+	var result any
+	err = yaml.Unmarshal([]byte(file_contents), &result)
+	if err != nil {
+		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
+	}
 
 	fields_parsed := csv.NewReader(strings.NewReader(fields_raw))
 	desc_parsed := csv.NewReader(strings.NewReader(desc_raw))
 
-	// Read returns a slice of fields
 	fields, err := fields_parsed.Read()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error while reading parsed custom fields. %q \n", err)
 	}
 	desc, err := desc_parsed.Read()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error while reading parsed custom descriptions: %q \n", err)
 	}
 
-	for i, field := range fields {
-		fmt.Printf("Field %d: %s\n", i+1, field)
-	}
-	for i, field := range desc {
-		fmt.Printf("Field %d: %s\n", i+1, field)
+	if len(fields) == len(desc){
+		db := database.Init()
+		database.NewChecklistTemplate(db, template_name, file_contents, fields, desc)
 	}
 
 }
