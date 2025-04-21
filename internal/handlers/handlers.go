@@ -54,13 +54,10 @@ func Home(w http.ResponseWriter, r *http.Request){
 
   tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
-  db := database.Init()
-  data, err := database.GetAllEntrysReversed(db)
-
   err = tmpl.Execute(w, map[string]interface{}{
-    "Entries" : data,
 		"Nav": NavList,
   })
+
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("", err)
@@ -369,11 +366,7 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
     log.Fatal("error parsing home template: ", err)
   }
 
-  db := database.Init()
-  data, err := database.GetAllEntrysReversed(db)
-
   err = tmpl.Execute(w, map[string]any{
-    "Entries" : data,
     "Nav" : NavList,
   })
   if err != nil {
@@ -408,11 +401,7 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
     log.Fatal("error parsing home template: ", err)
   }
 
-  db := database.Init()
-  data, err := database.GetAllEntrysReversed(db)
-
   err = tmpl.Execute(w, map[string]any{
-    "Entries" : data,
 		"Nav": NavList,
   })
   if err != nil {
