@@ -22,8 +22,15 @@
 
   </div>
 
-  <form id="prompt" action="/checklist/new" method="POST" class="p-4 mb-4 max-w-100 bg-gray-200">
+  <form id="prompt" action="/checklist/new" method="POST" 
+        class="p-4 mb-4 max-w-100 bg-gray-200" 
+        hx-get="/checklist/entries" 
+        hx-trigger="load, change" 
+        hx-target="#entries"
+        hx-include="[name='template']">
   </form>
+  
+  <div id="entries"></div>
 
 </body>
 </html>
