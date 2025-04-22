@@ -192,41 +192,6 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 }
 
-// Show the blanko checklist
-func DisplayBlanko(w http.ResponseWriter, r *http.Request){
-  var items []*structs.ChecklistItem
-  err := yaml.Unmarshal([]byte(EmptyChecklist), &items)
-  if err != nil {
-      http.Error(w, "Invalid Yaml", http.StatusInternalServerError)
-      log.Println("Yaml unmarshal error: ", err)
-      return
-  }
-
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-
-	var static = filepath.Join(wd, "static")
-	var checklist = filepath.Join(static, "checklist.html")
-
-  tmpl, err := template.ParseFiles(checklist)
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing base and new template: ", err)
-  }
-
-  err = tmpl.Execute(w, map[string]interface{}{
-    "Items": items,
-  })
-
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
-  }
-
-}
-
 func Update(w http.ResponseWriter, r *http.Request){
   path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
