@@ -10,15 +10,13 @@ type FormularData struct {
 	Path   string
 }
 
-// Represents a single checklist
+// Represents a single checklist entry in the database
 type ChecklistEntry struct {
-	IMEI   string `yaml:"imei"`
-	ITA    string `yaml:"ita"`
-	Name   string `yaml:"name"`
-	Ticket string `yaml:"ticket"`
-	Model  string `yaml:"model"`
-	Path   string `yaml:"path"`
-	Yaml   string `yaml:"yaml"`
+	Id          int
+	Template_id int
+	Data        string
+	Path        string
+	Yaml        string
 }
 
 // Single checkpoint of the list
