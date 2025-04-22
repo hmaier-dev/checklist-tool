@@ -105,7 +105,7 @@ func GetAllTemplates(db *sql.DB) []structs.ChecklistTemplate{
 	return all
 }
 
-
+// When a non-existent template is queried an empty slice is returned
 func GetAllFieldsForChecklist(db *sql.DB, template_name string)[]structs.CustomFields{
 	selectStmt := `SELECT cf.*
 								FROM custom_fields cf
