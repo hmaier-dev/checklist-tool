@@ -10,12 +10,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-  "time"
 	"encoding/csv"
 
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
-	"github.com/hmaier-dev/checklist-tool/internal/helper"
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/gorilla/mux"
@@ -94,144 +92,14 @@ func ReturnInputTagHTML(label string, name string) string{
 
 }
 
-
-
-// POST-Endpoint to receive the request made by the formular
-func NewEntry(w http.ResponseWriter, r *http.Request){
-  if r.Method != http.MethodPost {
-    http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-    return
-	}
-  now := time.Now()
-  curr_date := now.Format("20060102150405")
-  imei := r.FormValue("imei")
-  path := fmt.Sprintf("%s_%s", curr_date, imei)
-
-  form := structs.FormularData{
-    IMEI : r.FormValue("imei"),
-    ITA : r.FormValue("ita"),
-    Name: r.FormValue("name"),
-    Ticket: r.FormValue("ticket"),
-    Model: r.FormValue("model"),
-    Path: path,
-  }
-
-  db := database.Init()
-  defer db.Close() // Make sure to close the database when done
-
-  database.NewEntry(db, form)
-  
-  http.Redirect(w, r, "/checklist", http.StatusSeeOther)
+func Entries(w http.ResponseWriter, r *http.Request){
+	template := r.URL.Query().Get("template")
+	db := database.Init()
+	entries := database.GetAllEntriesForChecklist(db, template)
+	html := fmt.Sprintf("%#v \n", entries)
+  fmt.Fprintf(w, html)
 }
 
-// Based on the IMEI a fitting db-entry will get loaded
-func Display(w http.ResponseWriter, r *http.Request){
-  id := mux.Vars(r)["id"]
-  db := database.Init()
-
-  if database.PathAlreadyExists(db,id) == false{
-    http.Redirect(w, r, "/checklist", http.StatusSeeOther)
-    return
-  }
-
-  data, err := database.GetDataByPath(db, id)
-  if err != nil {
-    http.Error(w, "Database error", http.StatusInternalServerError)
-    log.Println("Database error: ", err)
-    return
-  }
-
-  var items []*structs.ChecklistItem
-	err = yaml.Unmarshal([]byte(data.Yaml), &items)
-	if err != nil {
-		fmt.Println("Error parsing YAML:", err)
-		return
-	}
-
-  helper.AddDataToEveryEntry(data.Path, items)
-
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-
-	var static = filepath.Join(wd, "static")
-	var checklist = filepath.Join(static, "checklist.html")
-
-  tmpl, err := template.ParseFiles(checklist)
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing base and new template: ", err)
-  }
-
-
-  info := struct{
-    IMEI string
-    ITA string
-    Name string
-    Ticket  string
-    Model string
-    Path string
-  }{
-    IMEI: data.IMEI,
-    ITA: data.ITA,
-    Name: data.Name,
-    Ticket: data.Ticket, 
-    Model: data.Model, 
-    Path: data.Path, 
-  }
-
-  err = tmpl.Execute(w, map[string]interface{}{
-    "Items": items,
-    "Info": info,
-  })
-
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
-  }
-}
-
-func Update(w http.ResponseWriter, r *http.Request){
-  path :=  mux.Vars(r)["id"]
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
-		return
-	}
-  
-  var checked bool
-  // if ["checked"] isset
-  if _, ok := r.Form["checked"]; ok{
-    checked = true
-  }else{
-    checked = false
-  }
-  alteredItem := structs.ChecklistItem{
-    Task: r.Form.Get("task"),
-    Checked: checked,
-  }
-  
-  // Fetch Row from Database
-  db := database.Init()
-  row, err := database.GetDataByPath(db, path)
-  if err != nil{
-    log.Fatalf("error fetching data by path: %q", err)
-  }
-  var oldItems []*structs.ChecklistItem
-  err = yaml.Unmarshal([]byte(row.Yaml), &oldItems)
-
-  helper.ChangeCheckedStatus(alteredItem, oldItems)
-
-  yamlBytes, err := yaml.Marshal(oldItems)
-  if err != nil {
-      log.Println("Error marshaling Yaml: ", err)
-      return
-  }
-  // Submit Altered Row to database
-  database.UpdateYamlByPath(db, path, string(yamlBytes))
-
-}
 
 // Maybe this function is unnecessary,
 // and I can call GET from the button
@@ -244,44 +112,15 @@ func RedirectToDownload(w http.ResponseWriter, r *http.Request){
 }
 
 func GeneratePDF(w http.ResponseWriter, r *http.Request) {
-		path :=  mux.Vars(r)["id"]
-
 		wd, err := os.Getwd()
 		var static = filepath.Join(wd, "static")
 		var print_tmpl = filepath.Join(static, "print.html")
 
 		tmpl, err := template.ParseFiles(print_tmpl)
 
-		db := database.Init()
-		row, err := database.GetDataByPath(db, path)
-
-		var items []*structs.ChecklistItem
-		err = yaml.Unmarshal([]byte(row.Yaml), &items)
-
-		// What is this??? can't I just give row to Info??
-		info := struct{
-			IMEI string
-			ITA string
-			Name string
-			Ticket  string
-			Model string
-		}{
-			IMEI: row.IMEI,
-			ITA: row.ITA,
-			Name: row.Name,
-			Ticket: row.Ticket, 
-			Model: row.Model, 
-		}
-
-		now := time.Now()
-    curr_date := now.Format("02.01.2006, 15:04:05")
-
 		// Generate html body into buffer
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, map[string]any{
-			"Items": items,
-			"Info": info,
-      "Date": curr_date,
 		})
 
 		bodyBytes, err := io.ReadAll(&buf) 
@@ -311,15 +150,7 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 						http.Error(w, "PDF creation error", http.StatusInternalServerError)
 						return
 		}
-		fDate := now.Format("20060102")
-		parts := strings.Fields(info.Name)
     var pdfName string 
-    if len(parts) > 1 {
-      pdfName = fmt.Sprintf("%s_%s_%s_%s_%s.pdf",fDate,parts[0],parts[1],info.Model,info.IMEI)
-    }else{
-      pdfName = fmt.Sprintf("%s_%s_%s_%s.pdf",fDate,parts[0],info.Model,info.IMEI)
-    }
-
 		err = pdfg.WriteFile(pdfName)
 		if err != nil {
 						http.Error(w, "Failed to write PDF to file", http.StatusInternalServerError)
@@ -374,10 +205,6 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
 
 // Handle a POST-Request to a path
 func DeleteEntry(w http.ResponseWriter, r *http.Request){
-  path :=  mux.Vars(r)["id"]
-  db := database.Init()
-  defer db.Close() // Make sure to close the database when done
-  database.DeleteEntryByPath(db, path)
   http.Redirect(w, r, "/checklist/delete", http.StatusSeeOther)
 }
 
@@ -410,10 +237,8 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
 
 // Handle POST-Request for resetting a checklist
 func ResetChecklistForEntry(w http.ResponseWriter, r *http.Request){
-  path :=  mux.Vars(r)["id"]
   db := database.Init()
   defer db.Close() // Make sure to close the database when done
-  database.ResetChecklistEntryByPath(db, path)
   http.Redirect(w, r, "/checklist/reset", http.StatusSeeOther)
 }
 
