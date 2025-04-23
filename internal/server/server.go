@@ -28,6 +28,7 @@ func NewServer() *Server {
   sub.HandleFunc(`/delete_{id:\d{14}_\d{15}}`, handlers.DeleteEntry).Methods("POST")
   sub.HandleFunc(`/reset_{id:\d{14}_\d{15}}`, handlers.ResetChecklistForEntry).Methods("POST")
   sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
+  sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
 
   router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
 
