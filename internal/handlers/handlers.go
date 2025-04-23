@@ -100,6 +100,9 @@ func Entries(w http.ResponseWriter, r *http.Request){
   fmt.Fprintf(w, html)
 }
 
+func NewEntry(w http.ResponseWriter, r *http.Request){
+}
+
 
 // Maybe this function is unnecessary,
 // and I can call GET from the button
