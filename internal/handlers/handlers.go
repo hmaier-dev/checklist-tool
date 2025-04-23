@@ -101,6 +101,20 @@ func Entries(w http.ResponseWriter, r *http.Request){
 }
 
 func NewEntry(w http.ResponseWriter, r *http.Request){
+	template_name := r.FormValue("template")
+	db := database.Init()
+	template := database.GetChecklistTemplateByName(db, template_name)
+	id := template.Id
+	yaml := template.Empty_yaml
+	cols := database.GetAllFieldsForChecklist(db,template_name)
+	data := make(map[string]interface{})
+	for _, col := range cols{
+		key := col.Key
+		value := r.FormValue(key)
+		data[key] = value
+	}
+	log.Println(id,yaml)
+
 }
 
 
