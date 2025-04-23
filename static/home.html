@@ -9,12 +9,27 @@
   <title>Checklist-Tool</title>
 </head>
 <body class="bg-slate-300 p-5">
+  <script>
+  function loadEntries() {
+    htmx.ajax('GET', '/checklist/entries', { 
+      target: '#entries',
+      swap: 'innerHTML',
+      values: {
+        template: document.querySelector('[name="template"]').value
+      }
+    });
+  }
+  </script>
 
   {{ template "nav.html" . }}
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
     
-    <select id="templates" name="template" class="w-full" hx-get="/checklist/option" hx-trigger="load, change" hx-target="#prompt">
+    <select id="templates" name="template" class="w-full" 
+      hx-get="/checklist/option" 
+      hx-trigger="load, change" 
+      hx-target="#prompt"
+      hx-on-htmx-before-on-load="loadEntries()">
       {{ range .Templates }}
       <option value="{{ .Name }}">{{ .Name }}</option>
       {{ end }}
@@ -22,11 +37,10 @@
 
   </div>
 
-  <form id="prompt" action="/checklist/new" method="POST" 
+  <form id="prompt"
         class="p-4 mb-4 max-w-100 bg-gray-200" 
-        hx-get="/checklist/entries" 
-        hx-trigger="load, change" 
-        hx-target="#entries"
+        hx-post="/checklist/new" 
+        hx-trigger="submit" 
         hx-include="[name='template']">
   </form>
   
