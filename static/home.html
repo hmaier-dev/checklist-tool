@@ -40,8 +40,9 @@
   <form id="prompt"
         class="p-4 mb-4 max-w-100 bg-gray-200" 
         hx-post="/checklist/new" 
-        hx-trigger="submit" 
-        hx-include="[name='template']">
+        hx-trigger="submit"
+        hx-include="[name='template']"
+        hx-swap="none">
   </form>
   
   <div id="entries"></div>
