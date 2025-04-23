@@ -148,6 +148,16 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]structs.Checkl
 	return all
 }
 
+func GetChecklistTemplateByName(db *sql.DB, template_name string) structs.ChecklistTemplate{
+	selectStmt := `SELECT id, name, empty_yaml FROM templates WHERE name = ?`
+	row := db.QueryRow(selectStmt, template_name)
+	var templateEntry structs.ChecklistTemplate
+	if err := row.Scan(&templateEntry.Id, &templateEntry.Name, &templateEntry.Empty_yaml); err != nil {
+			log.Fatalf("Error scanning row: %s", err)
+	}
+	return templateEntry
+}
+
 // ------------------------------------------------------------------------------------
 // Old Functions
 
