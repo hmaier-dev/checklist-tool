@@ -26,7 +26,20 @@ import (
 var EmptyChecklist []byte
 var EmptyChecklistItemsArray []*structs.ChecklistItem
 
-var NavList []structs.NavItem
+var NavList []structs.NavItem = []structs.NavItem{
+	{
+		Name: "Alle Einträge",
+		Path: "/checklist",
+	},
+	{
+		Name: "Einträge löschen",
+		Path: "/checklist/delte",
+	},
+	{
+		Name: "Einträge zurücksetzen",
+		Path: "/checklist/reset",
+	},
+}
 
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
