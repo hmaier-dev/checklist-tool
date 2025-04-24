@@ -15,10 +15,10 @@ import (
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 
-	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/gorilla/mux"
-
 	"gopkg.in/yaml.v3"
+	"github.com/sqids/sqids-go"
+	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 var EmptyChecklist []byte
@@ -111,15 +111,35 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 	id := template.Id
 	yaml := template.Empty_yaml
 	cols := database.GetAllFieldsForChecklist(db,template_name)
-	data := make(map[string]interface{})
+	data := make(map[string]string)
 	for _, col := range cols{
 		key := col.Key
 		value := r.FormValue(key)
 		data[key] = value
 	}
-	log.Println(id,yaml)
+	path := GeneratePath(data)
+
+	fmt.Println(data)
+	fmt.Println(id)
+	fmt.Println(yaml)
+	fmt.Println(path)
 
 }
+
+func GeneratePath(data map[string]string) string{
+	var chars []uint64
+	for col := range data{
+		for c := range []byte(data[col]){
+			chars = append(chars,uint64(c))
+		}
+	}
+	fmt.Printf("%#v \n",chars)
+	s, _ := sqids.New()
+	id, _ := s.Encode(chars)
+	return id
+}
+
+
 
 
 // Maybe this function is unnecessary,
