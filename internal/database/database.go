@@ -30,7 +30,7 @@ func Init() *sql.DB {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		template_id INTEGER NOT NULL,
 		data TEXT NOT NULL,
-		path TEXT NOT NULL UNIQUE CHECK (length(path) == 30),
+		path TEXT NOT NULL UNIQUE,
 		yaml TEXT,
 		FOREIGN KEY (template_id)
 			REFERENCES templates (id)
