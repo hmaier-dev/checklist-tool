@@ -37,6 +37,10 @@ var NavList []structs.NavItem = []structs.NavItem{
 		Name: "Einträge zurücksetzen",
 		Path: "/checklist/reset",
 	},
+	{ 
+		Name: "Checkliste hinzufügen",
+		Path: "/checklist/upload",
+	},
 }
 
 // Displays a form a new checklist-entry
