@@ -158,6 +158,26 @@ func GetChecklistTemplateByName(db *sql.DB, template_name string) structs.Checkl
 	return templateEntry
 }
 
+func DoesPathAlreadyExisit(db *sql.DB, path string)bool{
+	checkStmt := `SELECT path FROM entries WHERE path = ?`
+	var exist string
+	result := db.QueryRow(checkStmt, path)
+	err := result.Scan(&exist)
+	if err == sql.ErrNoRows {
+		return false
+	}
+	log.Println("Path already exists.")
+	return true
+}
+
+func NewEntry(db *sql.DB, entry structs.ChecklistEntry) {
+	insertStmt := `INSERT INTO entries (template_id, data, path, yaml) VALUES (?, ?, ?, ?)`
+	_, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml)
+	if err != nil {
+		log.Fatal("Failed to insert entry: ", err)
+	}
+}
+
 // ------------------------------------------------------------------------------------
 // Old Functions
 
