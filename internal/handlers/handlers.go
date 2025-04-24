@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -10,15 +12,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"encoding/csv"
 
-	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 
-	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v3"
-	"github.com/sqids/sqids-go"
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
+	"github.com/gorilla/mux"
+	"github.com/sqids/sqids-go"
+	"gopkg.in/yaml.v3"
 )
 
 var EmptyChecklist []byte
@@ -108,8 +109,6 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 	template_name := r.FormValue("template")
 	db := database.Init()
 	template := database.GetChecklistTemplateByName(db, template_name)
-	id := template.Id
-	yaml := template.Empty_yaml
 	cols := database.GetAllFieldsForChecklist(db,template_name)
 	data := make(map[string]string)
 	for _, col := range cols{
@@ -117,13 +116,20 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 		value := r.FormValue(key)
 		data[key] = value
 	}
+	json, err := json.Marshal(data)
+	if err != nil{
+		log.Fatalf("Error while marshaling json.\n Error: %q \n", err)
+	}
 	path := GeneratePath(data)
-
-	fmt.Println(data)
-	fmt.Println(id)
-	fmt.Println(yaml)
-	fmt.Println(path)
-
+	if database.DoesPathAlreadyExisit(db, path) == false{
+		entry := structs.ChecklistEntry{
+			Template_id: template.Id,
+			Data: string(json),
+			Path: path,
+			Yaml: template.Empty_yaml,
+		}
+		database.NewEntry(db, entry)
+	}
 }
 
 func GeneratePath(data map[string]string) string{
@@ -133,12 +139,16 @@ func GeneratePath(data map[string]string) string{
 			chars = append(chars,uint64(c))
 		}
 	}
-	fmt.Printf("%#v \n",chars)
-	s, _ := sqids.New()
-	id, _ := s.Encode(chars)
+	s, err := sqids.New()
+	if err != nil{
+		log.Fatalf("Error will constructing a new sqids-instance.\n Error: %q\n", err)
+	}
+	id, err := s.Encode(chars)
+	if err != nil{
+		log.Fatalf("Something wen't wrong while building the path.\n Error: %q\n", err)
+	}
 	return id
 }
-
 
 
 
