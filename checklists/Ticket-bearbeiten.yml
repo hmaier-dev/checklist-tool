@@ -1,0 +1,11 @@
+- task: "Computer starten."
+  checked: false
+- task: "Am Ticket-System anmelden."
+  checked: false
+- task: "Tickets sichten."
+  checked: false
+  children:
+    - task: "Ticket 1 bearbeiten."
+      checked: false
+    - task: "Ticket 2 bearbeiten."
+      checked: false
