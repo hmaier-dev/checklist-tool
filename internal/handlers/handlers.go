@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"net/url"
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
@@ -48,7 +49,7 @@ var NavList []structs.NavItem = []structs.NavItem{
 // Displays a form a new checklist-entry
 // and a list with all previous entrys
 func Home(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
+	wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
   }
@@ -60,10 +61,23 @@ func Home(w http.ResponseWriter, r *http.Request){
   tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl, select_tmpl))
 
 	db := database.Init()
-	AllChecklistTemplates := database.GetAllTemplates(db)
+	allTemplates := database.GetAllTemplates(db)
+	// Set the URL with ?template=<template> if not already set
+	if !r.URL.Query().Has("template"){
+		u, err := url.Parse(r.URL.String())
+		if err != nil {
+			log.Fatalln("Error parsing GET-Request while loading ''.")	
+		}
+		q := u.Query()
+		q.Set("template", allTemplates[0].Name)
+		u.RawQuery = q.Encode()
+		http.Redirect(w,r, u.String(), http.StatusFound)
+		return
+	}
   err = tmpl.Execute(w, map[string]any{
     "Nav" : NavList,
-		"Templates": AllChecklistTemplates,
+		"Templates": allTemplates,
+		"Template_name": r.URL.Query().Get("template"),
   })
 
   if err != nil {
