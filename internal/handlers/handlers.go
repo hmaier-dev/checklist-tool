@@ -63,7 +63,7 @@ func Home(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	allTemplates := database.GetAllTemplates(db)
 	// Set the URL with ?template=<template> if not already set
-	if !r.URL.Query().Has("template"){
+	if !r.URL.Query().Has("template") && len(allTemplates) > 0{
 		u, err := url.Parse(r.URL.String())
 		if err != nil {
 			log.Fatalln("Error parsing GET-Request while loading ''.")	
@@ -148,6 +148,22 @@ func Entries(w http.ResponseWriter, r *http.Request){
 		"Entries": result,
 	})
 }
+
+func Nav(w http.ResponseWriter, r *http.Request){
+	query := r.URL.Query().Encode()
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var nav_tmpl = filepath.Join(wd, "static/nav.html")
+	tmpl := template.Must(template.ParseFiles(nav_tmpl))
+
+	err = tmpl.Execute(w, map[string]any{
+		"Nav": NavList,
+		"Template": "?" + query,
+	})
+}
+
 
 func NewEntry(w http.ResponseWriter, r *http.Request){
 	template_name := r.FormValue("template")
