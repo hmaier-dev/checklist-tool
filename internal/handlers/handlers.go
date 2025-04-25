@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
@@ -127,9 +128,11 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 			Data: string(json),
 			Path: path,
 			Yaml: template.Empty_yaml,
+			Date: time.Now().Unix(),
 		}
 		database.NewEntry(db, entry)
 	}
+
 }
 
 func GeneratePath(data map[string]string) string{
