@@ -34,7 +34,7 @@ var NavList []structs.NavItem = []structs.NavItem{
 	},
 	{
 		Name: "Einträge löschen",
-		Path: "/checklist/delte",
+		Path: "/checklist/delete",
 	},
 	{
 		Name: "Einträge zurücksetzen",
