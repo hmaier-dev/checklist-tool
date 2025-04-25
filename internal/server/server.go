@@ -19,14 +19,10 @@ func NewServer() *Server {
   sub.HandleFunc("/delete", handlers.DisplayDelete).Methods("Get")
   sub.HandleFunc("/reset", handlers.DisplayReset).Methods("Get")
   sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
-  sub.HandleFunc(`/download_{id:\d{14}_\d{15}}`, handlers.GeneratePDF).Methods("GET")
   sub.HandleFunc("/option", handlers.Options).Methods("GET")
   sub.HandleFunc("/entries", handlers.Entries).Methods("GET")
   
   // POST
-  sub.HandleFunc(`/goto_{id:\d{14}_\d{15}}`, handlers.RedirectToDownload).Methods("POST")
-  sub.HandleFunc(`/delete_{id:\d{14}_\d{15}}`, handlers.DeleteEntry).Methods("POST")
-  sub.HandleFunc(`/reset_{id:\d{14}_\d{15}}`, handlers.ResetChecklistForEntry).Methods("POST")
   sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
 

@@ -25,9 +25,7 @@ func main() {
 
   database.DBfilePath = *dbArg
 
-  // Pass empty checklist as raw file and struct
   host := fmt.Sprintf("0.0.0.0:%s", port)
-
   srv := server.NewServer()
 	log.Printf("Starting tool on %s/checklist \n", host)
 	err := http.ListenAndServe(host, srv.Router)
