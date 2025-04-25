@@ -1,8 +1,3 @@
-
-{{ if not .Inputs }}
-  Nothing to show.
-{{ else }}
-
 {{ range .Inputs }}
 <label for='{{ .Key }}'>{{ .Desc }}</label>
   <input class='border bg-white relative float-right focus:ring-blue-300'
@@ -19,8 +14,3 @@
   focus:ring-blue-300" type="submit">Submit</button>
 <br><br>
 <div id="feedback"></div>
-
-{{ end }}
-
-
-

@@ -89,11 +89,49 @@ func Options(w http.ResponseWriter, r *http.Request){
 }
 
 func Entries(w http.ResponseWriter, r *http.Request){
-	template := r.URL.Query().Get("template")
+	template_name := r.URL.Query().Get("template")
 	db := database.Init()
-	entries := database.GetAllEntriesForChecklist(db, template)
-	html := fmt.Sprintf("%#v \n", entries)
-  fmt.Fprintf(w, html)
+	entries := database.GetAllEntriesForChecklist(db, template_name)
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var entries_tmpl = filepath.Join(wd, "static/entries.html")
+	tmpl := template.Must(template.ParseFiles(entries_tmpl))
+	
+
+	// building a map to access the descriptions by column names
+	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
+	var fieldsMap = make(map[string]string, len(custom_fields))
+	for _, field := range custom_fields{
+		fieldsMap[field.Key] = field.Desc
+	}
+
+	var result []structs.EntriesView	
+	for _, entry := range entries{
+		var dataMap map[string]string
+		err := json.Unmarshal([]byte(entry.Data), &dataMap)
+		if err != nil{
+			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
+		}
+		var viewMap []structs.DescValueView
+		for k, v := range dataMap {
+				desc := fieldsMap[k]
+				viewMap = append(viewMap, structs.DescValueView{Desc: desc, Value: v})	
+		}
+		// add creation date
+		viewMap = append(viewMap, structs.DescValueView{
+			Desc: "Erstellungsdatum",
+			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
+		})
+		result = append(result, structs.EntriesView{
+			Path: entry.Path,
+			Data: viewMap,
+		})
+	}
+	err = tmpl.Execute(w, map[string]any{
+		"Entries": result,
+	})
 }
 
 func NewEntry(w http.ResponseWriter, r *http.Request){
@@ -112,23 +150,25 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 		log.Fatalf("Error while marshaling json.\n Error: %q \n", err)
 	}
 	path := GeneratePath(data)
-	if database.DoesPathAlreadyExisit(db, path) == false{
-		entry := structs.ChecklistEntry{
-			Template_id: template.Id,
-			Data: string(json),
-			Path: path,
-			Yaml: template.Empty_yaml,
-			Date: time.Now().Unix(),
-		}
-		result := database.NewEntry(db, entry)
-		if result != nil{
-			html := `<div class=''>`
-			w.Write([]byte(html))
-		}
+	entry := structs.ChecklistEntry{
+		Template_id: template.Id,
+		Data: string(json),
+		Path: path,
+		Yaml: template.Empty_yaml,
+		Date: time.Now().Unix(),
 	}
-	html := `<div class=''>`
-	w.Write([]byte(html))
-
+	// Instead of checking the 'path' manually,
+	// use the CONSTRAINT on the column to generate an error
+	result := database.NewEntry(db, entry)
+	if result != nil{
+		html := `<div class='text-lime-400'>Eintrag erfolgreich erstellt.</div>`
+		w.Write([]byte(html))
+		return
+	}else{
+		html := `<div class='text-red-400'>Eintrag nicht erfolgreich erstellt.</div>`
+		w.Write([]byte(html))
+		return
+	}
 }
 
 func GeneratePath(data map[string]string) string{
