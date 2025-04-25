@@ -32,6 +32,7 @@ func Init() *sql.DB {
 		data TEXT NOT NULL,
 		path TEXT NOT NULL UNIQUE,
 		yaml TEXT,
+		date INT,
 		FOREIGN KEY (template_id)
 			REFERENCES templates (id)
 	);
@@ -139,7 +140,7 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]structs.Checkl
 	var all []structs.ChecklistEntry
 	for rows.Next() {
 		var entry structs.ChecklistEntry
-		if err := rows.Scan(&entry.Id, &entry.Template_id, &entry.Data, &entry.Path, &entry.Yaml); err != nil {
+		if err := rows.Scan(&entry.Id, &entry.Template_id, &entry.Data, &entry.Path, &entry.Yaml, &entry.Date); err != nil {
 					 log.Fatalf("Error scanning row: %s", err)
 					 return nil
 		}
@@ -170,12 +171,14 @@ func DoesPathAlreadyExisit(db *sql.DB, path string)bool{
 	return true
 }
 
-func NewEntry(db *sql.DB, entry structs.ChecklistEntry) {
-	insertStmt := `INSERT INTO entries (template_id, data, path, yaml) VALUES (?, ?, ?, ?)`
-	_, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml)
+func NewEntry(db *sql.DB, entry structs.ChecklistEntry) sql.Result {
+	insertStmt := `INSERT INTO entries (template_id, data, path, yaml, date) VALUES (?, ?, ?, ?, ?)`
+	result, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml, entry.Date)
 	if err != nil {
-		log.Fatal("Failed to insert entry: ", err)
+		log.Printf("Error while doing '%s'.\n Error: %q \n", insertStmt ,err)
+		return nil
 	}
+	return result
 }
 
 // ------------------------------------------------------------------------------------

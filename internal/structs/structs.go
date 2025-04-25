@@ -17,6 +17,7 @@ type ChecklistEntry struct {
 	Data        string
 	Path        string
 	Yaml        string
+	Date int64
 }
 
 // Single checkpoint of the list
