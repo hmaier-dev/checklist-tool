@@ -162,12 +162,13 @@ func GetChecklistTemplateByName(db *sql.DB, template_name string) structs.Checkl
 func DoesPathAlreadyExisit(db *sql.DB, path string)bool{
 	checkStmt := `SELECT path FROM entries WHERE path = ?`
 	var exist string
-	result := db.QueryRow(checkStmt, path)
-	err := result.Scan(&exist)
-	if err == sql.ErrNoRows {
+	err := db.QueryRow(checkStmt, path).Scan(&exist)
+	if err == sql.ErrNoRows{
 		return false
 	}
-	log.Println("Path already exists.")
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
 	return true
 }
 
