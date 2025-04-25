@@ -10,7 +10,29 @@
 </head>
 <body class="bg-slate-300 p-5">
 
-  {{ template "nav.html" . }}
+<script>
+function loadNav(){
+  htmx.ajax('GET', '/checklist/nav', { 
+    target: '#navbar',
+    swap: 'innerHTML',
+    values: {
+      template: document.querySelector('[name="template"]').value
+    }
+  });
+}
+function loadEntries() {
+  htmx.ajax('GET', '/checklist/entries', { 
+    target: '#entries',
+    swap: 'innerHTML',
+    values: {
+      template: document.querySelector('[name="template"]').value
+    }
+  });
+}
+</script>
+
+  <nav id="navbar" class="flex mb-5">
+  </nav>
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
 
@@ -24,7 +46,7 @@
         hx-trigger="submit"
         hx-include="[name='template']"
         hx-swap="none"
-        hx-on-htmx-before-on-load="loadEntries()">
+        hx-on-htmx-before-on-load=" loadEntries()">
   </form>
   
   <div id="entries"></div>
