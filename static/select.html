@@ -1,0 +1,24 @@
+{{ define "select.html" }}
+<script>
+function loadEntries() {
+  htmx.ajax('GET', '/checklist/entries', { 
+    target: '#entries',
+    swap: 'innerHTML',
+    values: {
+      template: document.querySelector('[name="template"]').value
+    }
+  });
+}
+</script>
+
+<select id="templates" name="template" class="w-full" 
+  hx-get="/checklist/option" 
+  hx-trigger="load, change" 
+  hx-target="#prompt"
+  hx-on-htmx-before-on-load="loadEntries()">
+  {{ range .Templates }}
+  <option value="{{ .Name }}">{{ .Name }}</option>
+  {{ end }}
+</select>
+
+{{ end }}
