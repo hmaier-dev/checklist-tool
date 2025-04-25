@@ -55,8 +55,9 @@ func Home(w http.ResponseWriter, r *http.Request){
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "home.html")
 	var nav_tmpl = filepath.Join(static, "nav.html")
+	var select_tmpl = filepath.Join(static, "select.html")
 
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl, select_tmpl))
 
 	db := database.Init()
 	AllChecklistTemplates := database.GetAllTemplates(db)
