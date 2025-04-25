@@ -340,11 +340,14 @@ func DisplayUpload(w http.ResponseWriter, r *http.Request){
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "upload.html")
 	var nav_tmpl = filepath.Join(static, "nav.html")
+	var template_tmpl = filepath.Join(static, "template.html")
 
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
-
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl, template_tmpl))
+	db := database.Init()
+	allTemplates := database.GetAllTemplates(db)
   err = tmpl.Execute(w, map[string]any{
     "Nav" : NavList,
+		"Templates": allTemplates,
   })
 
   if err != nil {
@@ -390,5 +393,5 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 		db := database.Init()
 		database.NewChecklistTemplate(db, template_name, file_contents, fields, desc)
 	}
-
+	http.Redirect(w, r, "/checklist/upload", http.StatusSeeOther)
 }
