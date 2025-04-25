@@ -42,7 +42,8 @@
         hx-post="/checklist/new" 
         hx-trigger="submit"
         hx-include="[name='template']"
-        hx-swap="none">
+        hx-swap="none"
+        hx-on-htmx-before-on-load="loadEntries()">
   </form>
   
   <div id="entries"></div>

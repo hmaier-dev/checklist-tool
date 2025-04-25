@@ -176,7 +176,7 @@ func NewEntry(db *sql.DB, entry structs.ChecklistEntry) sql.Result {
 	insertStmt := `INSERT INTO entries (template_id, data, path, yaml, date) VALUES (?, ?, ?, ?, ?)`
 	result, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml, entry.Date)
 	if err != nil {
-		log.Printf("Error while doing '%s'.\n Error: %q \n", insertStmt ,err)
+		log.Printf("Error while inserting a new entry into 'entries'.\n Error: %q \n", err)
 		return nil
 	}
 	return result

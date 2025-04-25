@@ -45,3 +45,13 @@ type CustomFields struct {
 	Key         string
 	Desc        string
 }
+
+type DescValueView struct {
+	Desc string
+	Value string
+}
+
+type EntriesView struct{
+	Path string
+	Data []DescValueView
+}
