@@ -83,7 +83,10 @@ func Options(w http.ResponseWriter, r *http.Request){
 	for _, field := range custom_fields{
 		html += ReturnInputTagHTML(field.Desc, field.Key)	
 	}
-	html += `<button class="mr-8 mb-4 px-10 py-3 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded relative float-right" type="submit">Submit</button><br><br>`
+	html += `<button class="mr-8 mb-4 px-10 py-3 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded relative float-right" type="submit">
+	Submit</button>
+	<br><br>
+	<div id="feedback"></div>`
   fmt.Fprintf(w, html)
 
 }
@@ -130,8 +133,14 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 			Yaml: template.Empty_yaml,
 			Date: time.Now().Unix(),
 		}
-		database.NewEntry(db, entry)
+		result := database.NewEntry(db, entry)
+		if result != nil{
+			html := `<div class=''>`
+			w.Write([]byte(html))
+		}
 	}
+	html := `<div class=''>`
+	w.Write([]byte(html))
 
 }
 
