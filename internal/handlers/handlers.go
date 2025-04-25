@@ -72,32 +72,19 @@ func Home(w http.ResponseWriter, r *http.Request){
 }
 
 func Options(w http.ResponseWriter, r *http.Request){
-	template := r.URL.Query().Get("template")
+
+	template_name := r.URL.Query().Get("template")
 	db := database.Init()
-	custom_fields := database.GetAllFieldsForChecklist(db, template)
-	if len(custom_fields) == 0{
-		 fmt.Fprintf(w, "'%s' is not existent.", template)
-		 return
-	}
-	html := ""
-	for _, field := range custom_fields{
-		html += ReturnInputTagHTML(field.Desc, field.Key)	
-	}
-	html += `<button class="mr-8 mb-4 px-10 py-3 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded relative float-right" type="submit">
-	Submit</button>
-	<br><br>
-	<div id="feedback"></div>`
-  fmt.Fprintf(w, html)
-
-}
-
-// Outputs a single input-tag with label as HTML
-func ReturnInputTagHTML(label string, name string) string{
-		return fmt.Sprintf(`
-		<label for='%s'>%s</label>
-		<input class='border bg-white relative float-right focus:ring-blue-300'
-		type='text' id='%s' name='%s' required>
-		<br><br>`, name, label, name, name)
+	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var options = filepath.Join(wd, "static/options.html")
+	tmpl := template.Must(template.ParseFiles(options))
+	err = tmpl.Execute(w, map[string]any{
+		"Inputs": custom_fields,
+	})
 
 }
 
