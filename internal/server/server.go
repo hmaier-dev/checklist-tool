@@ -17,6 +17,8 @@ func NewServer() *Server {
   sub := router.PathPrefix("/checklist").Subrouter()
   // GET
   sub.HandleFunc("/delete", handlers.DisplayDelete).Methods("Get")
+  subsub := sub.PathPrefix("/delete").Subrouter()
+	subsub.HandleFunc("/entries", handlers.DeleteableEntries).Methods("GET")
   sub.HandleFunc("/reset", handlers.DisplayReset).Methods("Get")
   sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
   sub.HandleFunc("/option", handlers.Options).Methods("GET")
@@ -26,6 +28,7 @@ func NewServer() *Server {
   // POST
   sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
+  sub.HandleFunc("/delete", handlers.DeleteEntry).Methods("POST")
 
   router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
 

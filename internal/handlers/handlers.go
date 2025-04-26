@@ -245,38 +245,89 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/pdf")
 		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
     w.Header().Set("Content-Disposition", disposition)
-
     _, err = io.Copy(w, bytes.NewReader(pdfBytes))
     if err != nil {
 			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
     }
 }
 
-// Displays a page where existing database
-// entrys can be altered
+// Displays the page for deleting entries for the template passed in the GET-Request
 func DisplayDelete(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
   }
 	var static = filepath.Join(wd, "static")
-	var new_tmpl = filepath.Join(static, "delete.html")
+	var delete_tmpl = filepath.Join(static, "delete.html")
 	var nav_tmpl = filepath.Join(static, "nav.html")
+	var select_tmpl = filepath.Join(static, "select.html")
 
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
-
+  tmpl := template.Must(template.ParseFiles(delete_tmpl, nav_tmpl, select_tmpl))
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("error parsing home template: ", err)
   }
 
+	db := database.Init()
+	all := database.GetAllTemplates(db)
   err = tmpl.Execute(w, map[string]any{
     "Nav" : NavList,
+		"Templates": all,
+		"Active": r.URL.Query().Get("template"),
   })
+
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
+    log.Fatalf("%q \n", err)
   }
+}
+
+// TODO: this code is reused from Entries
+func DeleteableEntries(w http.ResponseWriter, r *http.Request){
+	template_name := r.URL.Query().Get("template")
+	db := database.Init()
+	entries := database.GetAllEntriesForChecklist(db, template_name)
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var entries_tmpl = filepath.Join(wd, "static/deleteEntries.html")
+	tmpl := template.Must(template.ParseFiles(entries_tmpl))
+	
+
+	// building a map to access the descriptions by column names
+	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
+	var fieldsMap = make(map[string]string, len(custom_fields))
+	for _, field := range custom_fields{
+		fieldsMap[field.Key] = field.Desc
+	}
+
+	var result []structs.EntriesView	
+	for _, entry := range entries{
+		var dataMap map[string]string
+		err := json.Unmarshal([]byte(entry.Data), &dataMap)
+		if err != nil{
+			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
+		}
+		var viewMap []structs.DescValueView
+		for k, v := range dataMap {
+				desc := fieldsMap[k]
+				viewMap = append(viewMap, structs.DescValueView{Desc: desc, Value: v})	
+		}
+		// add creation date
+		viewMap = append(viewMap, structs.DescValueView{
+			Desc: "Erstellungsdatum",
+			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
+		})
+		result = append(result, structs.EntriesView{
+			Path: entry.Path,
+			Data: viewMap,
+		})
+	}
+	err = tmpl.Execute(w, map[string]any{
+		"Entries": result,
+	})
+
 }
 
 // Handle a POST-Request to a path
