@@ -55,28 +55,29 @@ func Home(w http.ResponseWriter, r *http.Request){
 	var static = filepath.Join(wd, "static")
 	var new_tmpl = filepath.Join(static, "home.html")
 	var nav_tmpl = filepath.Join(static, "nav.html")
-	var select_tmpl = filepath.Join(static, "select.html")
 
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl, select_tmpl))
+  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
 
 	db := database.Init()
-	allTemplates := database.GetAllTemplates(db)
+	all := database.GetAllTemplates(db)
+
+	// TODO: turn this code if into a function
 	// Set the URL with ?template=<template> if not already set
-	if !r.URL.Query().Has("template") && len(allTemplates) > 0{
+	if !r.URL.Query().Has("template") && len(all) > 0{
 		u, err := url.Parse(r.URL.String())
 		if err != nil {
 			log.Fatalln("Error parsing GET-Request while loading ''.")	
 		}
 		q := u.Query()
-		q.Set("template", allTemplates[0].Name)
+		q.Set("template", all[0].Name)
 		u.RawQuery = q.Encode()
 		http.Redirect(w,r, u.String(), http.StatusFound)
 		return
 	}
   err = tmpl.Execute(w, map[string]any{
     "Nav" : NavList,
-		"Templates": allTemplates,
-		"Template_name": r.URL.Query().Get("template"),
+		"Templates": all,
+		"Active": r.URL.Query().Get("template"),
   })
 
   if err != nil {
@@ -86,7 +87,6 @@ func Home(w http.ResponseWriter, r *http.Request){
 }
 
 func Options(w http.ResponseWriter, r *http.Request){
-
 	template_name := r.URL.Query().Get("template")
 	db := database.Init()
 	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
@@ -99,7 +99,6 @@ func Options(w http.ResponseWriter, r *http.Request){
 	err = tmpl.Execute(w, map[string]any{
 		"Inputs": custom_fields,
 	})
-
 }
 
 func Entries(w http.ResponseWriter, r *http.Request){
@@ -260,9 +259,8 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
 	var static = filepath.Join(wd, "static")
 	var delete_tmpl = filepath.Join(static, "delete.html")
 	var nav_tmpl = filepath.Join(static, "nav.html")
-	var select_tmpl = filepath.Join(static, "select.html")
 
-  tmpl := template.Must(template.ParseFiles(delete_tmpl, nav_tmpl, select_tmpl))
+  tmpl := template.Must(template.ParseFiles(delete_tmpl, nav_tmpl))
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
     log.Fatal("error parsing home template: ", err)

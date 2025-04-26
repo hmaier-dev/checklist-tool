@@ -35,9 +35,15 @@ function loadEntries() {
   </nav>
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
-
-    {{ template "select.html" . }}
-
+    <select id="templates" name="template" class="w-full" 
+      hx-get="/checklist/option" 
+      hx-trigger="load, change" 
+      hx-target="#prompt"
+      hx-on-htmx-before-on-load="loadNav(); loadEntries()">
+      {{ range .Templates }}
+      <option value="{{ .Name }}" {{ if eq .Name $.Active }}selected{{ end }}>{{ .Name }}</option>
+      {{ end }}
+    </select>
   </div>
 
   <form id="prompt"
