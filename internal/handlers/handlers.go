@@ -17,9 +17,8 @@ import (
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
+	"github.com/hmaier-dev/checklist-tool/internal/pdf"
 
-	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
-	"github.com/gorilla/mux"
 	"github.com/sqids/sqids-go"
 	"gopkg.in/yaml.v3"
 )
@@ -221,80 +220,36 @@ func GeneratePath(data map[string]string) string{
 }
 
 
-
-// Maybe this function is unnecessary,
-// and I can call GET from the button
-func RedirectToDownload(w http.ResponseWriter, r *http.Request){
-  path :=  mux.Vars(r)["id"]
-  // A redirect does not open a new windows with a pdf
-  // so I need to do this hacky stuff with js
-	cmd := fmt.Sprintf("<script>window.open('/checklist/download_%s', '_blank');</script>", path)
-  fmt.Fprintf(w, cmd)
-}
-
 func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 		wd, err := os.Getwd()
 		var static = filepath.Join(wd, "static")
 		var print_tmpl = filepath.Join(static, "print.html")
-
 		tmpl, err := template.ParseFiles(print_tmpl)
-
-		// Generate html body into buffer
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, map[string]any{
 		})
-
-		bodyBytes, err := io.ReadAll(&buf) 
+		bodyBytes, err := io.ReadAll(&buf)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
 		defer r.Body.Close() // Close the body after reading
 
-		body := strings.NewReader(string(bodyBytes))
-
-		pdfg, err :=  wkhtml.NewPDFGenerator()
+		var pdfName string	
+		var pdfBytes []byte
+		pdfBytes, err = pdf.Generate(pdfName,bodyBytes)
 		if err != nil{
-			log.Fatalf("problem with pdf generator: %q", err)
-			return
+			log.Fatalf("Error while generating pdf.\nError: %q \n", err)
 		}
-    pdfg.PageSize.Set(wkhtml.PageSizeLetter)
-    
-    page := wkhtml.NewPageReader(body)
-    page.Zoom.Set(0.95)
-
-		pdfg.AddPage(page)
-
-		err = pdfg.Create()
-		if err != nil {
-						log.Println(err)
-						http.Error(w, "PDF creation error", http.StatusInternalServerError)
-						return
-		}
-    var pdfName string 
-		err = pdfg.WriteFile(pdfName)
-		if err != nil {
-						http.Error(w, "Failed to write PDF to file", http.StatusInternalServerError)
-						return
-		}
-
-    file, err := os.Open(pdfName)
-    if err != nil {
-        http.Error(w, "File not found", http.StatusNotFound)
-        return
-    }
-    defer file.Close()
-
+		// Setting the header before sending the file to the browser
     w.Header().Set("Content-Type", "application/pdf")
 		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
     w.Header().Set("Content-Disposition", disposition)
 
-    _, err = io.Copy(w, file)
+    _, err = io.Copy(w, bytes.NewReader(pdfBytes))
     if err != nil {
-        http.Error(w, "Error sending file", http.StatusInternalServerError)
-        return
+			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
     }
-    os.Remove(pdfName)
 }
 
 // Displays a page where existing database
