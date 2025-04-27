@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="/checklist/static/style.css" rel="stylesheet">
-  <script src="/checklist/static/htmx.min.js"></script>
+  <link href="/static/style.css" rel="stylesheet">
+  <script src="/static/htmx.min.js"></script>
   <title>Checklist-Tool</title>
 </head>
 <body class="bg-slate-300 p-5">
 
 <script>
 function loadNav(){
-  htmx.ajax('GET', '/checklist/nav', { 
+  htmx.ajax('GET', '/nav', { 
     target: '#navbar',
     swap: 'innerHTML',
     values: {
@@ -28,7 +28,7 @@ function loadNav(){
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
     <select id="templates" name="template" class="w-full" 
-      hx-get="/checklist/delete/entries" 
+      hx-get="/delete/entries" 
       hx-trigger="load, change" 
       hx-target="#entries"
       hx-on-htmx-before-on-load="loadNav();">

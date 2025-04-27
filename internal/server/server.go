@@ -13,8 +13,8 @@ type Server struct {
 
 func NewServer() *Server {
 	router := mux.NewRouter()
-	router.HandleFunc("/checklist", handlers.Home).Methods("GET")
-  sub := router.PathPrefix("/checklist").Subrouter()
+	router.HandleFunc("/", handlers.Home).Methods("GET")
+  sub := router.PathPrefix("/").Subrouter()
   // GET
   sub.HandleFunc("/delete", handlers.DisplayDelete).Methods("Get")
   subsub := sub.PathPrefix("/delete").Subrouter()
@@ -30,7 +30,7 @@ func NewServer() *Server {
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
   sub.HandleFunc("/delete", handlers.DeleteEntry).Methods("POST")
 
-  router.PathPrefix("/checklist/static/").Handler(http.StripPrefix("/checklist/static/", http.FileServer(http.Dir("./static/"))))
+  router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	return &Server{Router: router}
 }

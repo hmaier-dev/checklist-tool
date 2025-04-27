@@ -29,19 +29,19 @@ var EmptyChecklistItemsArray []*structs.ChecklistItem
 var NavList []structs.NavItem = []structs.NavItem{
 	{
 		Name: "Alle Einträge",
-		Path: "/checklist",
+		Path: "/",
 	},
 	{
 		Name: "Einträge löschen",
-		Path: "/checklist/delete",
+		Path: "/delete",
 	},
 	{
 		Name: "Einträge zurücksetzen",
-		Path: "/checklist/reset",
+		Path: "/reset",
 	},
 	{ 
 		Name: "Checkliste hinzufügen",
-		Path: "/checklist/upload",
+		Path: "/upload",
 	},
 }
 
@@ -330,7 +330,7 @@ func DeleteableEntries(w http.ResponseWriter, r *http.Request){
 
 // Handle a POST-Request to a path
 func DeleteEntry(w http.ResponseWriter, r *http.Request){
-  http.Redirect(w, r, "/checklist/delete", http.StatusSeeOther)
+  http.Redirect(w, r, "/delete", http.StatusSeeOther)
 }
 
 func DisplayReset(w http.ResponseWriter, r *http.Request){
@@ -364,7 +364,7 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
 func ResetChecklistForEntry(w http.ResponseWriter, r *http.Request){
   db := database.Init()
   defer db.Close() // Make sure to close the database when done
-  http.Redirect(w, r, "/checklist/reset", http.StatusSeeOther)
+  http.Redirect(w, r, "/reset", http.StatusSeeOther)
 }
 
 func DisplayUpload(w http.ResponseWriter, r *http.Request){
@@ -428,5 +428,5 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 		db := database.Init()
 		database.NewChecklistTemplate(db, template_name, file_contents, fields, desc)
 	}
-	http.Redirect(w, r, "/checklist/upload", http.StatusSeeOther)
+	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
