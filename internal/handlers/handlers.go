@@ -21,6 +21,7 @@ import (
 
 	"github.com/sqids/sqids-go"
 	"gopkg.in/yaml.v3"
+	"github.com/gorilla/mux"
 )
 
 var EmptyChecklist []byte
@@ -332,6 +333,25 @@ func DeleteableEntries(w http.ResponseWriter, r *http.Request){
 func DeleteEntry(w http.ResponseWriter, r *http.Request){
   http.Redirect(w, r, "/delete", http.StatusSeeOther)
 }
+
+func DisplayChecklist(w http.ResponseWriter, r *http.Request){
+  path := mux.Vars(r)["id"]
+	log.Println(path)
+  wd, err := os.Getwd()
+  if err != nil{
+    log.Fatal("couldn't get working directory: ", err)
+  }
+	var static = filepath.Join(wd, "static")
+	var checklist_tmpl = filepath.Join(static, "checklist.html")
+  tmpl := template.Must(template.ParseFiles(checklist_tmpl))
+  err = tmpl.Execute(w, map[string]any{
+  })
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    log.Fatal("", err)
+  }
+}
+
 
 func DisplayReset(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
