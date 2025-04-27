@@ -25,6 +25,7 @@ func NewServer() *Server {
   sub.HandleFunc("/entries", handlers.Entries).Methods("GET")
   sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
 	sub.HandleFunc(`/checklist/{id:\w*}`, handlers.DisplayChecklist).Methods("GET")
+	sub.HandleFunc(`/print/{id:\w*}`, handlers.GeneratePDF).Methods("GET")
   
   // POST
   sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
