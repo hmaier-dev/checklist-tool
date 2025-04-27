@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="/checklist/static/style.css" rel="stylesheet">
-  <script src="/checklist/static/htmx.min.js"></script>
+  <link href="/static/style.css" rel="stylesheet">
+  <script src="/static/htmx.min.js"></script>
   <title>Checklist-Tool</title>
 </head>
 <body class="bg-slate-300 p-5">
@@ -31,7 +31,7 @@
           <td class="border-b px-1">{{ .Name }}</td>
           <td class="border-b px-1">{{ .Ticket }}</td>
           <td class="border-b px-1">{{ .Model }}</td>
-          <td class="border-b px-1"><button hx-post="/checklist/reset_{{ .Path }}" hx-target="body" class="w-full md:w-auto text-white bg-pink-500 hover:bg-pink-700 focus:ring-4 focus:ring-pink-300 font-semibold rounded-lg shadow-md transition duration-200">Reset Checklist</button></td>
+          <td class="border-b px-1"><button hx-post="/reset_{{ .Path }}" hx-target="body" class="w-full md:w-auto text-white bg-pink-500 hover:bg-pink-700 focus:ring-4 focus:ring-pink-300 font-semibold rounded-lg shadow-md transition duration-200">Reset Checklist</button></td>
         </tr>
       </tbody>
     </table>
