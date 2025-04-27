@@ -53,18 +53,26 @@ func Home(w http.ResponseWriter, r *http.Request){
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
   }
+	var templates = []string{
+		"home.html",
+		"nav.html",
+		"options.html",
+		"entries.html",
+	}
+	var full = make([]string,len(templates))
 	var static = filepath.Join(wd, "static")
-	var new_tmpl = filepath.Join(static, "home.html")
-	var nav_tmpl = filepath.Join(static, "nav.html")
-
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
-
+	for i, t := range templates{
+		full[i] = filepath.Join(static,t)
+	}
+  tmpl := template.Must(template.ParseFiles(full...))
+	// This needs to be called here, to set ?template=
+	// to the first template if none is set.
 	db := database.Init()
 	all := database.GetAllTemplates(db)
-
+	active := r.URL.Query().Get("template")
 	// TODO: turn this code if into a function
 	// Set the URL with ?template=<template> if not already set
-	if !r.URL.Query().Has("template") && len(all) > 0{
+	if active == "" && len(all) > 0{
 		u, err := url.Parse(r.URL.String())
 		if err != nil {
 			log.Fatalln("Error parsing GET-Request while loading ''.")	
@@ -75,10 +83,16 @@ func Home(w http.ResponseWriter, r *http.Request){
 		http.Redirect(w,r, u.String(), http.StatusFound)
 		return
 	}
+	entries_raw := database.GetAllEntriesForChecklist(db, active)
+	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
+	entries_view := buildEntriesView(custom_fields,entries_raw)
+	inputs := database.GetAllCustomFieldsForTemplate(db, active)
   err = tmpl.Execute(w, map[string]any{
-    "Nav" : NavList,
+		"Active": active,
+    "Nav" : updateNav(r),
 		"Templates": all,
-		"Active": r.URL.Query().Get("template"),
+		"Inputs": inputs,
+		"Entries": entries_view,
   })
 
   if err != nil {
@@ -149,7 +163,6 @@ func Entries(w http.ResponseWriter, r *http.Request){
 }
 
 func Nav(w http.ResponseWriter, r *http.Request){
-	query := r.URL.Query().Encode()
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
@@ -158,8 +171,7 @@ func Nav(w http.ResponseWriter, r *http.Request){
 	tmpl := template.Must(template.ParseFiles(nav_tmpl))
 
 	err = tmpl.Execute(w, map[string]any{
-		"Nav": NavList,
-		"Template": "?" + query,
+		"Nav": updateNav(r),
 	})
 }
 
@@ -270,7 +282,7 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	all := database.GetAllTemplates(db)
   err = tmpl.Execute(w, map[string]any{
-    "Nav" : NavList,
+    "Nav" : updateNav(r),
 		"Templates": all,
 		"Active": r.URL.Query().Get("template"),
   })
@@ -371,7 +383,7 @@ func DisplayReset(w http.ResponseWriter, r *http.Request){
   }
 
   err = tmpl.Execute(w, map[string]any{
-		"Nav": NavList,
+		"Nav": updateNav(r),
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -401,7 +413,7 @@ func DisplayUpload(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	allTemplates := database.GetAllTemplates(db)
   err = tmpl.Execute(w, map[string]any{
-    "Nav" : NavList,
+    "Nav" : updateNav(r),
 		"Templates": allTemplates,
   })
 
@@ -450,3 +462,16 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 	}
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
+
+// I want to save the current state of the active template when switching paths.
+// So I add the Query to NavList.Path
+func updateNav(r *http.Request)[]structs.NavItem{
+	update := make([]structs.NavItem, len(NavList))
+	copy(update, NavList)
+	for i := range update{
+		update[i].Path += "?"
+		update[i].Path += r.URL.Query().Encode()
+	}
+	return update
+}
+
