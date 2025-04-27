@@ -90,7 +90,7 @@ func Home(w http.ResponseWriter, r *http.Request){
 func Options(w http.ResponseWriter, r *http.Request){
 	template_name := r.URL.Query().Get("template")
 	db := database.Init()
-	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
+	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
@@ -115,7 +115,7 @@ func Entries(w http.ResponseWriter, r *http.Request){
 	
 
 	// building a map to access the descriptions by column names
-	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
+	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
 	var fieldsMap = make(map[string]string, len(custom_fields))
 	for _, field := range custom_fields{
 		fieldsMap[field.Key] = field.Desc
@@ -168,7 +168,7 @@ func NewEntry(w http.ResponseWriter, r *http.Request){
 	template_name := r.FormValue("template")
 	db := database.Init()
 	template := database.GetChecklistTemplateByName(db, template_name)
-	cols := database.GetAllFieldsForChecklist(db,template_name)
+	cols := database.GetAllCustomFieldsForTemplate(db,template_name)
 	data := make(map[string]string)
 	for _, col := range cols{
 		key := col.Key
@@ -295,7 +295,7 @@ func DeleteableEntries(w http.ResponseWriter, r *http.Request){
 	
 
 	// building a map to access the descriptions by column names
-	custom_fields := database.GetAllFieldsForChecklist(db, template_name)
+	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
 	var fieldsMap = make(map[string]string, len(custom_fields))
 	for _, field := range custom_fields{
 		fieldsMap[field.Key] = field.Desc
