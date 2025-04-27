@@ -32,12 +32,13 @@ function loadEntries() {
 </script>
 
   <nav id="navbar" class="flex mb-5">
+    {{ template "nav.html" . }}
   </nav>
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
     <select id="templates" name="template" class="w-full" 
       hx-get="/option" 
-      hx-trigger="load, change" 
+      hx-trigger="change" 
       hx-target="#prompt"
       hx-on-htmx-before-on-load="loadNav(); loadEntries()">
       {{ range .Templates }}
@@ -53,9 +54,12 @@ function loadEntries() {
         hx-include="[name='template']"
         hx-swap="none"
         hx-on-htmx-before-on-load=" loadEntries()">
+    {{ template "options.html" . }}
   </form>
   
-  <div id="entries"></div>
+  <div id="entries">
+    {{ template "entries.html" . }}
+  </div>
 
 </body>
 </html>
