@@ -85,7 +85,7 @@ func Home(w http.ResponseWriter, r *http.Request){
 	}
 	entries_raw := database.GetAllEntriesForChecklist(db, active)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
-	entries_view := buildEntriesView(custom_fields,entries_raw)
+	entries_view := BuildEntriesView(custom_fields,entries_raw)
 	inputs := database.GetAllCustomFieldsForTemplate(db, active)
   err = tmpl.Execute(w, map[string]any{
 		"Active": active,
@@ -474,7 +474,7 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 // {{ end }}
 //
 // For me it seems a lot cleaner to build a struct for this.
-func buildEntriesView(custom_fields []structs.CustomFields, entries []structs.ChecklistEntry) []structs.EntriesView{
+func BuildEntriesView(custom_fields []structs.CustomFields, entries []structs.ChecklistEntry) []structs.EntriesView{
 	var fieldsMap = make(map[string]string, len(custom_fields))
 	for _, field := range custom_fields{
 		fieldsMap[field.Key] = field.Desc
