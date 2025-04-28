@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"github.com/gorilla/mux"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
-	"github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
+	// server.go does need to explicit use reset
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
 )
 
 
@@ -34,11 +35,11 @@ func NewServer() *Server {
   sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
   sub.HandleFunc("/delete", handlers.DeleteEntry).Methods("POST")
 
-	// /reset
-  sub.HandleFunc("/reset", reset.Display).Methods("Get")
-  subreset := sub.PathPrefix("/reset").Subrouter()
-	subreset.HandleFunc("/entries", reset.Entries).Methods("GET")
-  sub.HandleFunc("/reset", reset.Execute).Methods("POST")
+	for _, h := range handlers.GetHandlers() {
+		// Link the routes declared in sub-handlers to *mux.Router
+		h.Routes(sub)
+	}
+
 
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 

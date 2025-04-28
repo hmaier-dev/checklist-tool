@@ -8,13 +8,31 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gorilla/mux"
+
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
 )
 
 
+type ResetHandler struct {}
 
-func Display(w http.ResponseWriter, r *http.Request){
+// ResetHandler must implement all methods used in handlers.Handler.
+// Because go doesn't have a implements, I test it with this declare.
+// In go interface implementation is implicit, meaning you
+// don't need to write it out
+var _ handlers.Handler = (*ResetHandler)(nil)
+
+
+func (h *ResetHandler) Routes(router *mux.Router){
+	sub := router.PathPrefix("/reset").Subrouter()
+  sub.HandleFunc("", h.Display).Methods("Get")
+	sub.HandleFunc("/entries", h.Entries).Methods("GET")
+  sub.HandleFunc("", h.Execute).Methods("POST")
+}
+
+
+func (h *ResetHandler) Display(w http.ResponseWriter, r *http.Request){
 	wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
@@ -48,7 +66,7 @@ func Display(w http.ResponseWriter, r *http.Request){
   }
 
 }
-func Entries(w http.ResponseWriter, r *http.Request){
+func (h *ResetHandler) Entries(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
@@ -65,6 +83,12 @@ func Entries(w http.ResponseWriter, r *http.Request){
 		"Entries": entries_view,
   })
 }
-func Execute(w http.ResponseWriter, r *http.Request){
+func (h *ResetHandler) Execute(w http.ResponseWriter, r *http.Request){
   http.Redirect(w, r, "/reset", http.StatusSeeOther)
+}
+
+func init(){
+	// to trigger this, import the package blank
+	// e.g. _ "github.com/tool/handler/pkg"
+	handlers.RegisterHandler(&ResetHandler{})	
 }

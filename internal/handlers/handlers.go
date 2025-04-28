@@ -9,20 +9,36 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-	"net/url"
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
-	"github.com/hmaier-dev/checklist-tool/internal/structs"
 	"github.com/hmaier-dev/checklist-tool/internal/pdf"
+	"github.com/hmaier-dev/checklist-tool/internal/structs"
 
+	"github.com/gorilla/mux"
 	"github.com/sqids/sqids-go"
 	"gopkg.in/yaml.v3"
-	"github.com/gorilla/mux"
 )
+
+type Handler interface{
+	Routes(router *mux.Router)
+	Display(w http.ResponseWriter, r *http.Request)	
+	Entries(w http.ResponseWriter, r *http.Request)	
+	Execute(w http.ResponseWriter, r *http.Request)
+}
+
+var handlerRegistry []Handler
+
+func RegisterHandler(h Handler) {
+	handlerRegistry = append(handlerRegistry, h)
+}
+func GetHandlers() []Handler {
+	return handlerRegistry
+}
 
 var EmptyChecklist []byte
 var EmptyChecklistItemsArray []*structs.ChecklistItem
