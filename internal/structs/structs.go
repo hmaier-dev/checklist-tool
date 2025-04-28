@@ -1,24 +1,5 @@
 package structs
 
-// Represents data needed to create a new database entry
-type FormularData struct {
-	IMEI   string
-	ITA    string
-	Name   string
-	Ticket string
-	Model  string
-	Path   string
-}
-
-// Represents a single checklist entry in the database
-type ChecklistEntry struct {
-	Id          int
-	Template_id int
-	Data        string
-	Path        string
-	Yaml        string
-	Date int64
-}
 
 // Single checkpoint of the list
 type ChecklistItem struct {
@@ -28,30 +9,28 @@ type ChecklistItem struct {
 	Path     string           `yaml:"Path"`
 }
 
-type NavItem struct {
-	Name string
-	Path string
-}
-
+// Row in 'templates'-table
 type ChecklistTemplate struct {
 	Id         int
 	Name       string
 	Empty_yaml string
 }
 
-type CustomFields struct {
+// Row in 'custom_fields'-table
+type CustomField struct {
 	Id          int
 	Template_id int
 	Key         string
 	Desc        string
 }
 
-type DescValueView struct {
-	Desc string
-	Value string
+// Row in 'entries'-table
+type ChecklistEntry struct {
+	Id          int
+	Template_id int
+	Data        string
+	Path        string
+	Yaml        string
+	Date int64
 }
 
-type EntriesView struct{
-	Path string
-	Data []DescValueView
-}

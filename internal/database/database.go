@@ -107,7 +107,7 @@ func GetAllTemplates(db *sql.DB) []structs.ChecklistTemplate{
 }
 
 // When a non-existent template is queried an empty slice is returned
-func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]structs.CustomFields{
+func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]structs.CustomField{
 	selectStmt := `SELECT cf.*
 								FROM custom_fields cf
 								JOIN templates t ON cf.template_id = t.id
@@ -116,9 +116,9 @@ func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]structs.Cu
 	if err != nil{
 		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
 	}
-	var all []structs.CustomFields
+	var all []structs.CustomField
 	for rows.Next() {
-		var fields structs.CustomFields
+		var fields structs.CustomField
 		if err := rows.Scan(&fields.Id, &fields.Template_id, &fields.Key, &fields.Desc); err != nil {
 					 log.Fatalf("Error scanning row: %s", err)
 					 return nil

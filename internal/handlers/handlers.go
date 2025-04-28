@@ -43,7 +43,13 @@ func GetHandlers() []Handler {
 var EmptyChecklist []byte
 var EmptyChecklistItemsArray []*structs.ChecklistItem
 
-var NavList []structs.NavItem = []structs.NavItem{
+type NavItem struct {
+	Name string
+	Path string
+}
+
+// Declaring the navbar
+var NavList []NavItem = []NavItem{
 	{
 		Name: "Alle Einträge",
 		Path: "/",
@@ -142,37 +148,10 @@ func Entries(w http.ResponseWriter, r *http.Request){
   }
 	var entries_tmpl = filepath.Join(wd, "static/entries.html")
 	tmpl := template.Must(template.ParseFiles(entries_tmpl))
-	
 
 	// building a map to access the descriptions by column names
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
-	var fieldsMap = make(map[string]string, len(custom_fields))
-	for _, field := range custom_fields{
-		fieldsMap[field.Key] = field.Desc
-	}
-
-	var result []structs.EntriesView	
-	for _, entry := range entries{
-		var dataMap map[string]string
-		err := json.Unmarshal([]byte(entry.Data), &dataMap)
-		if err != nil{
-			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
-		}
-		var viewMap []structs.DescValueView
-		for k, v := range dataMap {
-				desc := fieldsMap[k]
-				viewMap = append(viewMap, structs.DescValueView{Desc: desc, Value: v})	
-		}
-		// add creation date
-		viewMap = append(viewMap, structs.DescValueView{
-			Desc: "Erstellungsdatum",
-			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
-		})
-		result = append(result, structs.EntriesView{
-			Path: entry.Path,
-			Data: viewMap,
-		})
-	}
+	result := BuildEntriesView(custom_fields, entries)
 	err = tmpl.Execute(w, map[string]any{
 		"Entries": result,
 	})
@@ -362,40 +341,40 @@ func ReceiveUpload(w http.ResponseWriter, r *http.Request){
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
 
-// Helper function to structure []structs.ChecklistEntry into []structs.EntriesView.
-// Instead of using this function I could access the ChecklistEntry.Data-Fields in the template like this
-//
-// {{ range $key, $value := .Data }}
-// <td >{{ $key }}</td>
-// {{ end }}
-// {{ range $key, $value := .Data }}
-// <td >{{ $value }}</td>
-// {{ end }}
-//
-// For me it seems a lot cleaner to build a struct for this.
-func BuildEntriesView(custom_fields []structs.CustomFields, entries []structs.ChecklistEntry) []structs.EntriesView{
+type DescValueView struct {
+	Desc string
+	Value string
+}
+
+type EntriesView struct{
+	Path string
+	Data []DescValueView
+}
+
+// Returns description and value instead of the database-column and value.
+func BuildEntriesView(custom_fields []structs.CustomField, entries []structs.ChecklistEntry) []EntriesView{
 	var fieldsMap = make(map[string]string, len(custom_fields))
 	for _, field := range custom_fields{
 		fieldsMap[field.Key] = field.Desc
 	}
-	var result []structs.EntriesView	
+	var result []EntriesView	
 	for _, entry := range entries{
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(entry.Data), &dataMap)
 		if err != nil{
 			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
 		}
-		var viewMap []structs.DescValueView
+		var viewMap []DescValueView
 		for k, v := range dataMap {
 				desc := fieldsMap[k]
-				viewMap = append(viewMap, structs.DescValueView{Desc: desc, Value: v})	
+				viewMap = append(viewMap, DescValueView{Desc: desc, Value: v})	
 		}
 		// format unix-time string to human-readable format
-		viewMap = append(viewMap, structs.DescValueView{
+		viewMap = append(viewMap, DescValueView{
 			Desc: "Erstellungsdatum",
 			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
 		})
-		result = append(result, structs.EntriesView{
+		result = append(result, EntriesView{
 			Path: entry.Path,
 			Data: viewMap,
 		})
@@ -405,8 +384,8 @@ func BuildEntriesView(custom_fields []structs.CustomFields, entries []structs.Ch
 
 // I want to save the current state of the active template when switching paths.
 // So I add the Query to NavList.Path
-func UpdateNav(r *http.Request)[]structs.NavItem{
-	update := make([]structs.NavItem, len(NavList))
+func UpdateNav(r *http.Request)[]NavItem{
+	update := make([]NavItem, len(NavList))
 	copy(update, NavList)
 	for i := range update{
 		update[i].Path += "?"
