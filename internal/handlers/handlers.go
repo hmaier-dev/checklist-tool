@@ -89,7 +89,7 @@ func Home(w http.ResponseWriter, r *http.Request){
 	inputs := database.GetAllCustomFieldsForTemplate(db, active)
   err = tmpl.Execute(w, map[string]any{
 		"Active": active,
-    "Nav" : updateNav(r),
+    "Nav" : UpdateNav(r),
 		"Templates": all,
 		"Inputs": inputs,
 		"Entries": entries_view,
@@ -171,7 +171,7 @@ func Nav(w http.ResponseWriter, r *http.Request){
 	tmpl := template.Must(template.ParseFiles(nav_tmpl))
 
 	err = tmpl.Execute(w, map[string]any{
-		"Nav": updateNav(r),
+		"Nav": UpdateNav(r),
 	})
 }
 
@@ -282,7 +282,7 @@ func DisplayDelete(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	all := database.GetAllTemplates(db)
   err = tmpl.Execute(w, map[string]any{
-    "Nav" : updateNav(r),
+    "Nav" : UpdateNav(r),
 		"Templates": all,
 		"Active": r.URL.Query().Get("template"),
   })
@@ -413,7 +413,7 @@ func DisplayUpload(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	allTemplates := database.GetAllTemplates(db)
   err = tmpl.Execute(w, map[string]any{
-    "Nav" : updateNav(r),
+    "Nav" : UpdateNav(r),
 		"Templates": allTemplates,
   })
 
@@ -506,7 +506,7 @@ func buildEntriesView(custom_fields []structs.CustomFields, entries []structs.Ch
 
 // I want to save the current state of the active template when switching paths.
 // So I add the Query to NavList.Path
-func updateNav(r *http.Request)[]structs.NavItem{
+func UpdateNav(r *http.Request)[]structs.NavItem{
 	update := make([]structs.NavItem, len(NavList))
 	copy(update, NavList)
 	for i := range update{
