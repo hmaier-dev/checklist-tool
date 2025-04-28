@@ -365,39 +365,7 @@ func DisplayChecklist(w http.ResponseWriter, r *http.Request){
 }
 
 
-func DisplayReset(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var static = filepath.Join(wd, "static")
-	var new_tmpl = filepath.Join(static, "reset.html")
 
-	var nav_tmpl = filepath.Join(static, "nav.html")
-
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl))
-
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing home template: ", err)
-  }
-
-  err = tmpl.Execute(w, map[string]any{
-		"Nav": updateNav(r),
-  })
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
-  }
-
-}
-
-// Handle POST-Request for resetting a checklist
-func ResetChecklistForEntry(w http.ResponseWriter, r *http.Request){
-  db := database.Init()
-  defer db.Close() // Make sure to close the database when done
-  http.Redirect(w, r, "/reset", http.StatusSeeOther)
-}
 
 func DisplayUpload(w http.ResponseWriter, r *http.Request){
   wd, err := os.Getwd()
