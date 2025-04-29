@@ -8,7 +8,6 @@ import (
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/server"
-
 )
 
 
