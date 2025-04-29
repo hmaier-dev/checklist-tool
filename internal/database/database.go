@@ -3,10 +3,37 @@ package database
 import (
 	"database/sql"
 	"log"
+
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// Row in 'templates'-table
+type ChecklistTemplate struct {
+	Id         int
+	Name       string
+	Empty_yaml string
+}
+
+// Row in 'custom_fields'-table
+type CustomField struct {
+	Id          int
+	Template_id int
+	Key         string
+	Desc        string
+}
+
+// Row in 'entries'-table
+type ChecklistEntry struct {
+	Id          int
+	Template_id int
+	Data        string
+	Path        string
+	Yaml        string
+	Date int64
+}
+
 
 var DBfilePath string
 var EmptyChecklist []byte
@@ -88,15 +115,15 @@ func NewChecklistTemplate(db *sql.DB, template_name string, file_content string,
 
 }
 
-func GetAllTemplates(db *sql.DB) []structs.ChecklistTemplate{
+func GetAllTemplates(db *sql.DB) []ChecklistTemplate{
 	selectStmt := `SELECT * FROM templates`
 	rows, err := db.Query(selectStmt)
 	if err != nil{
 		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
 	}
-	var all []structs.ChecklistTemplate
+	var all []ChecklistTemplate
 	for rows.Next() {
-		var tmpl structs.ChecklistTemplate
+		var tmpl ChecklistTemplate
 		if err := rows.Scan(&tmpl.Id,&tmpl.Name,&tmpl.Empty_yaml); err != nil {
 					 log.Fatalf("Error scanning row: %s", err)
 					 return nil
@@ -107,7 +134,7 @@ func GetAllTemplates(db *sql.DB) []structs.ChecklistTemplate{
 }
 
 // When a non-existent template is queried an empty slice is returned
-func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]structs.CustomField{
+func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]CustomField{
 	selectStmt := `SELECT cf.*
 								FROM custom_fields cf
 								JOIN templates t ON cf.template_id = t.id
@@ -116,9 +143,9 @@ func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]structs.Cu
 	if err != nil{
 		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
 	}
-	var all []structs.CustomField
+	var all []CustomField
 	for rows.Next() {
-		var fields structs.CustomField
+		var fields CustomField
 		if err := rows.Scan(&fields.Id, &fields.Template_id, &fields.Key, &fields.Desc); err != nil {
 					 log.Fatalf("Error scanning row: %s", err)
 					 return nil
@@ -128,7 +155,7 @@ func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]structs.Cu
 	return all
 }
 
-func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]structs.ChecklistEntry{
+func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]ChecklistEntry{
 	selectStmt := `SELECT e.*
 								FROM entries e
 								JOIN templates t ON e.template_id = t.id
@@ -137,9 +164,9 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]structs.Checkl
 	if err != nil{
 		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
 	}
-	var all []structs.ChecklistEntry
+	var all []ChecklistEntry
 	for rows.Next() {
-		var entry structs.ChecklistEntry
+		var entry ChecklistEntry
 		if err := rows.Scan(&entry.Id, &entry.Template_id, &entry.Data, &entry.Path, &entry.Yaml, &entry.Date); err != nil {
 					 log.Fatalf("Error scanning row: %s", err)
 					 return nil
@@ -149,10 +176,10 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]structs.Checkl
 	return all
 }
 
-func GetChecklistTemplateByName(db *sql.DB, template_name string) structs.ChecklistTemplate{
+func GetChecklistTemplateByName(db *sql.DB, template_name string) ChecklistTemplate{
 	selectStmt := `SELECT id, name, empty_yaml FROM templates WHERE name = ?`
 	row := db.QueryRow(selectStmt, template_name)
-	var templateEntry structs.ChecklistTemplate
+	var templateEntry ChecklistTemplate
 	if err := row.Scan(&templateEntry.Id, &templateEntry.Name, &templateEntry.Empty_yaml); err != nil {
 			log.Fatalf("Error scanning row: %s", err)
 	}
@@ -172,7 +199,7 @@ func DoesPathAlreadyExisit(db *sql.DB, path string)bool{
 	return true
 }
 
-func NewEntry(db *sql.DB, entry structs.ChecklistEntry) sql.Result {
+func NewEntry(db *sql.DB, entry ChecklistEntry) sql.Result {
 	insertStmt := `INSERT INTO entries (template_id, data, path, yaml, date) VALUES (?, ?, ?, ?, ?)`
 	result, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml, entry.Date)
 	if err != nil {
