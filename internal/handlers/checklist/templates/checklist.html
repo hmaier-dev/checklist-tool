@@ -11,51 +11,48 @@
 
 <body>
 
-  <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
-    <thead class="bg-gray-100 text-gray-700 uppercase text-sm">
-      <tr>
-        <th class="px-6 py-3 text-left border-b">IMEI</th>
-        <th class="px-6 py-3 text-left border-b">ITA</th>
-        <th class="px-6 py-3 text-left border-b">Name</th>
-        <th class="px-6 py-3 text-left border-b">Ticket Number</th>
-        <th class="px-6 py-3 text-left border-b">Model</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-200">
-      <tr class="hover:bg-gray-50">
-        <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.IMEI }}</td>
-        <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.ITA }}</td>
-        <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.Name }}</td>
-        <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.Ticket }}</td>
-        <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Info.Model }}</td>
-      </tr>
-    </tbody>
-  </table>
-  <br>
+ {{ range .Entries }}
+    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
+      <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
+        <tr>
+          {{ range .Data }}
+          <th class="px-5 py-0 text-left border-b">{{ .Desc }}</th>
+          {{ end }}
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        <tr class="hover:bg-gray-50">
+          {{ range .Data }}
+          <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Value }}</td>
+          {{ end }}
+        </tr>
+      </tbody>
+    </table>
+    <br>
+{{ end }}
 
 
-  {{ define "renderItems" }}
-    <ul>
-    {{ range . }}
-        <li>
-          <input class="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring focus:ring-blue-300"
-            type="checkbox"
-            hx-post="/update_{{ .Path }}"
-            hx-trigger="change"
-            name="checked"
-            value="true"
-            hx-vals='{"task": "{{ .Task }}"}'
-            {{ if .Checked }}checked{{ end }}> {{ .Task }}
+{{ define "renderItems" }}
+  <ul>
+  {{ range .Items }}
+      <li>
+        <input class="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring focus:ring-blue-300"
+          type="checkbox"
+          hx-post="/checklist/update/{{ $.Path }}" hx-trigger="change"
+          name="checked"
+          value="true"
+          hx-vals='{"task": "{{ .Task }}"}'
+          {{ if .Checked }}checked{{ end }}> {{ .Task }}
 
-            {{ if .Children }}
-                {{ template "renderItems" .Children }}
-            {{ end }}
-        </li>
-    {{ end }}
-    </ul>
+          {{ if .Children }}
+              {{ template "renderItems" .Children }}
+          {{ end }}
+      </li>
   {{ end }}
+  </ul>
+{{ end }}
 
-  {{ template "renderItems" .Items }}
+{{ template "renderItems" . }}
 
   <input 
     type="button" 
