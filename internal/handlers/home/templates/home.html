@@ -37,7 +37,7 @@ function loadEntries() {
 
   <div class="p-4 mb-4 max-w-100 bg-gray-200">
     <select id="templates" name="template" class="w-full" 
-      hx-get="/option" 
+      hx-get="/options" 
       hx-trigger="change" 
       hx-target="#prompt"
       hx-on-htmx-before-on-load="loadNav(); loadEntries()">
