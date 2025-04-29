@@ -30,14 +30,21 @@ func NewServer() *Server {
   
   // POST
   sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
-  sub.HandleFunc("/new", handlers.NewEntry).Methods("POST")
 
 	for _, h := range handlers.GetHandlers() {
 		// Link the routes declared in sub-handlers to *mux.Router
-		h.Routes(sub)
+		h.Routes(router)
 	}
 
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+
+	// logs all routes when starting after they go defined
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		path, _ := route.GetPathTemplate()
+		method, _ := route.GetMethods()
+		log.Println(method, path)
+		return nil
+	})
 
 	return &Server{Router: router}
 }
