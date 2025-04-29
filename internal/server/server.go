@@ -1,12 +1,16 @@
 package server
 
 import (
+	"log"
 	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+
 	// blank import for handlers. They initalize theirself by init()
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/delete"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/home"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
 )
 
 
@@ -16,12 +20,9 @@ type Server struct {
 
 func NewServer() *Server {
 	router := mux.NewRouter()
-	router.HandleFunc("/", handlers.Home).Methods("GET")
   sub := router.PathPrefix("/").Subrouter()
 
   sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
-  sub.HandleFunc("/option", handlers.Options).Methods("GET")
-  sub.HandleFunc("/entries", handlers.Entries).Methods("GET")
 
   sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
 	sub.HandleFunc(`/checklist/{id:\w*}`, handlers.DisplayChecklist).Methods("GET")
