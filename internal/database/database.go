@@ -204,6 +204,32 @@ func NewEntry(db *sql.DB, entry ChecklistEntry) sql.Result {
 	return result
 }
 
+func GetEntryByPath(db *sql.DB, path string) ChecklistEntry{
+	selectStmt := `SELECT id, template_id, data, path, yaml, date FROM entries WHERE path = ?`
+	row := db.QueryRow(selectStmt, path)
+	var singleEntry ChecklistEntry
+	if err := row.Scan(&singleEntry.Id, &singleEntry.Template_id, &singleEntry.Data, &singleEntry.Path, &singleEntry.Yaml, &singleEntry.Date); err != nil {
+		log.Fatalf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+	}
+	return singleEntry
+}
+func GetTemplateNameByID(db *sql.DB, id int) ChecklistTemplate{
+	selectStmt := `SELECT id, name, empty_yaml FROM templates WHERE id = ?`
+	row := db.QueryRow(selectStmt, id)
+	var tmpl ChecklistTemplate
+	if err := row.Scan(&tmpl.Id, &tmpl.Name, &tmpl.Empty_yaml); err != nil {
+		log.Fatalf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+	}
+	return tmpl
+}
+
+func UpdateYamlByPath(db *sql.DB, path string, yamlData string) {
+	_, err := db.Exec("UPDATE entries SET yaml = ? WHERE path = ?", yamlData, path)
+	if err != nil {
+		log.Fatal("Error updating database:", err)
+	}
+}
+
 // ------------------------------------------------------------------------------------
 // Old Functions
 

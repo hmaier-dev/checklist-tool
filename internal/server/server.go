@@ -11,6 +11,7 @@ import (
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/delete"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/home"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
 )
 
 
@@ -25,7 +26,6 @@ func NewServer() *Server {
   sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
 
   sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
-	sub.HandleFunc(`/checklist/{id:\w*}`, handlers.DisplayChecklist).Methods("GET")
 	sub.HandleFunc(`/print/{id:\w*}`, handlers.GeneratePDF).Methods("GET")
   
   // POST
