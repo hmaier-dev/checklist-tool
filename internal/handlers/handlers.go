@@ -71,16 +71,13 @@ var NavList []NavItem = []NavItem{
 }
 
 func Nav(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var nav_tmpl = filepath.Join(wd, "static/nav.html")
-	tmpl := template.Must(template.ParseFiles(nav_tmpl))
-
-	err = tmpl.Execute(w, map[string]any{
+	tmpl := LoadTemplates([]string{"nav.html"})
+	err := tmpl.Execute(w, map[string]any{
 		"Nav": UpdateNav(r),
 	})
+	if err != nil{
+		log.Fatalf("Something went wrong executing the 'nav.html' template.\n %q \n", err)
+	}
 }
 
 

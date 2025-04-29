@@ -1,12 +1,9 @@
 package home
 
 import(
-	"html/template"
 	"net/http"
-	"os"
 	"log"
 	"net/url"
-	"path/filepath"
 	"encoding/json"
 	"time"
 
@@ -79,19 +76,16 @@ func (h *HomeHandler) Entries(w http.ResponseWriter, r *http.Request){
 	template_name := r.URL.Query().Get("template")
 	db := database.Init()
 	entries := database.GetAllEntriesForChecklist(db, template_name)
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var entries_tmpl = filepath.Join(wd, "static/entries.html")
-	tmpl := template.Must(template.ParseFiles(entries_tmpl))
-
+	tmpl := handlers.LoadTemplates([]string{"home/templates/entries.html"})
 	// building a map to access the descriptions by column names
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
 	result := handlers.BuildEntriesView(custom_fields, entries)
-	err = tmpl.Execute(w, map[string]any{
+	err := tmpl.Execute(w, map[string]any{
 		"Entries": result,
 	})
+	if err != nil{
+
+	}
 }
 
 // Runs when submit-button on / is pressed
@@ -137,15 +131,13 @@ func (h *HomeHandler) Options(w http.ResponseWriter, r *http.Request){
 	template_name := r.URL.Query().Get("template")
 	db := database.Init()
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var options = filepath.Join(wd, "static/options.html")
-	tmpl := template.Must(template.ParseFiles(options))
-	err = tmpl.Execute(w, map[string]any{
+	tmpl := handlers.LoadTemplates([]string{"home/templates/options.html"})
+	err := tmpl.Execute(w, map[string]any{
 		"Inputs": custom_fields,
 	})
+	if err != nil{
+		log.Fatalf("Can't execute 'entries'-template.\n %#v \n", err)
+	}
 }
 
 func generatePath(data map[string]string) string{
