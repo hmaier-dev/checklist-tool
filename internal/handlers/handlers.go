@@ -249,14 +249,14 @@ func UpdateNav(r *http.Request)[]NavItem{
 }
 
 // Takes './internal/handlers' as base-path.
-// All paths 
+// Keep in mind that paths[0] must be the base/root-template
+// that uses all other templates! 
 func LoadTemplates(paths []string) *template.Template{
 	wd, err := os.Getwd()
   if err != nil{
     log.Fatal("couldn't get working directory: ", err)
   }
 	base := filepath.Join(wd, "internal", "handlers")
-	log.Println(base)
 	var full = make([]string, len(paths))
 	for i, p := range paths{
 		full[i] = filepath.Join(base,p)
