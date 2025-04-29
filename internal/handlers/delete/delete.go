@@ -15,6 +15,8 @@ import(
 
 type DeleteHandler struct{}
 
+var _ handlers.Handler = (*DeleteHandler)(nil)
+
 // Sets /delete and all subroutes
 func (h *DeleteHandler)	Routes(router *mux.Router){
 	sub := router.PathPrefix("/delete").Subrouter()
