@@ -3,9 +3,6 @@ package database
 import (
 	"database/sql"
 	"log"
-
-	"github.com/hmaier-dev/checklist-tool/internal/structs"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -36,8 +33,6 @@ type ChecklistEntry struct {
 
 
 var DBfilePath string
-var EmptyChecklist []byte
-var EmptyChecklistItemsArray []*structs.ChecklistItem
 
 // Initialize database
 func Init() *sql.DB {
