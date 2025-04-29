@@ -28,29 +28,15 @@ func (h *ResetHandler) Routes(router *mux.Router){
 
 
 func (h *ResetHandler) Display(w http.ResponseWriter, r *http.Request){
-	wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
 	var templates = []string{
-		"reset.html",
+		"reset/templates/reset.html",
 		"nav.html",
 	}
-	var full = make([]string,len(templates))
-	var static = filepath.Join(wd, "static")
-	for i, t := range templates{
-		full[i] = filepath.Join(static,t)
-	}
-  tmpl := template.Must(template.ParseFiles(full...))
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing home template: ", err)
-  }
-
+  tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()
 	all := database.GetAllTemplates(db)
 	active := r.URL.Query().Get("template")
-  err = tmpl.Execute(w, map[string]any{
+	err := tmpl.Execute(w, map[string]any{
 		"Active": active,
 		"Nav": handlers.UpdateNav(r),
 		"Templates": all,
@@ -62,21 +48,24 @@ func (h *ResetHandler) Display(w http.ResponseWriter, r *http.Request){
 
 }
 func (h *ResetHandler) Entries(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var entries_tmpl = filepath.Join(wd, "static/resetEntries.html")
-	active := r.URL.Query().Get("template")
-	tmpl := template.Must(template.ParseFiles(entries_tmpl))
-
+	var templates = []string{
+		"reset/templates/entries.html",
+	}
+  tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()
+	active := r.URL.Query().Get("template")
 	entries_raw := database.GetAllEntriesForChecklist(db, active)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
 	entries_view := handlers.BuildEntriesView(custom_fields,entries_raw)
-  err = tmpl.Execute(w, map[string]any{
+	err := tmpl.Execute(w, map[string]any{
 		"Entries": entries_view,
   })
+	if err != nil{
+		fmt.Fprintf(w,"Can't execute 'entries'-template.\n %#v \n", err)
+	}
+	if err != nil{
+		log.Fatalf("Something went wrong executing the 'home/templates/entries.html'-template.\n %q \n", err)
+	}
 }
 func (h *ResetHandler) Execute(w http.ResponseWriter, r *http.Request){
   http.Redirect(w, r, "/reset", http.StatusSeeOther)

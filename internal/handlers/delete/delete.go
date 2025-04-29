@@ -26,22 +26,14 @@ func (h *DeleteHandler)	Routes(router *mux.Router){
 
 // Return rendered html for GET to /delete
 func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var static = filepath.Join(wd, "static")
-	var delete_tmpl = filepath.Join(static, "delete.html")
-	var nav_tmpl = filepath.Join(static, "nav.html")
-
-  tmpl := template.Must(template.ParseFiles(delete_tmpl, nav_tmpl))
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("error parsing home template: ", err)
-  }
+	var templates = []string{
+		"delete/templates/delete.html",
+		"nav.html",
+	}
+  tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()
 	all := database.GetAllTemplates(db)
-  err = tmpl.Execute(w, map[string]any{
+	err := tmpl.Execute(w, map[string]any{
     "Nav" : handlers.UpdateNav(r),
 		"Templates": all,
 		"Active": r.URL.Query().Get("template"),
@@ -56,21 +48,22 @@ func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
 
 // Returns all entries for a 'template' into deleteEntries.html
 func (h *DeleteHandler)	Entries(w http.ResponseWriter, r *http.Request){
-	template_name := r.URL.Query().Get("template")
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var entries_tmpl = filepath.Join(wd, "static/deleteEntries.html")
-	tmpl := template.Must(template.ParseFiles(entries_tmpl))
+	var templates = []string{
+		"delete/templates/entries.html",
+	}
+  tmpl := handlers.LoadTemplates(templates)
 
+	template_name := r.URL.Query().Get("template")
 	db := database.Init()
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
 	entries := database.GetAllEntriesForChecklist(db, template_name)
 	result := handlers.BuildEntriesView(custom_fields, entries)
-	err = tmpl.Execute(w, map[string]any{
+	err := tmpl.Execute(w, map[string]any{
 		"Entries": result,
 	})
+	if err != nil{
+		fmt.Fprintf(w,"Can't execute 'entries'-template.\n %#v \n", err)
+	}
 }
 
 // Removes entry from 'entries'-table by the 'path'-column
