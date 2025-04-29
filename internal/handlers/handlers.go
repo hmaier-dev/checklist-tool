@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +19,6 @@ import (
 	"github.com/hmaier-dev/checklist-tool/internal/structs"
 
 	"github.com/gorilla/mux"
-	"github.com/sqids/sqids-go"
 	"gopkg.in/yaml.v3"
 )
 
