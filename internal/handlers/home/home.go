@@ -32,22 +32,13 @@ func (h *HomeHandler)	Routes(router *mux.Router){
 
 // Return html to http.ResponseWriter for /
 func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
-	wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
 	var templates = []string{
-		"home.html",
 		"nav.html",
-		"options.html",
-		"entries.html",
+		"home/templates/home.html",
+		"home/templates/options.html",
+		"home/templates/entries.html",
 	}
-	var full = make([]string,len(templates))
-	var static = filepath.Join(wd, "static")
-	for i, t := range templates{
-		full[i] = filepath.Join(static,t)
-	}
-  tmpl := template.Must(template.ParseFiles(full...))
+  tmpl := handlers.LoadTemplates(templates)
 	// This needs to be called here, to set ?template=
 	// to the first template if none is set.
 	db := database.Init()
@@ -70,7 +61,7 @@ func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
 	entries_view := handlers.BuildEntriesView(custom_fields,entries_raw)
 	inputs := database.GetAllCustomFieldsForTemplate(db, active)
-  err = tmpl.Execute(w, map[string]any{
+	err := tmpl.Execute(w, map[string]any{
 		"Active": active,
     "Nav" : handlers.UpdateNav(r),
 		"Templates": all,
