@@ -1,11 +1,9 @@
 package delete
 
-import(
-	"html/template"
+import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/gorilla/mux"
 
@@ -15,7 +13,7 @@ import(
 
 type DeleteHandler struct{}
 
-var _ handlers.Handler = (*DeleteHandler)(nil)
+var _ handlers.ActionHandler = (*DeleteHandler)(nil)
 
 // Sets /delete and all subroutes
 func (h *DeleteHandler)	Routes(router *mux.Router){

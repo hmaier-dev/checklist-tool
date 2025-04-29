@@ -20,7 +20,7 @@ import(
 
 type HomeHandler struct{}
 
-var _ handlers.Handler = (*HomeHandler)(nil)
+var _ handlers.ActionHandler = (*HomeHandler)(nil)
 
 // Sets / and all its subroutes
 func (h *HomeHandler)	Routes(router *mux.Router){

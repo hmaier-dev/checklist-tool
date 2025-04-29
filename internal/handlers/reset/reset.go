@@ -1,15 +1,10 @@
 package reset
 
-
 import (
-	"html/template"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
-
 	"github.com/gorilla/mux"
-
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
 )
@@ -21,7 +16,7 @@ type ResetHandler struct {}
 // Because go doesn't have a implements, I test it with this declare.
 // In go interface implementation is implicit, meaning you
 // don't need to write it out
-var _ handlers.Handler = (*ResetHandler)(nil)
+var _ handlers.ActionHandler = (*ResetHandler)(nil)
 
 
 func (h *ResetHandler) Routes(router *mux.Router){

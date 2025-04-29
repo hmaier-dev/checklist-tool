@@ -16,30 +16,34 @@ import (
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/pdf"
-	"github.com/hmaier-dev/checklist-tool/internal/structs"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 )
 
-type Handler interface{
+
+// Just sets the routes and displays html
+type DisplayHandler interface{
 	Routes(router *mux.Router)
 	Display(w http.ResponseWriter, r *http.Request)	
+}
+
+// Writes
+type ActionHandler interface{
+	DisplayHandler
 	Entries(w http.ResponseWriter, r *http.Request)	
 	Execute(w http.ResponseWriter, r *http.Request)
 }
 
-var handlerRegistry []Handler
+var handlerRegistry []DisplayHandler
 
-func RegisterHandler(h Handler) {
+func RegisterHandler(h DisplayHandler) {
 	handlerRegistry = append(handlerRegistry, h)
 }
-func GetHandlers() []Handler {
+func GetHandlers() []DisplayHandler {
 	return handlerRegistry
 }
 
-var EmptyChecklist []byte
-var EmptyChecklistItemsArray []*structs.ChecklistItem
 
 type NavItem struct {
 	Name string
