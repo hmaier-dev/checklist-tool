@@ -32,27 +32,29 @@
 {{ end }}
 
 
-{{ define "renderItems" }}
+{{ define "renderItems"  }}
+  {{ $Items := index . 0 }}
+  {{ $Path := index . 1 }}
   <ul>
-  {{ range .Items }}
+  {{ range $Items }}
       <li>
         <input class="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring focus:ring-blue-300"
           type="checkbox"
-          hx-post="/checklist/update/{{ $.Path }}" hx-trigger="change"
+          hx-post="/checklist/update/{{ $Path }}" hx-trigger="change"
           name="checked"
           value="true"
           hx-vals='{"task": "{{ .Task }}"}'
           {{ if .Checked }}checked{{ end }}> {{ .Task }}
 
           {{ if .Children }}
-              {{ template "renderItems" .Children }}
+              {{ template "renderItems" (arr .Children $Path) }}
           {{ end }}
       </li>
   {{ end }}
   </ul>
 {{ end }}
 
-{{ template "renderItems" . }}
+{{ template "renderItems" (arr .Items .Path ) }}
 
   <input 
     type="button" 

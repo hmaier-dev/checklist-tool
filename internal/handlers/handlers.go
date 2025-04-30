@@ -177,6 +177,13 @@ func LoadTemplates(paths []string) *template.Template{
 	for i, p := range paths{
 		full[i] = filepath.Join(base,p)
 	}
-	return template.Must(template.ParseFiles(full...))
+	funcMap := template.FuncMap{
+		"arr": func (item ...any) []any { return item },
+	}
+	// add funcMap to base-template
+	first := filepath.Base(full[0])
+	tmpl := template.New(first).Funcs(template.FuncMap(funcMap))
+	tmpl = template.Must(tmpl.ParseFiles(full...))
+	return tmpl
 }
 
