@@ -12,6 +12,7 @@ import (
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/home"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/upload"
 )
 
 
@@ -23,13 +24,8 @@ func NewServer() *Server {
 	router := mux.NewRouter()
   sub := router.PathPrefix("/").Subrouter()
 
-  sub.HandleFunc("/upload", handlers.DisplayUpload).Methods("Get")
-
   sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
 	sub.HandleFunc(`/print/{id:\w*}`, handlers.GeneratePDF).Methods("GET")
-  
-  // POST
-  sub.HandleFunc("/upload", handlers.ReceiveUpload).Methods("POST")
 
 	for _, h := range handlers.GetHandlers() {
 		// Link the routes declared in sub-handlers to *mux.Router
