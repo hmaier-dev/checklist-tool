@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,14 +10,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/pdf"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v3"
 )
 
 
@@ -112,71 +109,6 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-
-
-func DisplayUpload(w http.ResponseWriter, r *http.Request){
-  wd, err := os.Getwd()
-  if err != nil{
-    log.Fatal("couldn't get working directory: ", err)
-  }
-	var static = filepath.Join(wd, "static")
-	var new_tmpl = filepath.Join(static, "upload.html")
-	var nav_tmpl = filepath.Join(static, "nav.html")
-	var template_tmpl = filepath.Join(static, "template.html")
-
-  tmpl := template.Must(template.ParseFiles(new_tmpl, nav_tmpl, template_tmpl))
-	db := database.Init()
-	allTemplates := database.GetAllTemplates(db)
-  err = tmpl.Execute(w, map[string]any{
-    "Nav" : UpdateNav(r),
-		"Templates": allTemplates,
-  })
-
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
-  }
-
-}
-func ReceiveUpload(w http.ResponseWriter, r *http.Request){
-	r.ParseMultipartForm(1 << 20)
-	var buf bytes.Buffer
-	file, header, err := r.FormFile("yaml")
-	if err != nil {
-		panic(err)
-	}
-
-	fields_raw := r.FormValue("fields_csv")
-	desc_raw := r.FormValue("desc_csv")
-
-	template_name := strings.Split(header.Filename, ".")[0]
-	io.Copy(&buf, file)
-	file_contents := buf.String()
-
-	var result any
-	err = yaml.Unmarshal([]byte(file_contents), &result)
-	if err != nil {
-		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
-	}
-
-	fields_parsed := csv.NewReader(strings.NewReader(fields_raw))
-	desc_parsed := csv.NewReader(strings.NewReader(desc_raw))
-
-	fields, err := fields_parsed.Read()
-	if err != nil {
-		log.Fatalf("Error while reading parsed custom fields. %q \n", err)
-	}
-	desc, err := desc_parsed.Read()
-	if err != nil {
-		log.Fatalf("Error while reading parsed custom descriptions: %q \n", err)
-	}
-
-	if len(fields) == len(desc){
-		db := database.Init()
-		database.NewChecklistTemplate(db, template_name, file_contents, fields, desc)
-	}
-	http.Redirect(w, r, "/upload", http.StatusSeeOther)
-}
 
 type DescValueView struct {
 	Desc string
