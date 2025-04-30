@@ -1,6 +1,7 @@
 package checklist
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -25,7 +26,7 @@ var _ handlers.DisplayHandler = (*ChecklistHandler)(nil)
 func (h *ChecklistHandler)	Routes(router *mux.Router){
 	router.HandleFunc(`/checklist/{id:\w*}`, h.Display).Methods("GET")
 	sub := router.PathPrefix("/checklist").Subrouter()
-	sub.HandleFunc(`/update/{id:\w*}`, h.Update).Methods("GET")
+	sub.HandleFunc(`/update/{id:\w*}`, h.Update).Methods("POST")
 }
 
 func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
@@ -78,9 +79,6 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
   // Fetch Row from Database
   db := database.Init()
   entry := database.GetEntryByPath(db, path)
-  if err != nil{
-    log.Fatalf("error fetching data by path: %q", err)
-  }
 
   var oldItems []*ChecklistItem
   err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
@@ -92,6 +90,7 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
       return
   }
   database.UpdateYamlByPath(db, path, string(yamlBytes))
+	fmt.Fprint(w,[]byte{})
 }
 
 func ChangeCheckedStatus(newItem ChecklistItem, oldChecklist []*ChecklistItem){
