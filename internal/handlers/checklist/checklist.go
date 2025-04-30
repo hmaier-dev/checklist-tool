@@ -1,13 +1,17 @@
 package checklist
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/pdf"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,6 +31,7 @@ func (h *ChecklistHandler)	Routes(router *mux.Router){
 	router.HandleFunc(`/checklist/{id:\w*}`, h.Display).Methods("GET")
 	sub := router.PathPrefix("/checklist").Subrouter()
 	sub.HandleFunc(`/update/{id:\w*}`, h.Update).Methods("POST")
+	sub.HandleFunc(`/print/{id:\w*}`, h.Print).Methods("GET")
 }
 
 func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
@@ -82,7 +87,7 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
 
   var oldItems []*ChecklistItem
   err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
-  ChangeCheckedStatus(alteredItem, oldItems)
+  changeCheckedStatus(alteredItem, oldItems)
   yamlBytes, err := yaml.Marshal(oldItems)
 
   if err != nil {
@@ -93,14 +98,57 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
 	fmt.Fprint(w,[]byte{})
 }
 
-func ChangeCheckedStatus(newItem ChecklistItem, oldChecklist []*ChecklistItem){
+func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
+		path :=  mux.Vars(r)["id"]
+		tmpl := handlers.LoadTemplates([]string{"checklist/templates/print.html"})
+		db := database.Init()
+		entry := database.GetEntryByPath(db, path)
+
+		var items []ChecklistItem
+		err := yaml.Unmarshal([]byte(entry.Yaml), &items)
+
+		entries := make([]database.ChecklistEntry, 1)
+		entries[0] = database.GetEntryByPath(db, path)
+		template := database.GetTemplateNameByID(db,entries[0].Template_id)
+		custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
+		result := handlers.BuildEntriesView(custom_fields, entries)
+		var buf bytes.Buffer
+		err = tmpl.Execute(&buf, map[string]any{
+			"Items": items,
+			"Entries": result,
+			"Date": time.Now().Format("02.01.2006, 15:04:05"),
+		})
+		bodyBytes, err := io.ReadAll(&buf)
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close() // Close the body after reading
+
+		var pdfName string	
+		var pdfBytes []byte
+		pdfBytes, err = pdf.Generate(pdfName,bodyBytes)
+		if err != nil{
+			log.Fatalf("Error while generating pdf.\nError: %q \n", err)
+		}
+		// Setting the header before sending the file to the browser
+    w.Header().Set("Content-Type", "application/pdf")
+		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
+    w.Header().Set("Content-Disposition", disposition)
+    _, err = io.Copy(w, bytes.NewReader(pdfBytes))
+    if err != nil {
+			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
+    }
+}
+
+func changeCheckedStatus(newItem ChecklistItem, oldChecklist []*ChecklistItem){
   for _, item := range oldChecklist{
     if newItem.Task == item.Task{
       item.Checked = newItem.Checked     
       return
     }
     if len(item.Children) > 0 {
-			ChangeCheckedStatus(newItem, item.Children)
+			changeCheckedStatus(newItem, item.Children)
 		}
   }
 }

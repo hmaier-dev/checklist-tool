@@ -25,13 +25,11 @@ func NewServer() *Server {
   sub := router.PathPrefix("/").Subrouter()
 
   sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
-	sub.HandleFunc(`/print/{id:\w*}`, handlers.GeneratePDF).Methods("GET")
 
 	for _, h := range handlers.GetHandlers() {
 		// Link the routes declared in sub-handlers to *mux.Router
 		h.Routes(router)
 	}
-
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	// logs all routes when starting after they go defined

@@ -1,11 +1,8 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +10,6 @@ import (
 	"time"
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
-	"github.com/hmaier-dev/checklist-tool/internal/pdf"
-
 	"github.com/gorilla/mux"
 )
 
@@ -76,39 +71,6 @@ func Nav(w http.ResponseWriter, r *http.Request){
 		log.Fatalf("Something went wrong executing the 'nav.html' template.\n %q \n", err)
 	}
 }
-
-
-func GeneratePDF(w http.ResponseWriter, r *http.Request) {
-		wd, err := os.Getwd()
-		var static = filepath.Join(wd, "static")
-		var print_tmpl = filepath.Join(static, "print.html")
-		tmpl, err := template.ParseFiles(print_tmpl)
-		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, map[string]any{
-		})
-		bodyBytes, err := io.ReadAll(&buf)
-		if err != nil {
-			http.Error(w, "Failed to read request body", http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close() // Close the body after reading
-
-		var pdfName string	
-		var pdfBytes []byte
-		pdfBytes, err = pdf.Generate(pdfName,bodyBytes)
-		if err != nil{
-			log.Fatalf("Error while generating pdf.\nError: %q \n", err)
-		}
-		// Setting the header before sending the file to the browser
-    w.Header().Set("Content-Type", "application/pdf")
-		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
-    w.Header().Set("Content-Disposition", disposition)
-    _, err = io.Copy(w, bytes.NewReader(pdfBytes))
-    if err != nil {
-			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
-    }
-}
-
 
 type DescValueView struct {
 	Desc string
