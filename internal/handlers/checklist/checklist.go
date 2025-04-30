@@ -34,14 +34,14 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		"checklist/templates/checklist.html",
 	}
 	tmpl := handlers.LoadTemplates(paths)
-	
+
 	db := database.Init()
 	entries := make([]database.ChecklistEntry, 1)
 	entries[0] = database.GetEntryByPath(db, path)
 	template := database.GetTemplateNameByID(db,entries[0].Template_id)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
 	result := handlers.BuildEntriesView(custom_fields, entries)
-	
+
 	var items []*ChecklistItem
 	yaml.Unmarshal([]byte(entries[0].Yaml), &items)
 	err := tmpl.Execute(w, map[string]any{
