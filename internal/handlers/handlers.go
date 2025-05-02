@@ -77,19 +77,19 @@ type DescValueView struct {
 	Value string
 }
 
-type EntriesView struct{
+type EntryView struct{
 	Path string
 	Data []DescValueView
 }
 
 
 // Returns description and value instead of the database-column and value.
-func BuildEntriesView(custom_fields []database.CustomField, entries []database.ChecklistEntry) []EntriesView{
+func BuildEntriesView(custom_fields []database.CustomField, entries []database.ChecklistEntry) []EntryView{
 	var fieldsMap = make(map[string]string, len(custom_fields))
 	for _, field := range custom_fields{
 		fieldsMap[field.Key] = field.Desc
 	}
-	var result []EntriesView	
+	var result []EntryView	
 	for _, entry := range entries{
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(entry.Data), &dataMap)
@@ -106,7 +106,7 @@ func BuildEntriesView(custom_fields []database.CustomField, entries []database.C
 			Desc: "Erstellungsdatum",
 			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
 		})
-		result = append(result, EntriesView{
+		result = append(result, EntryView{
 			Path: entry.Path,
 			Data: viewMap,
 		})
