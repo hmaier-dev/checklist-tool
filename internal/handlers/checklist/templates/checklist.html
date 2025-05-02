@@ -3,33 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wghNachname, Vort@400;500;600;700&display=swap" rel="stylesheet">
   <script src="/static/htmx.min.js"></script>
   <link href="/static/style.css" rel="stylesheet">
-  <title>{{ printf "%s | %s" .Info.Name .Info.Model }}</title>
+  <title>{{ printf "%s" .Identifier.First }}</title>
 </head>
 
 <body>
 
- {{ range .Entries }}
-    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
-      <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
-        <tr>
-          {{ range .Data }}
-          <th class="px-5 py-0 text-left border-b">{{ .Desc }}</th>
-          {{ end }}
-        </tr>
-      </thead>
-      <tbody class="divide-y">
-        <tr class="hover:bg-gray-50">
-          {{ range .Data }}
-          <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Value }}</td>
-          {{ end }}
-        </tr>
-      </tbody>
-    </table>
-    <br>
-{{ end }}
+  {{ with .EntryView }}
+  <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
+    <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
+      <tr>
+        {{ range .Data }}
+        <th class="px-5 py-0 text-left border-b">{{ .Desc }}</th>
+        {{ end }}
+      </tr>
+    </thead>
+    <tbody class="divide-y">
+      <tr class="hover:bg-gray-50">
+        {{ range .Data }}
+        <td class="copyable px-6 py-4 border-b p-4 cursor-pointer transition duration-100 hover:bg-gray-500 hover:text-white active:bg-gray-700 focus:outline-none copy-cell">{{ .Value }}</td>
+        {{ end }}
+      </tr>
+    </tbody>
+  </table>
+  <br>
+  {{ end }}
 
 
 {{ define "renderItems"  }}
@@ -55,6 +55,8 @@
 {{ end }}
 
 {{ template "renderItems" (arr .Items .Path ) }}
+
+  <br>
 
   <a
     href="/checklist/print/{{ .Path }}" 
