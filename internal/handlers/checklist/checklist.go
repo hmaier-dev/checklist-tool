@@ -42,16 +42,41 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	tmpl := handlers.LoadTemplates(paths)
 
 	db := database.Init()
-	entries := make([]database.ChecklistEntry, 1)
-	entries[0] = database.GetEntryByPath(db, path)
-	template := database.GetTemplateNameByID(db,entries[0].Template_id)
+	entry := database.GetEntryByPath(db, path)
+	template := database.GetTemplateNameByID(db,entry.Template_id)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
-	result := handlers.BuildEntriesView(custom_fields, entries)
+	result := handlers.BuildEntryView(custom_fields, entry)
 
+	// Search for field in data to set as browser-window title
+	var firstID string
+	out: for _, field  := range result.Data{
+		switch field.Key{
+		case "ticket":
+			firstID = field.Value
+			break out
+		case "ticket-num":
+			firstID = field.Value
+			break out
+		case "fullname":
+			firstID = field.Value
+			break out
+		case "name":
+			firstID = field.Value
+			break out
+		default: 
+			firstID = path
+			break out
+		}
+	}
 	var items []*ChecklistItem
-	yaml.Unmarshal([]byte(entries[0].Yaml), &items)
+	yaml.Unmarshal([]byte(entry.Yaml), &items)
 	err := tmpl.Execute(w, map[string]any{
-		"Entries": result,
+		"Identifier": struct {
+			First string
+		}{
+			First: firstID,
+		},
+		"EntryView": result,
 		"Items": items,
 		"Path": path,
   })
