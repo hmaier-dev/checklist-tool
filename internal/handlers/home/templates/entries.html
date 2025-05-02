@@ -15,10 +15,12 @@
             <td class="px-5 py-2 border-b cursor-pointer clickable" data-href="/checklist/{{ $entry.Path }}">{{ .Value }}</td>
             {{ end }}
             <td class="px-5 py-2 border-b">  
-              <input type="button" value="Export to PDF" 
-                  hx-get="/print/{{ $entry.Path }}" 
-                  hx-trigger="click" 
-                  class="w-full md:w-auto px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded-lg shadow-md transition duration-200">
+              <a
+                href="/checklist/print/{{ .Path }}" 
+                target="_blank"
+                class="w-full md:w-auto px-4 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-semibold rounded-lg shadow-md transition duration-200">
+                Export
+              </a>
             </td>
           </tr>
       </tbody>
