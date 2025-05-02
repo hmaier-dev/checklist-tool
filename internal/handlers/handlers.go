@@ -72,46 +72,54 @@ func Nav(w http.ResponseWriter, r *http.Request){
 	}
 }
 
-type DescValueView struct {
-	Desc string
-	Value string
-}
-
 type EntryView struct{
 	Path string
 	Data []DescValueView
 }
 
+type DescValueView struct {
+	Desc string
+	Value string
+	Key string
+}
 
-// Returns description and value instead of the database-column and value.
+// Connects the description of a column with it's value for an array of entries.
 func BuildEntriesView(custom_fields []database.CustomField, entries []database.ChecklistEntry) []EntryView{
-	var fieldsMap = make(map[string]string, len(custom_fields))
-	for _, field := range custom_fields{
-		fieldsMap[field.Key] = field.Desc
-	}
 	var result []EntryView	
 	for _, entry := range entries{
+		result = append(result, BuildEntryView(custom_fields, entry))
+	}
+	return result
+}
+// Connects the description of a column with it's value for a single entry.
+// The DescValueView could also be build by a JOIN() in SQL.
+// Maybe refactor it in the function, to reduce the codebase.
+func BuildEntryView(custom_fields []database.CustomField, entry database.ChecklistEntry) EntryView{
+		var fieldsMap = make(map[string]string, len(custom_fields))
+		for _, field := range custom_fields{
+			fieldsMap[field.Key] = field.Desc
+		}
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(entry.Data), &dataMap)
 		if err != nil{
 			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
 		}
 		var viewMap []DescValueView
+		// dataMap => ChecklistEntry.Data
 		for k, v := range dataMap {
+				// fieldsMap => Customfields
 				desc := fieldsMap[k]
-				viewMap = append(viewMap, DescValueView{Desc: desc, Value: v})	
+				viewMap = append(viewMap, DescValueView{Desc: desc, Value: v, Key: k})	
 		}
 		// format unix-time string to human-readable format
 		viewMap = append(viewMap, DescValueView{
 			Desc: "Erstellungsdatum",
 			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
 		})
-		result = append(result, EntryView{
+		return EntryView{
 			Path: entry.Path,
-			Data: viewMap,
-		})
-	}
-	return result
+			Data: viewMap,			
+		}
 }
 
 // I want to save the current state of the active template when switching paths.

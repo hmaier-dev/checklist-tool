@@ -140,7 +140,7 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, map[string]any{
 			"Items": items,
-			"Entries": result,
+			"EntryView": result,
 			"Date": time.Now().Format("02.01.2006, 15:04:05"),
 		})
 		bodyBytes, err := io.ReadAll(&buf)
