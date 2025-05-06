@@ -19,7 +19,7 @@ name: auf arbeit gehen
 fields: [fullname,ticket,typ]
 desc: ["Nachname, Vorname","Ticket Number","Modell"]
 tab_desc_schema: [fullname,typ]
-pdf_name_schema: [ticket,name,typ]
+pdf_name_schema: [ticket,fullname,typ]
 ---
 
 - task: "Auf Arbeit kommen."
