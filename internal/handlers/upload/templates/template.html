@@ -6,6 +6,10 @@
     <tr>
       <th class="px-5 py-0 text-left border-b w-32">Template ID</th>
       <th class="px-5 py-0 text-left border-b w-48">Name</th>
+      <th class="px-5 py-0 text-left border-b w-48">Columns</th>
+      <th class="px-5 py-0 text-left border-b w-48">Descriptions</th>
+      <th class="px-5 py-0 text-left border-b w-48">Browser Tab Description Schema</th>
+      <th class="px-5 py-0 text-left border-b w-48">PDF Name Schema</th>
       <th class="px-2 py-0 text-left border-b w-8"></th>
       <th class="px-2 py-0 text-left border-b w-8"></th>
     </tr>
@@ -14,6 +18,10 @@
     <tr class="">
       <td class="px-5 py-2 border-b">{{ .Id }}</td>
       <td class="px-5 py-2 border-b">{{ .Name }}</td>
+      <td class="px-5 py-2 border-b">{{ .Columns }}</td>
+      <td class="px-5 py-2 border-b">{{ .Description }}</td>
+      <td class="px-5 py-2 border-b">{{ .Tab_Schema }}</td>
+      <td class="px-5 py-2 border-b">{{ .PDF_Schema }}</td>
       <td class="px-2 py-2 border-b">
         <a
           hx-post="/checklist/delete/" 
