@@ -2,6 +2,7 @@ package checklist
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -43,39 +44,31 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 
 	db := database.Init()
 	entry := database.GetEntryByPath(db, path)
+	var data map[string]string
+	err := json.Unmarshal([]byte(entry.Data),&data)
+	if err != nil{
+		log.Fatalln("Unmarshaling json from db wen't wrong.")
+		return
+	}
 	template := database.GetTemplateNameByID(db,entry.Template_id)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
 	result := handlers.BuildEntryView(custom_fields, entry)
 
-	// Search for field in data to set as browser-window title
-	var firstID string
-	out: for _, field  := range result.Data{
-		switch field.Key{
-		case "ticket":
-			firstID = field.Value
-			break out
-		case "ticket-num":
-			firstID = field.Value
-			break out
-		case "fullname":
-			firstID = field.Value
-			break out
-		case "name":
-			firstID = field.Value
-			break out
-		default: 
-			firstID = path
-			break out
+	// Build string for browser-tab title
+	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
+	var tab_desc string
+	for i, desc := range tab_desc_schema{
+		key := desc.Value
+		if i == len(tab_desc_schema) - 1 {
+			tab_desc += data[key]
+		}else{
+			tab_desc += data[key] + " | "
 		}
 	}
 	var items []*ChecklistItem
 	yaml.Unmarshal([]byte(entry.Yaml), &items)
-	err := tmpl.Execute(w, map[string]any{
-		"Identifier": struct {
-			First string
-		}{
-			First: firstID,
-		},
+	err = tmpl.Execute(w, map[string]any{
+		"TabDescription": tab_desc,
 		"EntryView": result,
 		"Items": items,
 		"Path": path,
