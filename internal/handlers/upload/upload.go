@@ -2,12 +2,12 @@ package upload
 
 import (
 	"bytes"
-	"encoding/csv"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/adrg/frontmatter"
 	"github.com/gorilla/mux"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
@@ -47,44 +47,35 @@ func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request){
 
 }
 
+
 // Runs when submit-button on / is pressed
 func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request){
 	r.ParseMultipartForm(1 << 20)
-	var buf bytes.Buffer
 	file, header, err := r.FormFile("yaml")
 	if err != nil {
 		panic(err)
 	}
-
-	fields_raw := r.FormValue("fields_csv")
-	desc_raw := r.FormValue("desc_csv")
-
-	template_name := strings.Split(header.Filename, ".")[0]
+	var buf bytes.Buffer
 	io.Copy(&buf, file)
 	file_contents := buf.String()
+	var matter database.FrontMatter
+	// splits the file into the yaml frontmatter and the rest of the file
+	rest, err := frontmatter.Parse(strings.NewReader(file_contents), &matter)
+	if err != nil {
+		http.Error(w, "Error while parsing frontmatter", http.StatusBadRequest)
+		log.Printf("Error while parsing frontmatter.\n %q\n", err)
+		return
+	}
 
 	var result any
-	err = yaml.Unmarshal([]byte(file_contents), &result)
+	err = yaml.Unmarshal([]byte(rest), &result)
 	if err != nil {
 		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
 	}
 
-	fields_parsed := csv.NewReader(strings.NewReader(fields_raw))
-	desc_parsed := csv.NewReader(strings.NewReader(desc_raw))
+	db := database.Init()
+	database.NewChecklistTemplate(db, matter, string(rest))
 
-	fields, err := fields_parsed.Read()
-	if err != nil {
-		log.Fatalf("Error while reading parsed custom fields. %q \n", err)
-	}
-	desc, err := desc_parsed.Read()
-	if err != nil {
-		log.Fatalf("Error while reading parsed custom descriptions: %q \n", err)
-	}
-
-	if len(fields) == len(desc){
-		db := database.Init()
-		database.NewChecklistTemplate(db, template_name, file_contents, fields, desc)
-	}
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
 

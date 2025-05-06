@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -48,6 +49,28 @@ func Init() *sql.DB {
 		name TEXT NOT NULL,
 		empty_yaml TEXT
 	);
+	CREATE TABLE IF NOT EXISTS custom_fields (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		template_id INTEGER NOT NULL,
+		key TEXT NOT NULL,
+		desc TEXT NOT NULL,
+		FOREIGN KEY (template_id)
+			REFERENCES templates (id)
+	);
+	CREATE TABLE IF NOT EXISTS tab_desc_schema (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		template_id INTEGER NOT NULL,
+		value TEXT NOT NULL,
+		FOREIGN KEY (template_id)
+			REFERENCES templates (id)
+	);
+	CREATE TABLE IF NOT EXISTS pdf_name_schema (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		template_id INTEGER NOT NULL,
+		value TEXT NOT NULL,
+		FOREIGN KEY (template_id)
+			REFERENCES templates (id)
+	);
 	CREATE TABLE IF NOT EXISTS entries (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		template_id INTEGER NOT NULL,
@@ -55,14 +78,6 @@ func Init() *sql.DB {
 		path TEXT NOT NULL UNIQUE,
 		yaml TEXT,
 		date INT,
-		FOREIGN KEY (template_id)
-			REFERENCES templates (id)
-	);
-	CREATE TABLE IF NOT EXISTS custom_fields (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		template_id INTEGER NOT NULL,
-		key TEXT NOT NULL,
-		desc TEXT NOT NULL,
 		FOREIGN KEY (template_id)
 			REFERENCES templates (id)
 	);
@@ -74,25 +89,36 @@ func Init() *sql.DB {
 	return db
 }
 
-func NewChecklistTemplate(db *sql.DB, template_name string, file_content string, fields []string, desc []string){
+// For storing the values inside the frontmatter of the yaml
+type FrontMatter struct{
+	Name string 							`yaml:"name"`
+	Fields []string 					`yaml:"fields"`
+	Desc []string 						`yaml:"desc"`
+	Tab_desc_schema []string 	`yaml:"tab_desc_schema"`
+	Pdf_name_schema []string 	`yaml:"pdf_name_schema"`
+}
+
+// Takes frontmatter and the checklist yaml to create 
+// a new checklist template in all required tables
+func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string){
 	// Is there already a template with the same name?
 	checkStmt := `SELECT name FROM templates WHERE name = ?`
 	var exist string
-	result := db.QueryRow(checkStmt, template_name)
+	result := db.QueryRow(checkStmt, matter.Name)
 	err := result.Scan(&exist)
 	if err != sql.ErrNoRows {
-		log.Printf("A template with the name '%s' is already present. \n Error: %q", template_name, err)
+		log.Printf("A template with the name '%s' is already present. \n Error: %q", matter.Name, err)
 		return 
 	}
 	// Add a new entry in templates (the main table)
 	newTemplateStmt := `INSERT INTO templates (name, empty_yaml) VALUES (?, ?)`
-	_, err = db.Exec(newTemplateStmt, template_name, file_content)
+	_, err = db.Exec(newTemplateStmt, matter.Name, yaml)
 	if err != nil{
 		log.Fatalf("Couldn't insert a new template.\n Error: %q \n", err)
 	}
-	// Get the id of the newly 
+	// Get the id of the newly created template
 	selectStmt := `SELECT id FROM templates WHERE name = ?`
-	row := db.QueryRow(selectStmt, template_name)
+	row := db.QueryRow(selectStmt, matter.Name)
 	var id int
 	err = row.Scan(&id)
 	if err != nil {
@@ -100,11 +126,27 @@ func NewChecklistTemplate(db *sql.DB, template_name string, file_content string,
 		return
 	}
 	// Add custom input fields including description
-	for i := range fields{
+	for i := range matter.Fields{
 		newFieldStmt := `INSERT INTO custom_fields (template_id, key, desc) VALUES (?, ?, ?)`
-		_, err = db.Exec(newFieldStmt, id, fields[i], desc[i])
+		_, err = db.Exec(newFieldStmt, id, matter.Fields[i], matter.Desc[i])
 		if err != nil{
 			log.Fatalf("Error while inserting custom fields: %q\n", err)
+		}
+	}
+	// Add column names for browser tab description
+	for t := range matter.Tab_desc_schema{
+		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
+		_, err = db.Exec(newFieldStmt, id, t)
+		if err != nil{
+			log.Fatalf("Error while inserting column names for tab description schema: %q\n", err)
+		}
+	}
+	// Add column names for pdf name schema
+	for p := range matter.Pdf_name_schema{
+		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
+		_, err = db.Exec(newFieldStmt, id, p)
+		if err != nil{
+			log.Fatalf("Error while inserting column names for pdf name schema: %q\n", err)
 		}
 	}
 
