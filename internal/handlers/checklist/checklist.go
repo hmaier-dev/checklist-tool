@@ -142,8 +142,28 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 			return
 		}
 		defer r.Body.Close() // Close the body after reading
-
-		var pdfName string	
+		
+		
+		var data map[string]string
+		err = json.Unmarshal([]byte(entries[0].Data),&data)
+		if err != nil{
+			log.Fatalln("Unmarshaling json from db wen't wrong.")
+			return
+		}
+		// Build filename of pdf
+		name_schema := database.GetPdfNamingByID(db, template.Id)
+		var pdfName string
+		fmt.Printf("%+v \n", data)
+		for i, desc := range name_schema{
+			key := desc.Value
+			fmt.Println(key)
+			fmt.Println(data[key])
+			if i == len(name_schema) - 1 {
+				pdfName += data[key] + ".pdf"
+			}else{
+				pdfName += data[key] + "_"
+			}
+		}
 		var pdfBytes []byte
 		pdfBytes, err = pdf.Generate(pdfName,bodyBytes)
 		if err != nil{
