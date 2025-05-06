@@ -16,12 +16,10 @@ A checklist can look like this:
 ```yaml
 ---
 name: auf arbeit gehen
-fields: fullname,ticket,typ
-desc: "Nachname, Vorname","Ticket Number","Modell"
-## e.g. Martha Muster | S4
-tab_desc_schema: fullname,typ 
-## e.g. TCK01_Martha_Muster_S4.pdf
-pdf_name_schema: ticket,name,typ 
+fields: [fullname,ticket,typ]
+desc: ["Nachname, Vorname","Ticket Number","Modell"]
+tab_desc_schema: [fullname,typ]
+pdf_name_schema: [ticket,name,typ]
 ---
 
 - task: "Auf Arbeit kommen."

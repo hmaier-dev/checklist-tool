@@ -7,12 +7,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Row in 'templates'-table
-type ChecklistTemplate struct {
-	Id         int
-	Name       string
-	Empty_yaml string
-}
 
 // Row in 'custom_fields'-table
 type CustomField struct {
@@ -47,7 +41,8 @@ func Init() *sql.DB {
 	CREATE TABLE IF NOT EXISTS templates (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
-		empty_yaml TEXT
+		empty_yaml TEXT,
+		file TEXT
 	);
 	CREATE TABLE IF NOT EXISTS custom_fields (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,7 +95,7 @@ type FrontMatter struct{
 
 // Takes frontmatter and the checklist yaml to create 
 // a new checklist template in all required tables
-func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string){
+func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file string){
 	// Is there already a template with the same name?
 	checkStmt := `SELECT name FROM templates WHERE name = ?`
 	var exist string
@@ -111,8 +106,8 @@ func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string){
 		return 
 	}
 	// Add a new entry in templates (the main table)
-	newTemplateStmt := `INSERT INTO templates (name, empty_yaml) VALUES (?, ?)`
-	_, err = db.Exec(newTemplateStmt, matter.Name, yaml)
+	newTemplateStmt := `INSERT INTO templates (name, empty_yaml, file) VALUES (?, ?, ?)`
+	_, err = db.Exec(newTemplateStmt, matter.Name, yaml, file)
 	if err != nil{
 		log.Fatalf("Couldn't insert a new template.\n Error: %q \n", err)
 	}
@@ -134,7 +129,7 @@ func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string){
 		}
 	}
 	// Add column names for browser tab description
-	for t := range matter.Tab_desc_schema{
+	for _, t := range matter.Tab_desc_schema{
 		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
 		_, err = db.Exec(newFieldStmt, id, t)
 		if err != nil{
@@ -142,14 +137,22 @@ func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string){
 		}
 	}
 	// Add column names for pdf name schema
-	for p := range matter.Pdf_name_schema{
-		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
+	for _, p := range matter.Pdf_name_schema{
+		newFieldStmt := `INSERT INTO pdf_name_schema (template_id, value) VALUES (?, ?)`
 		_, err = db.Exec(newFieldStmt, id, p)
 		if err != nil{
 			log.Fatalf("Error while inserting column names for pdf name schema: %q\n", err)
 		}
 	}
 
+}
+
+// Row in 'templates'-table
+type ChecklistTemplate struct {
+	Id         int
+	Name       string
+	Empty_yaml string
+	File string
 }
 
 func GetAllTemplates(db *sql.DB) []ChecklistTemplate{
@@ -161,8 +164,8 @@ func GetAllTemplates(db *sql.DB) []ChecklistTemplate{
 	var all []ChecklistTemplate
 	for rows.Next() {
 		var tmpl ChecklistTemplate
-		if err := rows.Scan(&tmpl.Id,&tmpl.Name,&tmpl.Empty_yaml); err != nil {
-					 log.Fatalf("Error scanning row: %s", err)
+		if err := rows.Scan(&tmpl.Id,&tmpl.Name,&tmpl.Empty_yaml,&tmpl.File); err != nil {
+					 log.Fatalf("Error while getting all templates: %s", err)
 					 return nil
 		}
 		all = append(all, tmpl)
@@ -270,6 +273,58 @@ func UpdateYamlByPath(db *sql.DB, path string, yamlData string) {
 	if err != nil {
 		log.Fatal("Error updating database:", err)
 	}
+}
+
+
+// Single entry in 'tab_desc_schema'
+type TabDescriptionSchemaEntry struct{
+	Id int
+	Template_id int
+	Value string
+}
+
+func GetTabDescriptionsByID(db *sql.DB, template_id int) []TabDescriptionSchemaEntry{
+	selectStmt := `SELECT id, template_id, value FROM tab_desc_schema  WHERE template_id = ?`
+	rows, err := db.Query(selectStmt, template_id)
+	if err != nil{
+		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
+	}
+	var all []TabDescriptionSchemaEntry
+	for rows.Next() {
+		var entry TabDescriptionSchemaEntry
+		if err := rows.Scan(&entry.Id,&entry.Template_id,&entry.Value); err != nil {
+					 log.Fatalf("Error scanning row: %s", err)
+					 return nil
+		}
+		all = append(all, entry)
+	}
+	return all
+
+}
+
+// Single entry in 'pdf_name_schema'
+type PdfNamingSchemaEntry struct{
+	Id int
+	Template_id int
+	Value string
+}
+
+func GetPdfNamingByID(db *sql.DB, template_id int) []PdfNamingSchemaEntry {
+	selectStmt := `SELECT id, template_id, value FROM  pdf_name_schema WHERE template_id = ?`
+	rows, err := db.Query(selectStmt, template_id)
+	if err != nil{
+		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
+	}
+	var all []PdfNamingSchemaEntry
+	for rows.Next() {
+		var entry PdfNamingSchemaEntry
+		if err := rows.Scan(&entry.Id,&entry.Template_id,&entry.Value); err != nil {
+					 log.Fatalf("Error scanning row: %s", err)
+					 return nil
+		}
+		all = append(all, entry)
+	}
+	return all
 }
 
 // ------------------------------------------------------------------------------------
