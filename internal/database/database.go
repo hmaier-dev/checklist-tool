@@ -2,11 +2,11 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 )
-
 
 // Row in 'custom_fields'-table
 type CustomField struct {
@@ -26,6 +26,16 @@ type ChecklistEntry struct {
 	Date int64
 }
 
+
+type DatabaseError struct {
+	Message string
+	Err     error // Optionally embed the original error
+}
+
+// Implement the error interface for your custom error type
+func (e *DatabaseError) Error() string {
+	return e.Message
+}
 
 var DBfilePath string
 
@@ -95,15 +105,18 @@ type FrontMatter struct{
 
 // Takes frontmatter and the checklist yaml to create 
 // a new checklist template in all required tables
-func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file string){
+func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file string) error{
 	// Is there already a template with the same name?
 	checkStmt := `SELECT name FROM templates WHERE name = ?`
 	var exist string
 	result := db.QueryRow(checkStmt, matter.Name)
 	err := result.Scan(&exist)
 	if err != sql.ErrNoRows {
-		log.Printf("A template with the name '%s' is already present. \n Error: %q", matter.Name, err)
-		return 
+		msg := fmt.Sprintf("A template with the name '%s' is already present.\n", matter.Name)
+		return &DatabaseError{
+			Message: msg,
+			Err:     err,
+		}
 	}
 	// Add a new entry in templates (the main table)
 	newTemplateStmt := `INSERT INTO templates (name, empty_yaml, file) VALUES (?, ?, ?)`
@@ -118,7 +131,7 @@ func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file stri
 	err = row.Scan(&id)
 	if err != nil {
 		log.Fatal("Failed to scan entry: ", err)
-		return
+		return nil
 	}
 	// Add custom input fields including description
 	for i := range matter.Fields{
@@ -144,7 +157,7 @@ func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file stri
 			log.Fatalf("Error while inserting column names for pdf name schema: %q\n", err)
 		}
 	}
-
+	return nil
 }
 
 // Row in 'templates'-table
