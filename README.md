@@ -11,6 +11,25 @@ docker run --rm --name checklist-tool -v $pwd\sqlite.db:/root/sqlite.db -p 8080:
 docker run --rm --name checklist-tool -v $PWD/sqlite.db:/root/sqlite.db -p 8080:8080 ghcr.io/hmaier-dev/checklist-tool:test
 ```
 
+## Checklist Example
+A checklist can look like this:
+```yaml
+---
+name: auf arbeit gehen
+fields:
+desc:
+tab_desc_schema:
+pdf_name_schema:
+---
+- task: "Auf Arbeit kommen."
+  checked: false
+  children:
+  - task: "Kaffee trinken."
+    checked: false
+- task: "Tickets bearbeiten."
+  checked: false
+```
+
 
 ## Motivation
 At work I'm dealing with mobile devices, whose setup require multiple steps I need to keep track of. This is not just for me but also for quality assurance.
