@@ -145,7 +145,12 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := database.Init()
-	database.NewChecklistTemplate(db, matter, string(rest), file_contents)
+	err = database.NewChecklistTemplate(db, matter, string(rest), file_contents)
+	if err != nil{
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+
+	}
 
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
