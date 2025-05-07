@@ -5,23 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="/static/style.css" rel="stylesheet">
-  <script src="/static/htmx.min.js"></script>
   <title>Alle Checklisten</title>
 </head>
 <body class="bg-slate-300 p-5">
-
-<script>
-function loadNav(){
-  htmx.ajax('GET', '/nav', { 
-    target: '#navbar',
-    swap: 'innerHTML',
-    values: {
-      template: document.querySelector('[name="template"]').value
-    }
-  });
-}
-
-</script>
 
   <nav id="navbar" class="flex mb-5">
     {{ template "nav.html" . }}
