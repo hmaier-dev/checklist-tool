@@ -55,8 +55,6 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
 	result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
 
-	// Add date to the data-map because it is an extra field in the db and not present in entry.Data
-	data["date"] = time.Now().Format("2006-01-02")
 
 	// Build string for browser-tab title
 	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
@@ -156,8 +154,10 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		}
 		// Build filename of pdf
 		name_schema := database.GetPdfNamingByID(db, template.Id)
+
+		// Add date to the data-map because it is an extra field in the db and not present in entry.Data
+		data["date"] = time.Now().Format("2006-01-02")
 		var pdfName string
-		fmt.Printf("%+v \n", data)
 		for i, desc := range name_schema{
 			key := desc.Value
 			fmt.Println(key)
