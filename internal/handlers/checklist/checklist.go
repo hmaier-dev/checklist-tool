@@ -56,7 +56,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
 
 	// Add date to the data-map because it is an extra field in the db and not present in entry.Data
-	data["date"] = time.Unix(entry.Date,0).Format("2006-01-02")
+	data["date"] = time.Now().Format("2006-01-02")
 
 	// Build string for browser-tab title
 	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
