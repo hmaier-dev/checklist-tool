@@ -30,6 +30,13 @@ pdf_name_schema: [ticket,fullname,typ]
 - task: "Tickets bearbeiten."
   checked: false
 ```
+Fields and Desc must be the same length, otherwise a field would be without a description.
+For the `tab_desc_schema` and `pdf_name_schema` all values in `fields` can be used. Non existent `fields` will just be display as empty string.
+
+Extra fields are:
+
+- `pdf_name_schema`:
+    - `date`: displays the current date in `yyyymmdd`
 
 
 ## Motivation
