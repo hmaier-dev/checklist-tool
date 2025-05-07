@@ -13,6 +13,7 @@ import (
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/reset"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/upload"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/all"
 )
 
 

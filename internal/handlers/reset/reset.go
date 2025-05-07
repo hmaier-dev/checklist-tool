@@ -56,7 +56,7 @@ func (h *ResetHandler) Entries(w http.ResponseWriter, r *http.Request){
 	active := r.URL.Query().Get("template")
 	entries_raw := database.GetAllEntriesForChecklist(db, active)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
-	entries_view := handlers.BuildEntriesView(custom_fields,entries_raw)
+	entries_view := handlers.BuildEntriesViewForTemplate(custom_fields,entries_raw)
 	err := tmpl.Execute(w, map[string]any{
 		"Entries": entries_view,
   })

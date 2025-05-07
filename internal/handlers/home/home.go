@@ -56,7 +56,7 @@ func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
 	}
 	entries_raw := database.GetAllEntriesForChecklist(db, active)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
-	entries_view := handlers.BuildEntriesView(custom_fields,entries_raw)
+	entries_view := handlers.BuildEntriesViewForTemplate(custom_fields,entries_raw)
 	inputs := database.GetAllCustomFieldsForTemplate(db, active)
 	err := tmpl.Execute(w, map[string]any{
 		"Active": active,
@@ -79,7 +79,7 @@ func (h *HomeHandler) Entries(w http.ResponseWriter, r *http.Request){
 	tmpl := handlers.LoadTemplates([]string{"home/templates/entries.html"})
 	// building a map to access the descriptions by column names
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
-	result := handlers.BuildEntriesView(custom_fields, entries)
+	result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
 	err := tmpl.Execute(w, map[string]any{
 		"Entries": result,
 	})

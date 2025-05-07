@@ -57,7 +57,7 @@ func (h *DeleteHandler)	Entries(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
 	entries := database.GetAllEntriesForChecklist(db, template_name)
-	result := handlers.BuildEntriesView(custom_fields, entries)
+	result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
 	err := tmpl.Execute(w, map[string]any{
 		"Entries": result,
 	})

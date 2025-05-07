@@ -52,7 +52,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	}
 	template := database.GetTemplateNameByID(db,entry.Template_id)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
-	result := handlers.BuildEntryView(custom_fields, entry)
+	result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
 
 	// Build string for browser-tab title
 	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
@@ -129,7 +129,7 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		entries[0] = database.GetEntryByPath(db, path)
 		template := database.GetTemplateNameByID(db,entries[0].Template_id)
 		custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
-		result := handlers.BuildEntriesView(custom_fields, entries)
+		result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, map[string]any{
 			"Items": items,
