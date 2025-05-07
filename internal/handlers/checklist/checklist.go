@@ -70,6 +70,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	var items []*ChecklistItem
 	yaml.Unmarshal([]byte(entry.Yaml), &items)
 	err = tmpl.Execute(w, map[string]any{
+		"TemplateName": template.Name,
 		"TabDescription": tab_desc,
 		"EntryView": result,
 		"Items": items,
@@ -152,16 +153,18 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 			log.Fatalln("Unmarshaling json from db wen't wrong.")
 			return
 		}
+		if data == nil {
+			log.Fatalln("Error: data map is nil after unmarshaling.")
+    return
+		}
 		// Build filename of pdf
 		name_schema := database.GetPdfNamingByID(db, template.Id)
 
 		// Add date to the data-map because it is an extra field in the db and not present in entry.Data
-		data["date"] = time.Now().Format("2006-01-02")
+		data["date"] = time.Now().Format("20060102")
 		var pdfName string
 		for i, desc := range name_schema{
 			key := desc.Value
-			fmt.Println(key)
-			fmt.Println(data[key])
 			if i == len(name_schema) - 1 {
 				pdfName += data[key] + ".pdf"
 			}else{
