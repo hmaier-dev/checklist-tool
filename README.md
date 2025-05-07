@@ -10,6 +10,17 @@ docker run --rm --name checklist-tool -v $pwd\sqlite.db:/root/sqlite.db -p 8080:
 # Linux
 docker run --rm --name checklist-tool -v $PWD/sqlite.db:/root/sqlite.db -p 8080:8080 ghcr.io/hmaier-dev/checklist-tool:test
 ```
+## Deployment
+A `docker-compose.yml` for the checklist-tool can look like this:
+```yaml
+services:
+    checklist-tool:
+        contaier_name: "checklist-tool"
+    volumes:
+        - ./sqlite.db:/root/sqlite.db
+    ports:
+        - "8080:8080"
+```
 
 ## Checklist Example
 A checklist can look like this:
@@ -43,6 +54,5 @@ At work I'm dealing with mobile devices, whose setup require multiple steps I ne
 Working with/in PDFs is tireseome in serveral ways. So I decided to write this small project, which should ease my time setup up the devices.
 
 ## Deps
-
 - `wkhtmltopdf`: Creating pdf-documents from html
 - `tailwindcss`: utility-css framework 
