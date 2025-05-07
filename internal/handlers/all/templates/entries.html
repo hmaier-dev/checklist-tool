@@ -1,0 +1,21 @@
+ {{ range .Entries }}
+    <a href="/checklist/{{ .Path }}" target="_blank" >
+    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
+      <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
+        <tr>
+          {{ range .Data }}
+          <th class="px-5 py-0 text-left border-b">{{ .Desc }}</th>
+          {{ end }}
+        </tr>
+      </thead>
+      <tbody class="divide-y bg-gray-200">
+        <tr class="">
+          {{ range .Data }}
+          <td class="px-5 py-2 border-b">{{ .Value }}</td>
+          {{ end }}
+        </tr>
+      </tbody>
+    </table>
+    </a>
+    <br>
+{{ end }}
