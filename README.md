@@ -19,7 +19,7 @@ name: auf arbeit gehen
 fields: [fullname,ticket,typ]
 desc: ["Nachname, Vorname","Ticket Number","Modell"]
 tab_desc_schema: [fullname,typ]
-pdf_name_schema: [ticket,fullname,typ]
+pdf_name_schema: [date,fullname,typ]
 ---
 
 - task: "Auf Arbeit kommen."
@@ -38,7 +38,6 @@ Extra fields are:
 - `pdf_name_schema`:
     - `date`: displays the current date in `yyyymmdd`
 
-
 ## Motivation
 At work I'm dealing with mobile devices, whose setup require multiple steps I need to keep track of. This is not just for me but also for quality assurance.
 Working with/in PDFs is tireseome in serveral ways. So I decided to write this small project, which should ease my time setup up the devices.
@@ -47,13 +46,3 @@ Working with/in PDFs is tireseome in serveral ways. So I decided to write this s
 
 - `wkhtmltopdf`: Creating pdf-documents from html
 - `tailwindcss`: utility-css framework 
-
-## Roadmap
-
-- [x] Building a UI with Golang (templates/html)
-- [x] Add SQLite-Database for saving JSON-Structs
-- [x] Convert html to pdf
-- [x] Add styling to home.html
-- [x] Add styling to checklist.html
-- [ ] Optional: Different Checklists for different Jobs
-
