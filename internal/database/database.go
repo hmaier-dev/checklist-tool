@@ -340,6 +340,25 @@ func GetPdfNamingByID(db *sql.DB, template_id int) []PdfNamingSchemaEntry {
 	return all
 }
 
+func GetAllEntries(db *sql.DB)[]ChecklistEntry{
+	selectStmt := `SELECT id, template_id, data, path, yaml, date FROM entries`
+	rows, err := db.Query(selectStmt)
+	if err != nil{
+		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
+	}
+	var all []ChecklistEntry
+	for rows.Next() {
+		var entry ChecklistEntry
+		if err := rows.Scan(&entry.Id,&entry.Template_id,&entry.Data,&entry.Path,&entry.Yaml,&entry.Yaml); err != nil {
+					 log.Fatalf("Error scanning row: %s", err)
+					 return nil
+		}
+		all = append(all, entry)
+	}
+	return all
+
+}
+
 // ------------------------------------------------------------------------------------
 // Old Functions
 
