@@ -50,9 +50,13 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		log.Fatalln("Unmarshaling json from db wen't wrong.")
 		return
 	}
+	
 	template := database.GetTemplateNameByID(db,entry.Template_id)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
 	result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
+
+	// Add date to the data-map because it is an extra field in the db and not present in entry.Data
+	data["date"] = time.Unix(entry.Date,0).Format("2006-01-02")
 
 	// Build string for browser-tab title
 	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
