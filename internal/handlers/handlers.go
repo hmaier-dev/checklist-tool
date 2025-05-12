@@ -109,11 +109,16 @@ func BuildEntryViewForTemplate(custom_fields []database.CustomField, entry datab
 			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
 		}
 		var viewMap []DescValueView
-		// dataMap => ChecklistEntry.Data
-		for k, v := range dataMap {
-				// fieldsMap => Customfields
-				desc := fieldsMap[k]
-				viewMap = append(viewMap, DescValueView{Desc: desc, Value: v, Key: k})	
+		for _, field := range custom_fields{
+			if val, ok := dataMap[field.Key];ok{
+				viewMap = append(viewMap, DescValueView{
+					Desc: field.Desc, 
+					Value: val, 
+					Key: field.Key,
+				})
+			}else{
+				log.Fatalf("Key '%s' not found in dataMap: '%q' \n",field.Key,dataMap)
+			}
 		}
 		// format unix-time string to human-readable format
 		viewMap = append(viewMap, DescValueView{
