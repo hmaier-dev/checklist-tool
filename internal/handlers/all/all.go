@@ -69,6 +69,7 @@ func ViewForTemplate(db *sql.DB, template_name string, entry database.ChecklistE
 		}
 		custom_fields := database.GetAllCustomFieldsForTemplate(db,template_name)
 		var count int = 1
+		// Use the order from the database-table 'custom_fields'
 		for _, field := range custom_fields{
 			if val, ok := dataMap[field.Key];ok{
 				viewMap[count] = handlers.DescValueView{
