@@ -54,32 +54,39 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 // TODO: Get the 'Template Name' from the template_id found in the database entry. Right now the information is redundant...
 // Maybe connect the template_name and template_id over a JOIN()?
 func ViewForTemplate(db *sql.DB, template_name string, entry database.ChecklistEntry) handlers.EntryView{
-		custom_fields := database.GetAllCustomFieldsForTemplate(db,template_name)
-		var fieldsMap = make(map[string]string, len(custom_fields))
-		for _, field := range custom_fields{
-			fieldsMap[field.Key] = field.Desc
-		}
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(entry.Data), &dataMap)
 		if err != nil{
 			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
 		}
-		var viewMap []handlers.DescValueView
-		// Add Template Name at first
-		viewMap = append(viewMap, handlers.DescValueView{
+		// +2 comes from Checklist-Name and Erstellungsdatum
+		var length int = len(dataMap)+2
+		var viewMap []handlers.DescValueView = make([]handlers.DescValueView, length)
+		// Add Checklist Name at first
+		viewMap[0] = handlers.DescValueView{
 			Desc: "Checklist",
 			Value: template_name,
-		})
-		// Append data stored in database-entry
-		for k, v := range dataMap {
-				desc := fieldsMap[k]
-				viewMap = append(viewMap, handlers.DescValueView{Desc: desc, Value: v, Key: k})	
+		}
+		custom_fields := database.GetAllCustomFieldsForTemplate(db,template_name)
+		var count int = 1
+		for _, field := range custom_fields{
+			if val, ok := dataMap[field.Key];ok{
+				viewMap[count] = handlers.DescValueView{
+					Desc: field.Desc, 
+					Value: val, 
+					Key: field.Key,
+				}
+			}else{
+				log.Fatalf("Key '%s' not found in dataMap: '%q' \n",field.Key,dataMap)
+			}
+			count += 1
 		}
 		// Add Erstellungsdatum as last field
-		viewMap = append(viewMap, handlers.DescValueView{
+		viewMap[length-1] = handlers.DescValueView{
 			Desc: "Erstellungsdatum",
 			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
-		})
+		}
+		// fmt.Printf("%+v \n",viewMap)
 		return handlers.EntryView{
 			Path: entry.Path,
 			Data: viewMap,			
