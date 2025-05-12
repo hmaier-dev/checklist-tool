@@ -67,7 +67,7 @@ func ViewForTemplate(db *sql.DB, template_name string, entry database.ChecklistE
 		var viewMap []handlers.DescValueView
 		// Add Template Name at first
 		viewMap = append(viewMap, handlers.DescValueView{
-			Desc: "Template Name",
+			Desc: "Checklist",
 			Value: template_name,
 		})
 		// Append data stored in database-entry
