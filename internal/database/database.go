@@ -356,5 +356,44 @@ func GetAllEntries(db *sql.DB)[]ChecklistEntry{
 		all = append(all, entry)
 	}
 	return all
+}
+
+// Row in 'entries'-table plus resolved checklist-name
+type EntryPlusChecklistName struct {
+	Id          int
+	Data        string
+	Path        string
+	Yaml        string
+	Date int64
+	TemplateName string
+}
+
+
+func GetAllEntriesPlusTemplateName(db *sql.DB)[]EntryPlusChecklistName{
+	selectStmt := `SELECT 
+    entries.id,
+		entries.data,
+		entries.path,
+		entries.yaml,
+		entries.date,
+    templates.name AS template_name
+		FROM entries
+		JOIN templates ON entries.template_id = templates.id
+		ORDER BY entries.date DESC;
+		`
+	rows, err := db.Query(selectStmt)
+	if err != nil{
+		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
+	}
+	var all []EntryPlusChecklistName
+	for rows.Next() {
+		var entry EntryPlusChecklistName
+		if err := rows.Scan(&entry.Id,&entry.Data,&entry.Path,&entry.Yaml,&entry.Date,&entry.TemplateName); err != nil {
+					 log.Fatalf("Error scanning row: %s", err)
+					 return nil
+		}
+		all = append(all, entry)
+	}
+	return all
 
 }

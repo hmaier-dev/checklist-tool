@@ -31,14 +31,11 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 	}
   tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()
-	all_templates := database.GetAllTemplates(db)
 	var view []handlers.EntryView	
-	for _, t := range all_templates{
-		all := database.GetAllEntriesForChecklist(db,t.Name)
-		for _, a := range all{
-			tmp := ViewForTemplate(db, t.Name,a)
-			view = append(view, tmp)
-		}
+	all := database.GetAllEntriesPlusTemplateName(db)
+	for _, a := range all{
+		tmp := ViewForTemplate(db, a)
+		view = append(view, tmp)
 	}
 	err := tmpl.Execute(w, map[string]any{
     "Nav" : handlers.UpdateNav(r),
@@ -53,7 +50,7 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 
 // TODO: Get the 'Template Name' from the template_id found in the database entry. Right now the information is redundant...
 // Maybe connect the template_name and template_id over a JOIN()?
-func ViewForTemplate(db *sql.DB, template_name string, entry database.ChecklistEntry) handlers.EntryView{
+func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers.EntryView{
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(entry.Data), &dataMap)
 		if err != nil{
@@ -65,9 +62,9 @@ func ViewForTemplate(db *sql.DB, template_name string, entry database.ChecklistE
 		// Add Checklist Name at first
 		viewMap[0] = handlers.DescValueView{
 			Desc: "Checklist",
-			Value: template_name,
+			Value: entry.TemplateName,
 		}
-		custom_fields := database.GetAllCustomFieldsForTemplate(db,template_name)
+		custom_fields := database.GetAllCustomFieldsForTemplate(db,entry.TemplateName)
 		var count int = 1
 		// Use the order from the database-table 'custom_fields'
 		for _, field := range custom_fields{
