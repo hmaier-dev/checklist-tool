@@ -35,5 +35,5 @@ run:
   EXPOSE 8080
   RUN echo "You need to mount sqlite with '-v /opt/checklist-tool/sqlite:/root/sqlite.db'"
   ENTRYPOINT ["./checklist-tool", "-db=sqlite.db"]
-  SAVE IMAGE ghcr.io/hmaier-dev/checklist-tool:$tag
+  SAVE IMAGE --push ghcr.io/hmaier-dev/checklist-tool:$tag
 
