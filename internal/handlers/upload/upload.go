@@ -29,9 +29,12 @@ type TemplatesView struct {
 
 // Sets / and all its subroutes
 func (h *UploadHandler) Routes(router *mux.Router) {
-	sub := router.PathPrefix("/upload").Subrouter()
-	sub.HandleFunc("", h.Display).Methods("Get")
-	sub.HandleFunc("", h.Execute).Methods("POST")
+	router.HandleFunc("/upload", h.Display).Methods("Get")
+	router.HandleFunc("/upload", h.Execute).Methods("POST")
+	sub := router.PathPrefix("/checklist").Subrouter()
+	sub.HandleFunc("/delete", h.Delete).Methods("POST")
+	sub.HandleFunc("/download", h.Download).Methods("POST")
+	sub.HandleFunc("/update", h.Update).Methods("POST")
 }
 
 // Uses CustomField.Key
@@ -153,6 +156,13 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
+}
+
+func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
+}
+func (h *UploadHandler) Download(w http.ResponseWriter, r *http.Request) {
+}
+func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
