@@ -56,16 +56,10 @@ func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers
 		if err != nil{
 			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
 		}
-		// +2 comes from Checklist-Name and Erstellungsdatum
-		var length int = len(dataMap)+2
+		var length int = len(dataMap)
 		var viewMap []handlers.DescValueView = make([]handlers.DescValueView, length)
-		// Add Checklist Name at first
-		viewMap[0] = handlers.DescValueView{
-			Desc: "Checklist",
-			Value: entry.TemplateName,
-		}
 		custom_fields := database.GetAllCustomFieldsForTemplate(db,entry.TemplateName)
-		var count int = 1
+		var count int = 0
 		// Use the order from the database-table 'custom_fields'
 		for _, field := range custom_fields{
 			if val, ok := dataMap[field.Key];ok{
@@ -79,15 +73,11 @@ func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers
 			}
 			count += 1
 		}
-		// Add Erstellungsdatum as last field
-		viewMap[length-1] = handlers.DescValueView{
-			Desc: "Erstellungsdatum",
-			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
-		}
-		// fmt.Printf("%+v \n",viewMap)
 		return handlers.EntryView{
+			TemplateName: entry.TemplateName,
+			Date: time.Unix(entry.Date,0).Format("02.01.2006 15:04:05"),
 			Path: entry.Path,
-			Data: viewMap,			
+			Data: viewMap,
 		}
 }
 

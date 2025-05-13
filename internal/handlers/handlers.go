@@ -77,6 +77,8 @@ func Nav(w http.ResponseWriter, r *http.Request){
 }
 
 type EntryView struct{
+	TemplateName string
+	Date string
 	Path string
 	Data []DescValueView
 }
