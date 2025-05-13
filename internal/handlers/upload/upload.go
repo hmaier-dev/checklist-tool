@@ -6,7 +6,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/adrg/frontmatter"
 	"github.com/gorilla/mux"
@@ -161,24 +163,30 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 
 func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
+
+// Handles request to /checklist/download/<template_id>
+// and return the raw checklist including the frontmatter as text/yaml
 func (h *UploadHandler) Download(w http.ResponseWriter, r *http.Request) {
-		id :=  mux.Vars(r)["id"]
-		fmt.Println(id)
-		var err error
-		var checklistName string = ""
-		var checklistFile []byte 
+		template_id :=  mux.Vars(r)["id"]
+		// type conversion
+		id, err := strconv.Atoi(template_id)
 		if err != nil{
-			log.Fatalf("Error while generating pdf.\nError: %q \n", err)
+			http.Error(w, "Cannot get template id is not an integer.", http.StatusBadRequest)
+			return
 		}
+		db := database.Init()
+		template := database.GetTemplateNameByID(db, id)
 		// Setting the header before sending the file to the browser
     w.Header().Set("Content-Type", "text/yaml")
-		disposition := fmt.Sprintf("attachment; filename=%s", checklistName)
+		filename := time.Now().Format("20060102") + "_" + template.Name + ".yml"
+		disposition := fmt.Sprintf("attachment; filename=%s", filename)
     w.Header().Set("Content-Disposition", disposition)
-    _, err = io.Copy(w, bytes.NewReader(checklistFile))
+		_, err = io.Copy(w, strings.NewReader(template.File))
     if err != nil {
 			log.Fatalf("Couldn't send yaml file to browser.\nError: %q \n", err)
     }
 }
+
 func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(1 << 20)
 	file, header, err := r.FormFile("yaml")

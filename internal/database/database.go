@@ -272,10 +272,10 @@ func GetEntryByPath(db *sql.DB, path string) ChecklistEntry{
 	return singleEntry
 }
 func GetTemplateNameByID(db *sql.DB, id int) ChecklistTemplate{
-	selectStmt := `SELECT id, name, empty_yaml FROM templates WHERE id = ?`
+	selectStmt := `SELECT id, name, empty_yaml, file FROM templates WHERE id = ?`
 	row := db.QueryRow(selectStmt, id)
 	var tmpl ChecklistTemplate
-	if err := row.Scan(&tmpl.Id, &tmpl.Name, &tmpl.Empty_yaml); err != nil {
+	if err := row.Scan(&tmpl.Id, &tmpl.Name, &tmpl.Empty_yaml, &tmpl.File); err != nil {
 		log.Fatalf("Error scanning row: %s. \n Query: %s", err, selectStmt)
 	}
 	return tmpl
