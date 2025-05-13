@@ -2,6 +2,7 @@ package upload
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -33,7 +34,7 @@ func (h *UploadHandler) Routes(router *mux.Router) {
 	router.HandleFunc("/upload", h.Execute).Methods("POST")
 	sub := router.PathPrefix("/checklist").Subrouter()
 	sub.HandleFunc("/delete", h.Delete).Methods("POST")
-	sub.HandleFunc("/download", h.Download).Methods("POST")
+	sub.HandleFunc(`/download/{id:\d*}`, h.Download).Methods("GET")
 	sub.HandleFunc("/update", h.Update).Methods("POST")
 }
 
@@ -161,8 +162,48 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 func (h *UploadHandler) Download(w http.ResponseWriter, r *http.Request) {
+		id :=  mux.Vars(r)["id"]
+		fmt.Println(id)
+		var err error
+		var checklistName string = ""
+		var checklistFile []byte 
+		if err != nil{
+			log.Fatalf("Error while generating pdf.\nError: %q \n", err)
+		}
+		// Setting the header before sending the file to the browser
+    w.Header().Set("Content-Type", "text/yaml")
+		disposition := fmt.Sprintf("attachment; filename=%s", checklistName)
+    w.Header().Set("Content-Disposition", disposition)
+    _, err = io.Copy(w, bytes.NewReader(checklistFile))
+    if err != nil {
+			log.Fatalf("Couldn't send yaml file to browser.\nError: %q \n", err)
+    }
 }
 func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(1 << 20)
+	file, header, err := r.FormFile("yaml")
+	if err != nil {
+		panic(err)
+	}
+	var buf bytes.Buffer
+	io.Copy(&buf, file)
+	file_contents := buf.String()
+	var matter database.FrontMatter
+	// splits the file into the yaml frontmatter and the rest of the file
+	rest, err := frontmatter.Parse(strings.NewReader(file_contents), &matter)
+	if err != nil {
+		http.Error(w, "Error while parsing frontmatter", http.StatusBadRequest)
+		log.Printf("Error while parsing frontmatter.\n %q\n", err)
+		return
+	}
+	var result any
+	err = yaml.Unmarshal([]byte(rest), &result)
+	if err != nil {
+		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
+	}
+	// Debug
+	// fmt.Printf("%+v \n", matter)
+	// fmt.Printf("%+v \n", rest)
 }
 
 func init() {

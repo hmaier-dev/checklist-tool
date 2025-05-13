@@ -39,12 +39,16 @@ func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
 	// to the first template if none is set.
 	db := database.Init()
 	all := database.GetAllTemplates(db)
-	entries_raw := database.GetAllEntriesForChecklist(db, all[0].Name)
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, all[0].Name)
+	active := ""
+	if len(all) > 0 {
+		active = all[0].Name
+	}
+	entries_raw := database.GetAllEntriesForChecklist(db, active)
+	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
 	entries_view := handlers.BuildEntriesViewForTemplate(custom_fields,entries_raw)
-	inputs := database.GetAllCustomFieldsForTemplate(db, all[0].Name)
+	inputs := database.GetAllCustomFieldsForTemplate(db, active)
 	err := tmpl.Execute(w, map[string]any{
-		"Active": all[0].Name,
+		"Active": active,
     "Nav" : handlers.NavList,
 		"Templates": all,
 		"Inputs": inputs,
