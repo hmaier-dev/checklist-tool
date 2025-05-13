@@ -69,7 +69,7 @@ var NavList []NavItem = []NavItem{
 func Nav(w http.ResponseWriter, r *http.Request){
 	tmpl := LoadTemplates([]string{"nav.html"})
 	err := tmpl.Execute(w, map[string]any{
-		"Nav": UpdateNav(r),
+		"Nav": NavList,
 	})
 	if err != nil{
 		log.Fatalf("Something went wrong executing the 'nav.html' template.\n %q \n", err)
@@ -162,18 +162,6 @@ func ViewForEntry(db *sql.DB, entry database.EntryPlusChecklistName) EntryView{
 			Path: entry.Path,
 			Data: viewMap,
 		}
-}
-
-// I want to save the current state of the active template when switching paths.
-// So I add the Query to NavList.Path
-func UpdateNav(r *http.Request)[]NavItem{
-	update := make([]NavItem, len(NavList))
-	copy(update, NavList)
-	for i := range update{
-		update[i].Path += "?"
-		update[i].Path += r.URL.Query().Encode()
-	}
-	return update
 }
 
 // Takes './internal/handlers' as base-path.

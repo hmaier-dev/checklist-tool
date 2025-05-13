@@ -39,7 +39,7 @@ func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
 		view[i] = handlers.ViewForEntry(db, entry)
 	}
 	err := tmpl.Execute(w, map[string]any{
-    "Nav" : handlers.UpdateNav(r),
+    "Nav" : handlers.NavList,
 		"Entries": view,
   })
 

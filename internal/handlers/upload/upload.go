@@ -111,7 +111,7 @@ func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
 	tmpl := handlers.LoadTemplates(templates)
 	err := tmpl.Execute(w, map[string]any{
 		"Templates": all,
-		"Nav":       handlers.UpdateNav(r),
+		"Nav":       handlers.NavList,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -38,7 +38,7 @@ func (h *ResetHandler) Display(w http.ResponseWriter, r *http.Request){
 	active := r.URL.Query().Get("template")
 	err := tmpl.Execute(w, map[string]any{
 		"Active": active,
-		"Nav": handlers.UpdateNav(r),
+		"Nav": handlers.NavList,
 		"Templates": all,
   })
   if err != nil {
