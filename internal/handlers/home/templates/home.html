@@ -11,15 +11,6 @@
 <body class="bg-slate-300 p-5">
 
 <script>
-function loadNav(){
-  htmx.ajax('GET', '/nav', { 
-    target: '#navbar',
-    swap: 'innerHTML',
-    values: {
-      template: document.querySelector('[name="template"]').value
-    }
-  });
-}
 function loadEntries() {
   htmx.ajax('GET', '/entries', { 
     target: '#entries',
@@ -40,7 +31,7 @@ function loadEntries() {
       hx-get="/options" 
       hx-trigger="change" 
       hx-target="#prompt"
-      hx-on-htmx-before-on-load="loadNav(); loadEntries()">
+      hx-on-htmx-before-on-load="loadEntries()">
       {{ range .Templates }}
       <option value="{{ .Name }}" {{ if eq .Name $.Active }}selected{{ end }}>{{ .Name }}</option>
       {{ end }}
@@ -53,7 +44,7 @@ function loadEntries() {
         hx-trigger="submit"
         hx-include="[name='template']"
         hx-swap="none"
-        hx-on-htmx-before-on-load=" loadEntries()">
+        hx-on-htmx-before-on-load="loadEntries()">
     {{ template "options.html" . }}
   </form>
   

@@ -3,7 +3,6 @@ package home
 import(
 	"net/http"
 	"log"
-	"net/url"
 	"encoding/json"
 	"time"
 
@@ -23,8 +22,8 @@ var _ handlers.ActionHandler = (*HomeHandler)(nil)
 func (h *HomeHandler)	Routes(router *mux.Router){
 	router.HandleFunc("/", h.Display).Methods("GET")
 	router.HandleFunc("/entries", h.Entries).Methods("GET")
-	router.HandleFunc("/new", h.Execute).Methods("POST")
 	router.HandleFunc("/options", h.Options).Methods("GET")
+	router.HandleFunc("/new", h.Execute).Methods("POST")
 }
 
 // Return html to http.ResponseWriter for /
@@ -40,27 +39,13 @@ func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
 	// to the first template if none is set.
 	db := database.Init()
 	all := database.GetAllTemplates(db)
-	active := r.URL.Query().Get("template")
-	// TODO: turn this code if into a function
-	// Set the URL with ?template=<template> if not already set
-	if active == "" && len(all) > 0{
-		u, err := url.Parse(r.URL.String())
-		if err != nil {
-			log.Fatalln("Error parsing GET-Request while loading ''.")	
-		}
-		q := u.Query()
-		q.Set("template", all[0].Name)
-		u.RawQuery = q.Encode()
-		http.Redirect(w,r, u.String(), http.StatusFound)
-		return
-	}
-	entries_raw := database.GetAllEntriesForChecklist(db, active)
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
+	entries_raw := database.GetAllEntriesForChecklist(db, all[0].Name)
+	custom_fields := database.GetAllCustomFieldsForTemplate(db, all[0].Name)
 	entries_view := handlers.BuildEntriesViewForTemplate(custom_fields,entries_raw)
-	inputs := database.GetAllCustomFieldsForTemplate(db, active)
+	inputs := database.GetAllCustomFieldsForTemplate(db, all[0].Name)
 	err := tmpl.Execute(w, map[string]any{
-		"Active": active,
-    "Nav" : handlers.UpdateNav(r),
+		"Active": all[0].Name,
+    "Nav" : handlers.NavList,
 		"Templates": all,
 		"Inputs": inputs,
 		"Entries": entries_view,
