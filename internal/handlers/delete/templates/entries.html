@@ -15,7 +15,8 @@
           <td class="px-3 py-1 border-b w-38">{{ .Value }}</td>
           {{ end }}
           <td class="border-b"><button hx-post="/delete" 
-              hx-vals='{"path": "{{ .Path }}"}' 
+              hx-vals='{"path": "{{ .Path }}"}'
+              hx-swap="none"
               class="w-full text-white bg-red-500 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-semibold rounded-lg shadow-md transition duration-200">
               Delete Entry</button></td>
         </tr>

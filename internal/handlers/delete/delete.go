@@ -72,7 +72,14 @@ func (h *DeleteHandler)	Entries(w http.ResponseWriter, r *http.Request){
 
 // Removes entry from 'entries'-table by the 'path'-column
 func (h *DeleteHandler)	Execute(w http.ResponseWriter, r *http.Request){
-  http.Redirect(w, r, "/delete", http.StatusSeeOther)
+	path := r.FormValue("path")
+	db := database.Init()
+	defer db.Close()
+	database.DeleteEntryByPath(db,path)
+
+	// Special header for htmx
+	w.Header().Set("HX-Redirect", "/delete")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func init(){

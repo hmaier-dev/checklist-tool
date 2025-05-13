@@ -397,3 +397,11 @@ func GetAllEntriesPlusTemplateName(db *sql.DB)[]EntryPlusChecklistName{
 	return all
 
 }
+
+func DeleteEntryByPath(db *sql.DB, path string){
+	deleteStmt := `DELETE FROM entries WHERE path = ?`
+	_, err := db.Exec(deleteStmt,path)
+	if err != nil{
+		log.Fatalf("Error while running %s \n", deleteStmt)
+	}
+}
