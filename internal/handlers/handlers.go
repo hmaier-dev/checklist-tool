@@ -56,10 +56,6 @@ var NavList []NavItem = []NavItem{
 		Name: "Einträge löschen",
 		Path: "/delete",
 	},
-	{
-		Name: "Einträge zurücksetzen",
-		Path: "/reset",
-	},
 	{ 
 		Name: "Checkliste hinzufügen",
 		Path: "/upload",
