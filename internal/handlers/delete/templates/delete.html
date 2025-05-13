@@ -10,35 +10,13 @@
 </head>
 <body class="bg-slate-300 p-5">
 
-<script>
-function loadNav(){
-  htmx.ajax('GET', '/nav', { 
-    target: '#navbar',
-    swap: 'innerHTML',
-    values: {
-      template: document.querySelector('[name="template"]').value
-    }
-  });
-}
-
-</script>
-
   <nav id="navbar" class="flex mb-5">
+    {{ template "nav.html" . }}
   </nav>
-
-  <div class="p-4 mb-4 max-w-100 bg-gray-200">
-    <select id="templates" name="template" class="w-full" 
-      hx-get="/delete/entries" 
-      hx-trigger="load, change" 
-      hx-target="#entries"
-      hx-on-htmx-before-on-load="loadNav();">
-      {{ range .Templates }}
-      <option value="{{ .Name }}" {{ if eq .Name $.Active }}selected{{ end }}>{{ .Name }}</option>
-      {{ end }}
-    </select>
-  </div>
     
-  <div id="entries"></div>
+  <div id="entries">
+    {{ template "entries.html" . }}
+  </div>
 
 </body>
 </html>

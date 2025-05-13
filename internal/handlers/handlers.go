@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"html/template"
 	"log"
@@ -9,10 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/gorilla/mux"
+	"github.com/hmaier-dev/checklist-tool/internal/database"
 )
-
 
 // Just sets the routes and displays html
 type DisplayHandler interface{
@@ -130,6 +130,37 @@ func BuildEntryViewForTemplate(custom_fields []database.CustomField, entry datab
 		return EntryView{
 			Path: entry.Path,
 			Data: viewMap,			
+		}
+}
+
+func ViewForEntry(db *sql.DB, entry database.EntryPlusChecklistName) EntryView{
+		var dataMap map[string]string
+		err := json.Unmarshal([]byte(entry.Data), &dataMap)
+		if err != nil{
+			log.Fatalf("Error while unmarshaling json.\n Error: %q \n", err)
+		}
+		var length int = len(dataMap)
+		var viewMap []DescValueView = make([]DescValueView, length)
+		custom_fields := database.GetAllCustomFieldsForTemplate(db, entry.TemplateName)
+		var count int = 0
+		// Use the order from the database-table 'custom_fields'
+		for _, field := range custom_fields{
+			if val, ok := dataMap[field.Key];ok{
+				viewMap[count] = DescValueView{
+					Desc: field.Desc, 
+					Value: val, 
+					Key: field.Key,
+				}
+			}else{
+				log.Fatalf("Key '%s' not found in dataMap: '%q' \n",field.Key,dataMap)
+			}
+			count += 1
+		}
+		return EntryView{
+			TemplateName: entry.TemplateName,
+			Date: time.Unix(entry.Date,0).Format("02.01.2006 15:04:05"),
+			Path: entry.Path,
+			Data: viewMap,
 		}
 }
 

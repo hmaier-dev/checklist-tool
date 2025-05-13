@@ -28,15 +28,19 @@ func (h *DeleteHandler)	Routes(router *mux.Router){
 func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
 	var templates = []string{
 		"delete/templates/delete.html",
+		"delete/templates/entries.html",
 		"nav.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()
-	all := database.GetAllTemplates(db)
+	entries := database.GetAllEntriesPlusTemplateName(db)
+	var view []handlers.EntryView = make([]handlers.EntryView, len(entries))
+	for i, entry := range entries{
+		view[i] = handlers.ViewForEntry(db, entry)
+	}
 	err := tmpl.Execute(w, map[string]any{
     "Nav" : handlers.UpdateNav(r),
-		"Templates": all,
-		"Active": r.URL.Query().Get("template"),
+		"Entries": view,
   })
 
   if err != nil {
@@ -52,17 +56,17 @@ func (h *DeleteHandler)	Entries(w http.ResponseWriter, r *http.Request){
 		"delete/templates/entries.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
-
-	template_name := r.URL.Query().Get("template")
 	db := database.Init()
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
-	entries := database.GetAllEntriesForChecklist(db, template_name)
-	result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
+	entries := database.GetAllEntriesPlusTemplateName(db)
+	var view []handlers.EntryView = make([]handlers.EntryView, len(entries))
+	for i, entry := range entries{
+		view[i] = handlers.ViewForEntry(db, entry)
+	}
 	err := tmpl.Execute(w, map[string]any{
-		"Entries": result,
+		"Entries": view,
 	})
 	if err != nil{
-		fmt.Fprintf(w,"Can't execute 'entries'-template.\n %#v \n", err)
+		fmt.Fprintf(w,"Error while load template.\n %q \n", err)
 	}
 }
 
