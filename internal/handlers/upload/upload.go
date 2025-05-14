@@ -2,6 +2,7 @@ package upload
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
 	"gopkg.in/yaml.v3"
 )
 
@@ -148,6 +150,8 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	err = yaml.Unmarshal([]byte(rest), &result)
 	if err != nil {
 		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	db := database.Init()
@@ -155,7 +159,6 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	if err != nil{
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-
 	}
 
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
@@ -207,16 +210,88 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var result any
 	err = yaml.Unmarshal([]byte(rest), &result)
 	if err != nil {
-		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
+		log.Printf("Error while validating the yaml in %s: %q\n", header.Filename, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	db := database.Init()
 	defer db.Close()
+	// Updating tables with new data from the frontmatter
 	err = database.UpdateChecklistTemplate(db, matter, string(rest), file_contents)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Fatal(err)
 	}
+	entries := database.GetAllEntriesForChecklist(db, matter.Name)
+	// Update dataMap for concerning entries
+	for _, e := range entries{
+		var dataMap map[string]string
+		err := json.Unmarshal([]byte(e.Data), &dataMap)
+		if err != nil{
+			log.Fatal("Error while unmarshaling json into map[string]string.")
+		}
+		for _, c := range matter.Fields{
+			if _, exists := dataMap[c]; !exists {
+			dataMap[c] = ""
+			}
+		}
+		json, err := json.Marshal(dataMap)
+		database.UpdateDataById(db, e.Id, string(json))
+
+	}
+
+	// Update checklist for concerning entries
+	for _, e := range entries{
+		log.Printf("Update entries for %+v \n", e)
+
+		var oldChecklist []*checklist.Item
+		var newChecklist []*checklist.Item
+
+		err := yaml.Unmarshal([]byte(e.Yaml), &oldChecklist)
+		if err != nil{
+			log.Fatal("Error unmarshaling old yaml.")
+		}
+		err = yaml.Unmarshal(rest, &newChecklist)
+		if err != nil{
+			log.Fatal("Error unmarshaling new yaml.")
+		}
+
+		update := UpdateChecklistYaml(oldChecklist, newChecklist)
+		bytes, err := yaml.Marshal(update)
+		if err != nil{
+			log.Fatal("Error while marshaling yaml.")
+		}
+		database.UpdateYamlById(db, e.Id, string(bytes))
+	}
+
+	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
+
+// The idea is to replace the checklist with the new version
+// but to check first which point are already checked.
+// NOTE: this doesn't quiet work yet. I won't save the childrens state :(
+func UpdateChecklistYaml(oldYaml []*checklist.Item, newYaml []*checklist.Item)[]*checklist.Item{
+	log.Println("Entering update yaml")
+	for _, n := range newYaml{
+		// Is item present in the old yaml and is it checked?
+		for _, o := range oldYaml{
+			if (o.Task == n.Task) && (o.Checked == true){
+				log.Printf("%s was present before, so set %s to true", o.Task,n.Task)
+				n.Checked = true
+			}
+		}
+		if len(n.Children) > 0{
+			UpdateChecklistYaml(oldYaml,n.Children)
+		}
+	}
+	fmt.Printf("The new yaml looks like this: \n %#v \n", newYaml)
+	fmt.Printf("The old yaml looks like this: \n %#v \n", oldYaml)
+	return newYaml
+}
+
+
+
+
 
 func init() {
 	handlers.RegisterHandler(&UploadHandler{})

@@ -17,10 +17,10 @@ import (
 )
 
 // Single checkpoint of the list
-type ChecklistItem struct {
+type Item struct {
 	Task     string           `yaml:"task"`
 	Checked  bool             `yaml:"checked"`
-	Children []*ChecklistItem `yaml:"children,omitempty"`
+	Children []*Item `yaml:"children,omitempty"`
 	Path     string           `yaml:"Path"`
 }
 
@@ -67,7 +67,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 			tab_desc += data[key] + " | "
 		}
 	}
-	var items []*ChecklistItem
+	var items []*Item
 	yaml.Unmarshal([]byte(entry.Yaml), &items)
 	err = tmpl.Execute(w, map[string]any{
 		"TemplateName": template.Name,
@@ -97,7 +97,7 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
   }else{
     checked = false
   }
-  alteredItem := ChecklistItem{
+  alteredItem := Item{
     Task: r.Form.Get("task"),
     Checked: checked,
   }
@@ -106,7 +106,7 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
   db := database.Init()
   entry := database.GetEntryByPath(db, path)
 
-  var oldItems []*ChecklistItem
+  var oldItems []*Item
   err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
   changeCheckedStatus(alteredItem, oldItems)
   yamlBytes, err := yaml.Marshal(oldItems)
@@ -125,7 +125,7 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		db := database.Init()
 		entry := database.GetEntryByPath(db, path)
 
-		var items []ChecklistItem
+		var items []Item
 		err := yaml.Unmarshal([]byte(entry.Yaml), &items)
 
 		entries := make([]database.ChecklistEntry, 1)
@@ -186,7 +186,7 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
     }
 }
 
-func changeCheckedStatus(newItem ChecklistItem, oldChecklist []*ChecklistItem){
+func changeCheckedStatus(newItem Item, oldChecklist []*Item){
   for _, item := range oldChecklist{
     if newItem.Task == item.Task{
       item.Checked = newItem.Checked     

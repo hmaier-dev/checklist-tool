@@ -201,12 +201,6 @@ func UpdateChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file s
 		tx.Rollback()
 		log.Fatalf("Updating 'empty_yaml' and 'file' in 'templates' failed.\n Error: %q \n", err)
 	}
-	// TODO: do not reset the yaml but iterate through it to not lose progress
-	entries := GetAllEntriesForChecklist(db, matter.Name)
-	var _ = make([]ChecklistEntry, len(entries))
-	for i, e := range entries{
-		log.Println(i,e)
-	}
 	
 	err = tx.Commit()
 	if err != nil {
@@ -218,6 +212,7 @@ func UpdateChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file s
 	}
 	return nil
 }
+
 
 // Delete old custom fields (name & desc) and new ones
 func RenewCustomFieldsById(db *sql.DB, tx *sql.Tx, id string, matter FrontMatter){
@@ -272,6 +267,19 @@ func RenewPdfNameSchema(db *sql.DB, tx *sql.Tx, id string, matter FrontMatter){
 		}
 	}
 
+}
+
+func UpdateYamlById(db *sql.DB, id int, yaml string){
+	_, err := db.Exec("UPDATE entries SET yaml = ? WHERE id = ?", yaml, id)
+	if err != nil {
+		log.Fatal("Error updating database:", err)
+	}
+}
+func UpdateDataById(db *sql.DB, id int, data string){
+	_, err := db.Exec("UPDATE entries SET data = ? WHERE id = ?", data, id)
+	if err != nil {
+		log.Fatal("Error updating database:", err)
+	}
 }
 
 
