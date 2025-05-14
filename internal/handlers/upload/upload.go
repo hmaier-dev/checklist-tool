@@ -43,33 +43,33 @@ func (h *UploadHandler) Routes(router *mux.Router) {
 }
 
 // Uses CustomField.Key
-func FormatWithColumnsWithCommas(fields []database.CustomField) string{
-				var result string
-				for i, c := range fields {
-					if i == len(fields)-1 {
-						result += c.Key
-					} else {
-						result += c.Key + ","
-					}
-				}
-				return result
+func FormatWithColumnsWithCommas(fields []database.CustomField) string {
+	var result string
+	for i, c := range fields {
+		if i == len(fields)-1 {
+			result += c.Key
+		} else {
+			result += c.Key + ","
+		}
+	}
+	return result
 }
 
 // Uses CustomField.Desc
-func FormatWithDescriptionWithCommas(fields []database.CustomField) string{
-				var result string
-				for i, c := range fields {
-					if i == len(fields)-1 {
-						result += "'" + c.Desc + "'"
-					} else {
-						result += "'" + c.Desc + "',"
-					}
-				}
-				return result
+func FormatWithDescriptionWithCommas(fields []database.CustomField) string {
+	var result string
+	for i, c := range fields {
+		if i == len(fields)-1 {
+			result += "'" + c.Desc + "'"
+		} else {
+			result += "'" + c.Desc + "',"
+		}
+	}
+	return result
 }
 
 // Format to Tab Schema
-func FormatToTabSchema(entries []database.TabDescriptionSchemaEntry) string{
+func FormatToTabSchema(entries []database.TabDescriptionSchemaEntry) string {
 	var result string
 	for i, t := range entries {
 		if i == len(entries)-1 {
@@ -80,8 +80,9 @@ func FormatToTabSchema(entries []database.TabDescriptionSchemaEntry) string{
 	}
 	return result
 }
+
 // Format to PDF Schema
-func FormatToPDFSchema(entries []database.PdfNamingSchemaEntry) string{
+func FormatToPDFSchema(entries []database.PdfNamingSchemaEntry) string {
 	var result string
 	for i, t := range entries {
 		if i == len(entries)-1 {
@@ -108,12 +109,12 @@ func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
 		tab := database.GetTabDescriptionsByID(db, t.Id)
 		pdf := database.GetPdfNamingByID(db, t.Id)
 		all[i] = TemplatesView{
-			Id:   t.Id,
-			Name: t.Name,
-			Columns: FormatWithColumnsWithCommas(cols),
+			Id:          t.Id,
+			Name:        t.Name,
+			Columns:     FormatWithColumnsWithCommas(cols),
 			Description: FormatWithDescriptionWithCommas(cols),
-			Tab_Schema: FormatToTabSchema(tab),
-			PDF_Schema: FormatToPDFSchema(pdf),
+			Tab_Schema:  FormatToTabSchema(tab),
+			PDF_Schema:  FormatToPDFSchema(pdf),
 		}
 	}
 	tmpl := handlers.LoadTemplates(templates)
@@ -156,7 +157,7 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 
 	db := database.Init()
 	err = database.NewChecklistTemplate(db, matter, string(rest), file_contents)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -170,24 +171,24 @@ func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
 // Handles request to /checklist/download/<template_id>
 // and return the raw checklist including the frontmatter as text/yaml
 func (h *UploadHandler) Download(w http.ResponseWriter, r *http.Request) {
-		template_id :=  mux.Vars(r)["id"]
-		// type conversion
-		id, err := strconv.Atoi(template_id)
-		if err != nil{
-			http.Error(w, "Cannot get template id is not an integer.", http.StatusBadRequest)
-			return
-		}
-		db := database.Init()
-		template := database.GetTemplateNameByID(db, id)
-		// Setting the header before sending the file to the browser
-    w.Header().Set("Content-Type", "text/yaml")
-		filename := time.Now().Format("20060102") + "_" + template.Name + ".yml"
-		disposition := fmt.Sprintf("attachment; filename=%s", filename)
-    w.Header().Set("Content-Disposition", disposition)
-		_, err = io.Copy(w, strings.NewReader(template.File))
-    if err != nil {
-			log.Fatalf("Couldn't send yaml file to browser.\nError: %q \n", err)
-    }
+	template_id := mux.Vars(r)["id"]
+	// type conversion
+	id, err := strconv.Atoi(template_id)
+	if err != nil {
+		http.Error(w, "Cannot get template id is not an integer.", http.StatusBadRequest)
+		return
+	}
+	db := database.Init()
+	template := database.GetTemplateNameByID(db, id)
+	// Setting the header before sending the file to the browser
+	w.Header().Set("Content-Type", "text/yaml")
+	filename := time.Now().Format("20060102") + "_" + template.Name + ".yml"
+	disposition := fmt.Sprintf("attachment; filename=%s", filename)
+	w.Header().Set("Content-Disposition", disposition)
+	_, err = io.Copy(w, strings.NewReader(template.File))
+	if err != nil {
+		log.Fatalf("Couldn't send yaml file to browser.\nError: %q \n", err)
+	}
 }
 
 func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -224,41 +225,39 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	entries := database.GetAllEntriesForChecklist(db, matter.Name)
 	// Update dataMap for concerning entries
-	for _, e := range entries{
+	for _, e := range entries {
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(e.Data), &dataMap)
-		if err != nil{
+		if err != nil {
 			log.Fatal("Error while unmarshaling json into map[string]string.")
 		}
-		for _, c := range matter.Fields{
+		for _, c := range matter.Fields {
 			if _, exists := dataMap[c]; !exists {
-			dataMap[c] = ""
+				dataMap[c] = ""
 			}
 		}
 		json, err := json.Marshal(dataMap)
 		database.UpdateDataById(db, e.Id, string(json))
-
 	}
 
-	// Update checklist for concerning entries
-	for _, e := range entries{
+	// Update checklist for the concerning entries
+	var newChecklist []*checklist.Item
+	err = yaml.Unmarshal(rest, &newChecklist)
+	if err != nil {
+		log.Fatal("Error unmarshaling new yaml.")
+	}
+	for _, e := range entries {
 		log.Printf("Update entries for %+v \n", e)
 
 		var oldChecklist []*checklist.Item
-		var newChecklist []*checklist.Item
-
-		err := yaml.Unmarshal([]byte(e.Yaml), &oldChecklist)
-		if err != nil{
+		err = yaml.Unmarshal([]byte(e.Yaml), &oldChecklist)
+		if err != nil {
 			log.Fatal("Error unmarshaling old yaml.")
 		}
-		err = yaml.Unmarshal(rest, &newChecklist)
-		if err != nil{
-			log.Fatal("Error unmarshaling new yaml.")
-		}
 
-		update := UpdateChecklistYaml(oldChecklist, newChecklist)
-		bytes, err := yaml.Marshal(update)
-		if err != nil{
+		UpdateChecklistYaml(oldChecklist, newChecklist)
+		bytes, err := yaml.Marshal(newChecklist)
+		if err != nil {
 			log.Fatal("Error while marshaling yaml.")
 		}
 		database.UpdateYamlById(db, e.Id, string(bytes))
@@ -270,27 +269,9 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 // The idea is to replace the checklist with the new version
 // but to check first which point are already checked.
 // NOTE: this doesn't quiet work yet. I won't save the childrens state :(
-func UpdateChecklistYaml(oldYaml []*checklist.Item, newYaml []*checklist.Item)[]*checklist.Item{
-	log.Println("Entering update yaml")
-	for _, n := range newYaml{
-		// Is item present in the old yaml and is it checked?
-		for _, o := range oldYaml{
-			if (o.Task == n.Task) && (o.Checked == true){
-				log.Printf("%s was present before, so set %s to true", o.Task,n.Task)
-				n.Checked = true
-			}
-		}
-		if len(n.Children) > 0{
-			UpdateChecklistYaml(oldYaml,n.Children)
-		}
-	}
-	fmt.Printf("The new yaml looks like this: \n %#v \n", newYaml)
-	fmt.Printf("The old yaml looks like this: \n %#v \n", oldYaml)
-	return newYaml
+func UpdateChecklistYaml(oldYaml []*checklist.Item, newYaml []*checklist.Item) {
+
 }
-
-
-
 
 
 func init() {
