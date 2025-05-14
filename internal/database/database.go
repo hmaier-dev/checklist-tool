@@ -185,58 +185,14 @@ func UpdateChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file s
 		}
 	}
 
+	tx, err := db.Begin()
 	// To delete all entries in the different tables and just do a new insert,
 	// isn't the smartest way to update the complete template.
-	// But it is the easiest I can think of.
-
-	tx, err := db.Begin()
-	// Update all custom_fields that matches id
-	delcf := `DELETE FROM custom_fields WHERE template_id = ?`
-	_, err = db.Exec(delcf, id)
-	if err != nil{
-		tx.Rollback()
-		log.Fatalf("Delete from custom_fields failed.\n Error: %q \n", err)
-	}
-	for i := range matter.Fields{
-		newFieldStmt := `INSERT INTO custom_fields (template_id, key, desc) VALUES (?, ?, ?)`
-		_, err = db.Exec(newFieldStmt, id, matter.Fields[i], matter.Desc[i])
-		if err != nil{
-			tx.Rollback()
-			log.Fatalf("Error while inserting custom fields: %q\n", err)
-		}
-	}
-
-	// Update the tab_desc_schema that matches the id
-	deltd := `DELETE FROM tab_desc_schema WHERE template_id = ?`
-	_, err = db.Exec(deltd, id)
-	if err != nil{
-		tx.Rollback()
-		log.Fatalf("Delete from tab_desc_schema failed.\n Error: %q \n", err)
-	}
-	for _, t := range matter.Tab_desc_schema{
-		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
-		_, err = db.Exec(newFieldStmt, id, t)
-		if err != nil{
-			tx.Rollback()
-			log.Fatalf("Error while inserting column names for tab description schema: %q\n", err)
-		}
-	}
-
-	// Update the pdf_name_schema that matches the id
-	delps := `DELETE FROM pdf_name_schema WHERE template_id = ?`
-	_, err = db.Exec(delps, id)
-	if err != nil{
-		tx.Rollback()
-		log.Fatalf("Delete from pdf_name_schema failed.\n Error: %q \n", err)
-	}
-	for _, p := range matter.Pdf_name_schema{
-		newFieldStmt := `INSERT INTO pdf_name_schema (template_id, value) VALUES (?, ?)`
-		_, err = db.Exec(newFieldStmt, id, p)
-		if err != nil{
-			tx.Rollback()
-			log.Fatalf("Error while inserting column names for pdf name schema: %q\n", err)
-		}
-	}
+	// But it is the easiest I can think of,
+	// and that is what I'm doing in the renew functions
+	RenewCustomFieldsById(db, tx, id, matter)
+	RenewTabDescSchema(db, tx, id, matter)
+	RenewPdfNameSchema(db, tx, id, matter)
 
 	// Update the yaml & file in templates where id matches
 	updateTmpl := `Update templates SET empty_yaml = ?, file = ? WHERE id = ?`
@@ -261,6 +217,61 @@ func UpdateChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file s
 		}
 	}
 	return nil
+}
+
+// Delete old custom fields (name & desc) and new ones
+func RenewCustomFieldsById(db *sql.DB, tx *sql.Tx, id string, matter FrontMatter){
+	delcf := `DELETE FROM custom_fields WHERE template_id = ?`
+	_, err := db.Exec(delcf, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Delete from custom_fields failed.\n Error: %q \n", err)
+	}
+	for i := range matter.Fields{
+		newFieldStmt := `INSERT INTO custom_fields (template_id, key, desc) VALUES (?, ?, ?)`
+		_, err = db.Exec(newFieldStmt, id, matter.Fields[i], matter.Desc[i])
+		if err != nil{
+			tx.Rollback()
+			log.Fatalf("Error while inserting custom fields: %q\n", err)
+		}
+	}
+}
+
+// Delete old desc-schema entries and inserts new ones
+func RenewTabDescSchema(db *sql.DB, tx *sql.Tx, id string, matter FrontMatter){
+	deltd := `DELETE FROM tab_desc_schema WHERE template_id = ?`
+	_, err := db.Exec(deltd, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Delete from tab_desc_schema failed.\n Error: %q \n", err)
+	}
+	for _, t := range matter.Tab_desc_schema{
+		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
+		_, err = db.Exec(newFieldStmt, id, t)
+		if err != nil{
+		 tx.Rollback()
+		 log.Fatalf("Error while inserting column names for tab description schema: %q\n", err)
+		}
+	}
+}
+
+// Delete old pdf-schema entries and inserts new ones
+func RenewPdfNameSchema(db *sql.DB, tx *sql.Tx, id string, matter FrontMatter){
+	delps := `DELETE FROM pdf_name_schema WHERE template_id = ?`
+	_, err := db.Exec(delps, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Delete from pdf_name_schema failed.\n Error: %q \n", err)
+	}
+	for _, p := range matter.Pdf_name_schema{
+		newFieldStmt := `INSERT INTO pdf_name_schema (template_id, value) VALUES (?, ?)`
+		_, err = db.Exec(newFieldStmt, id, p)
+		if err != nil{
+			tx.Rollback()
+			log.Fatalf("Error while inserting column names for pdf name schema: %q\n", err)
+		}
+	}
+
 }
 
 
