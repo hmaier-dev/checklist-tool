@@ -160,6 +160,110 @@ func NewChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file stri
 	return nil
 }
 
+
+func UpdateChecklistTemplate(db *sql.DB, matter FrontMatter, yaml string, file string) error{
+	selectId := `SELECT id FROM templates where name = ?`
+	row := db.QueryRow(selectId, matter.Name)
+	var id string
+	err := row.Scan(&id)
+	if err == sql.ErrNoRows {
+		msg := fmt.Sprintf("There is no template with the name '%s'. It can't be updated.\n", matter.Name)
+		return &DatabaseError{
+			Message: msg,
+			Err:     err,
+		}
+	}
+	// Test if the inputs in the frontmatter are sane
+	// TODO: write a test for this
+	fieldl := len(matter.Fields)
+	descl := len(matter.Desc)
+	if  fieldl != descl {
+		msg := fmt.Sprintf("Length of fields (%d) and their descriptions (%d) doesn't match.\n", fieldl, descl)
+		return &DatabaseError{
+			Message: msg,
+			Err: nil,
+		}
+	}
+
+	// To delete all entries in the different tables and just do a new insert,
+	// isn't the smartest way to update the complete template.
+	// But it is the easiest I can think of.
+
+	tx, err := db.Begin()
+	// Update all custom_fields that matches id
+	delcf := `DELETE FROM custom_fields WHERE template_id = ?`
+	_, err = db.Exec(delcf, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Delete from custom_fields failed.\n Error: %q \n", err)
+	}
+	for i := range matter.Fields{
+		newFieldStmt := `INSERT INTO custom_fields (template_id, key, desc) VALUES (?, ?, ?)`
+		_, err = db.Exec(newFieldStmt, id, matter.Fields[i], matter.Desc[i])
+		if err != nil{
+			tx.Rollback()
+			log.Fatalf("Error while inserting custom fields: %q\n", err)
+		}
+	}
+
+	// Update the tab_desc_schema that matches the id
+	deltd := `DELETE FROM tab_desc_schema WHERE template_id = ?`
+	_, err = db.Exec(deltd, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Delete from tab_desc_schema failed.\n Error: %q \n", err)
+	}
+	for _, t := range matter.Tab_desc_schema{
+		newFieldStmt := `INSERT INTO tab_desc_schema (template_id, value) VALUES (?, ?)`
+		_, err = db.Exec(newFieldStmt, id, t)
+		if err != nil{
+			tx.Rollback()
+			log.Fatalf("Error while inserting column names for tab description schema: %q\n", err)
+		}
+	}
+
+	// Update the pdf_name_schema that matches the id
+	delps := `DELETE FROM pdf_name_schema WHERE template_id = ?`
+	_, err = db.Exec(delps, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Delete from pdf_name_schema failed.\n Error: %q \n", err)
+	}
+	for _, p := range matter.Pdf_name_schema{
+		newFieldStmt := `INSERT INTO pdf_name_schema (template_id, value) VALUES (?, ?)`
+		_, err = db.Exec(newFieldStmt, id, p)
+		if err != nil{
+			tx.Rollback()
+			log.Fatalf("Error while inserting column names for pdf name schema: %q\n", err)
+		}
+	}
+
+	// Update the yaml & file in templates where id matches
+	updateTmpl := `Update templates SET empty_yaml = ?, file = ? WHERE id = ?`
+	_, err = db.Exec(updateTmpl, yaml, file, id)
+	if err != nil{
+		tx.Rollback()
+		log.Fatalf("Updating 'empty_yaml' and 'file' in 'templates' failed.\n Error: %q \n", err)
+	}
+	// TODO: do not reset the yaml but iterate through it to not lose progress
+	entries := GetAllEntriesForChecklist(db, matter.Name)
+	var _ = make([]ChecklistEntry, len(entries))
+	for i, e := range entries{
+		log.Println(i,e)
+	}
+	
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("Error running the commit for the update.\n Error: %q \n", err)
+		return &DatabaseError{
+			Message: "Error while updating the checklist template.",
+			Err:     err,
+		}
+	}
+	return nil
+}
+
+
 // Row in 'templates'-table
 type ChecklistTemplate struct {
 	Id         int

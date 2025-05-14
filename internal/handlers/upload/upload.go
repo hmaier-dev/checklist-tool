@@ -209,9 +209,13 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Error while validating the yaml in %s: %q\n", header.Filename, err)
 	}
-	// Debug
-	// fmt.Printf("%+v \n", matter)
-	// fmt.Printf("%+v \n", rest)
+	db := database.Init()
+	defer db.Close()
+	err = database.UpdateChecklistTemplate(db, matter, string(rest), file_contents)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Fatal(err)
+	}
 }
 
 func init() {
