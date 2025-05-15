@@ -245,7 +245,9 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		database.UpdateYamlById(db, e.Id, string(rest))
 	}
 
-	http.Redirect(w, r, "/upload", http.StatusSeeOther)
+	// Special header for htmx
+	w.Header().Set("HX-Redirect", "/upload")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // The idea is to replace the checklist with the new version
