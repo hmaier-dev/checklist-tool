@@ -240,27 +240,9 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		database.UpdateDataById(db, e.Id, string(json))
 	}
 
-	// Update checklist for the concerning entries
-	var newChecklist []*checklist.Item
-	err = yaml.Unmarshal(rest, &newChecklist)
-	if err != nil {
-		log.Fatal("Error unmarshaling new yaml.")
-	}
+	// Reset all checklists with the new version
 	for _, e := range entries {
-		log.Printf("Update entries for %+v \n", e)
-
-		var oldChecklist []*checklist.Item
-		err = yaml.Unmarshal([]byte(e.Yaml), &oldChecklist)
-		if err != nil {
-			log.Fatal("Error unmarshaling old yaml.")
-		}
-
-		UpdateChecklistYaml(oldChecklist, newChecklist)
-		bytes, err := yaml.Marshal(newChecklist)
-		if err != nil {
-			log.Fatal("Error while marshaling yaml.")
-		}
-		database.UpdateYamlById(db, e.Id, string(bytes))
+		database.UpdateYamlById(db, e.Id, string(rest))
 	}
 
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
