@@ -1,20 +1,20 @@
  {{ range .Entries }}
     <a href="/checklist/{{ .Path }}" target="_blank" >
-    <table class="border border-gray-300 rounded-lg overflow-hidden shadow-md">
+    <table class="table-fixed border border-gray-300 rounded-lg overflow-hidden shadow-md">
       <thead class="bg-gray-100 text-gray-700 uppercase text-sm">
         <tr>
           <th class="px-3 py-0 text-left border-b w-16">Checklist</th>
           {{ range .Data }}
-          <th class="px-3 py-0 text-left border-b w-38">{{ .Desc }}</th>
+          <th class="px-3 py-0 text-left border-b min-w-[175px]">{{ .Desc }}</th>
           {{ end }}
           <th class="px-3 py-0 text-left border-b">Erstellungsdatum</th>
         </tr>
       </thead>
       <tbody class="divide-y bg-gray-200">
-        <tr>
+        <tr class="hover:bg-gray-100">
           <td class="px-3 py-1 border-b w-16">{{ .TemplateName }}</td>
           {{ range .Data }}
-          <td class="px-3 py-1 border-b w-38">{{ .Value }}</td>
+          <td class="px-3 py-1 border-b min-w-[175px]">{{ .Value }}</td>
           {{ end }}
           <td class="px-3 py-1 border-b">{{ .Date }}</td>
         </tr>
