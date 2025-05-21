@@ -1,7 +1,7 @@
  {{ range .Entries }}
     <a href="/checklist/{{ .Path }}" target="_blank" >
-    <table class="table-fixed border border-gray-300 rounded-lg overflow-hidden shadow-md mb-3 min-w-screen">
-      <thead class="bg-gray-100 text-gray-700 uppercase text-xs min-w-screen">
+    <table class="table-fixed border border-gray-300 rounded-lg overflow-hidden shadow-md mb-3 min-w-[calc(100vw-40px)]">
+      <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
         <tr>
           <th class="px-2 py-0 text-left border-b w-[10px]">Checklist</th>
           {{ range .Data }}

@@ -335,7 +335,8 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]ChecklistEntry
 	selectStmt := `SELECT e.*
 								FROM entries e
 								JOIN templates t ON e.template_id = t.id
-								WHERE t.name = ?;`
+								WHERE t.name = ?
+								ORDER BY e.id DESC;`
 	rows, err := db.Query(selectStmt, template_name)
 	if err != nil{
 		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
