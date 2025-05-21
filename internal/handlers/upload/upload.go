@@ -241,9 +241,9 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Reset all checklists with the new version
-	for _, e := range entries {
-		database.UpdateYamlById(db, e.Id, string(rest))
-	}
+	// for _, e := range entries {
+	// 	database.UpdateYamlById(db, e.Id, string(rest))
+	// }
 
 	// Special header for htmx
 	w.Header().Set("HX-Redirect", "/upload")
