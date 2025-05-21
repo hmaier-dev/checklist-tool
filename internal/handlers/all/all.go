@@ -74,7 +74,6 @@ func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers
 			count += 1
 		}
 		return handlers.EntryView{
-			TemplateName: entry.TemplateName,
 			Date: time.Unix(entry.Date,0).Format("02.01.2006 15:04:05"),
 			Path: entry.Path,
 			Data: viewMap,
