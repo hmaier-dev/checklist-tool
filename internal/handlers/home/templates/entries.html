@@ -5,14 +5,14 @@
       <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
         <tr>
           {{ range .Data }}
-          <th class="px-5 py-0 text-left border-b">{{ .Desc }}</th>
+          <th class="px-2 py-0 text-left border-b w-[140px]">{{ .Desc }}</th>
           {{ end }}
         </tr>
       </thead>
       <tbody class="divide-y bg-gray-200">
           <tr class="hover:bg-gray-100">
             {{ range .Data }}
-            <td class="px-5 py-2 border-b cursor-pointer">{{ .Value }}</td>
+            <td class="px-2 py-1 border-b cursor-pointer w-[140px] break-words whitespace-normal">{{ .Value }}</td>
             {{ end }}
           </tr>
       </tbody>
