@@ -44,6 +44,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 
 	db := database.Init()
 	entry := database.GetEntryByPath(db, path)
+
 	var data map[string]string
 	err := json.Unmarshal([]byte(entry.Data),&data)
 	if err != nil{
@@ -122,17 +123,16 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
 func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		path :=  mux.Vars(r)["id"]
 		tmpl := handlers.LoadTemplates([]string{"checklist/templates/print.html"})
+
 		db := database.Init()
 		entry := database.GetEntryByPath(db, path)
-
 		var items []Item
 		err := yaml.Unmarshal([]byte(entry.Yaml), &items)
 
-		entries := make([]database.ChecklistEntry, 1)
-		entries[0] = database.GetEntryByPath(db, path)
-		template := database.GetTemplateNameByID(db,entries[0].Template_id)
+		template := database.GetTemplateNameByID(db,entry.Template_id)
 		custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
-		result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
+		result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
+
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, map[string]any{
 			"Items": items,
@@ -146,9 +146,8 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		}
 		defer r.Body.Close() // Close the body after reading
 		
-		
 		var data map[string]string
-		err = json.Unmarshal([]byte(entries[0].Data),&data)
+		err = json.Unmarshal([]byte(entry.Data), &data)
 		if err != nil{
 			log.Fatalln("Unmarshaling json from db wen't wrong.")
 			return
@@ -159,7 +158,8 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		}
 		// Build filename of pdf
 		name_schema := database.GetPdfNamingByID(db, template.Id)
-
+		
+		// Build pdf name schema from entry.Data
 		// Add date to the data-map because it is an extra field in the db and not present in entry.Data
 		data["date"] = time.Now().Format("20060102")
 		var pdfName string
