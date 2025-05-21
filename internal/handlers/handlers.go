@@ -57,7 +57,7 @@ var NavList []NavItem = []NavItem{
 		Path: "/delete",
 	},
 	{ 
-		Name: "Checkliste hinzufügen",
+		Name: "Checklisten verwalten",
 		Path: "/upload",
 	},
 }
