@@ -1,12 +1,12 @@
 {{ define "entries.html" }}
  {{ range .Entries }}
-    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md">
+    <table class="min-w-1/3 border border-gray-300 rounded-lg overflow-hidden shadow-md min-w-[calc(100vw-40px)]">
       <thead class="bg-gray-100 text-gray-700 uppercase text-sm ">
         <tr>
           {{ range .Data }}
           <th class="px-3 py-0 text-left border-b w-38">{{ .Desc }}</th>
           {{ end }}
-          <th class="px-2 text-left border-b w-24"></th>
+          <th class="px-2 text-left border-b w-16"></th>
         </tr>
       </thead>
       <tbody class="divide-y bg-gray-200">
@@ -14,12 +14,19 @@
           {{ range .Data }}
           <td class="px-3 py-1 border-b w-38">{{ .Value }}</td>
           {{ end }}
-          <td class="border-b px-3 py-1">
-            <button hx-post="/delete" 
-              hx-vals='{"path": "{{ .Path }}"}'
-              hx-swap="none"
-              class="w-full  text-white bg-red-500 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-semibold rounded-lg shadow-md transition duration-200">
-              Delete Entry</button></td>
+          <td class="border-b w-16 p-1 ">
+            <div class="flex justify-end">
+              <button hx-post="/delete" 
+                hx-vals='{"path": "{{ .Path }}"}'
+                hx-swap="none"
+                class="w-16 h-10 
+                text-white text-sm
+                bg-red-500 hover:bg-red-700 
+                focus:ring-4 focus:ring-red-300 
+                font-semibold rounded-lg shadow-md transition duration-200">
+                Delete Entry</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
