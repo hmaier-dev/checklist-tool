@@ -2,6 +2,8 @@ package upload
 
 import (
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestUpdateChecklistYaml(t *testing.T) {
@@ -55,7 +57,18 @@ func TestUpdateChecklistYaml(t *testing.T) {
 			- task: "Emails schreiben."
 				checked: false
 	`
+	yaml.Unmarshal()
 
+	t.Run("Update YAML", func(t *testing.T) {
+							UpdateChecklistYaml(old, blank)
+							// compare tt.newYaml with tt.expected
+							for i, item := range tt.newYaml {
+									if item.Checked != tt.expected[i].Checked {
+											t.Errorf("item %d (%s): expected Checked=%v, got %v",
+													i, item.Text, tt.expected[i].Checked, item.Checked)
+									}
+							}
+					})
 
 
 
