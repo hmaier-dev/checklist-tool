@@ -6,7 +6,7 @@
           {{ range .Data }}
           <th class="px-2 py-0 text-left border-b w-[140px]">{{ .Desc }}</th>
           {{ end }}
-          <th class="px-2 text-left border-b w-[140px]"></th>
+          <th class="px-2 text-left border-b"></th>
         </tr>
       </thead>
       <tbody class="divide-y bg-gray-200">
@@ -14,17 +14,17 @@
           {{ range .Data }}
           <td class="px-2 py-1 border-b w-[140px] break-words whitespace-normal">{{ .Value }}</td>
           {{ end }}
-          <td class="border-b h-2 w-[140px]">
-            <div class="flex h-full justify-end">
+          <td class="border-b h-2">
+            <div class="flex h-full justify-center align-middle items-center">
               <button hx-post="/delete" 
                 hx-vals='{"path": "{{ .Path }}"}'
                 hx-swap="none"
-                class="text-white text-xs h-full w-1/2
+                class="text-white text-xs p-1 w-[75px] h-[28px] 
                 cursor-pointer
                 bg-red-500 hover:bg-red-700 
                 focus:ring-4 focus:ring-red-300 
                 font-semibold rounded-lg shadow-md transition duration-200">
-                Delete Entry</button>
+                Delete</button>
             </div>
           </td>
         </tr>
