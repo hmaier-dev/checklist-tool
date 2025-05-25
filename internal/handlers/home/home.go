@@ -1,14 +1,16 @@
 package home
 
-import(
-	"net/http"
-	"log"
+import (
+	"crypto/sha256"
 	"encoding/json"
+	"log"
+	"net/http"
+	"sort"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/sqids/sqids-go"
+	"github.com/btcsuite/btcutil/base58"
 
+	"github.com/gorilla/mux"
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
 )
@@ -130,20 +132,18 @@ func (h *HomeHandler) Options(w http.ResponseWriter, r *http.Request){
 }
 
 func generatePath(data map[string]string) string{
-	var chars []uint64
-	for col := range data{
-		for c := range []byte(data[col]){
-			chars = append(chars,uint64(c))
-		}
+	keys := make([]string, 0, len(data))
+	for k := range data{
+		keys = append(keys, k)
 	}
-	s, err := sqids.New()
-	if err != nil{
-		log.Fatalf("Error will constructing a new sqids-instance.\n Error: %q\n", err)
+	sort.Strings(keys)
+	var chars []byte
+	for _, k := range keys{
+		chars = append(chars, []byte(data[k])...)
 	}
-	id, err := s.Encode(chars)
-	if err != nil{
-		log.Fatalf("Something wen't wrong while building the path.\n Error: %q\n", err)
-	}
+	algo := sha256.New()
+	algo.Write(chars)
+	id := base58.Encode(algo.Sum(nil))
 	return id
 }
 
