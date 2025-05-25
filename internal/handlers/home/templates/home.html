@@ -43,10 +43,25 @@ function loadEntries() {
         hx-post="/new" 
         hx-trigger="submit"
         hx-include="[name='template']"
-        hx-swap="none"
+        hx-target="#user_msg"
         hx-on-htmx-before-on-load="loadEntries()">
     {{ template "options.html" . }}
   </form>
+
+  <div id="user_msg" class="hidden p-4 mb-4 max-w-100 bg-gray-200"></div>
+  <script>
+    const msg = document.getElementById('user_msg')
+    const observer = new MutationObserver(() =>{
+      msg.classList.remove('hidden');
+      msg.classList.add('opacity-100');
+      msg.classList.remove('opacity-0');
+    })
+    observer.observe(msg, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+  </script>
   
   <div id="entries">
     {{ template "entries.html" . }}

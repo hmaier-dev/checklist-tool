@@ -105,11 +105,11 @@ func (h *HomeHandler) Execute(w http.ResponseWriter, r *http.Request){
 	// use the CONSTRAINT on the column to generate an error
 	result := database.NewEntry(db, entry)
 	if result != nil{
-		html := `<div class='text-lime-400'>Eintrag erfolgreich erstellt.</div>`
+		html := `<div class='text-emerald-600'>Eintrag erfolgreich erstellt.</div>`
 		w.Write([]byte(html))
 		return
 	}else{
-		html := `<div class='text-red-400'>Eintrag nicht erfolgreich erstellt.</div>`
+		html := `<div class='text-red-700'>Eintrag nicht erfolgreich erstellt.</div>`
 		w.Write([]byte(html))
 		return
 	}
