@@ -121,7 +121,7 @@ func BuildEntryViewForTemplate(custom_fields []database.CustomField, entry datab
 		// format unix-time string to human-readable format
 		viewMap = append(viewMap, DescValueView{
 			Desc: "Erstellungsdatum",
-			Value: time.Unix(entry.Date,0).Format("02-01-2006 15:04:05"),
+			Value: time.Unix(entry.Date,0).Format("02.01.2006 15:04:05"),
 		})
 		return EntryView{
 			Path: entry.Path,
