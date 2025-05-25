@@ -22,7 +22,9 @@ services:
         - "8080:8080"
 ```
 
-## Checklist Example
+## Checklist
+This app uses `yaml` store the checklist itself and a preceding frontmatter to store all meta-data.
+
 A checklist can look like this:
 ```yaml
 ---
@@ -41,13 +43,20 @@ pdf_name_schema: [date,fullname,typ]
 - task: "Tickets bearbeiten."
   checked: false
 ```
-Fields and Desc must be the same length, otherwise a field would be without a description.
-For the `tab_desc_schema` and `pdf_name_schema` all values in `fields` can be used. Non existent `fields` will just be display as empty string.
+### Frontmatter
+Is the place where all the meta-data is stored.
 
-Extra fields are:
+| Key | Data  |
+| --- | --- |
+| fields | Takes a list of keys, which will store user input (need to be the same length as `desc`) |
+| desc | Takes a list of quoted strings, which function as labels for the input fields  (need to be the same length as `fields`) |
+| tab_desc_schema | Defines the browser-tab-description-schema. Values will be separated by `\|` |
+| pdf_name_schema | Defines how the pdf will be named. Values will be separated by `_`. **An extra field is `date`**  which displays the current date when exporting in `yyyyMMdd`-format. |
 
-- `pdf_name_schema`:
-    - `date`: displays the current date in `yyyymmdd`
+### Yaml
+
+>[!NOTE]
+> Note that, the `task`-string is used as an identifier and cannot be used twice!
 
 ## Motivation
 At work I'm dealing with mobile devices, whose setup require multiple steps I need to keep track of. This is not just for me but also for quality assurance.
