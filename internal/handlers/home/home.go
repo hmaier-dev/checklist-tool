@@ -143,6 +143,8 @@ func generatePath(data map[string]string) string{
 	}
 	algo := sha256.New()
 	algo.Write(chars)
+	// base58 is used, because it misses certain chars which makes it more human-readable.
+	// It's also used for bitcoin-address and stuff like that
 	id := base58.Encode(algo.Sum(nil))
 	return id
 }
