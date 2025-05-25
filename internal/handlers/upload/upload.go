@@ -240,18 +240,25 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		database.UpdateDataById(db, e.Id, string(json))
 	}
 
-	// Reset all checklists with the new version
-	// for _, e := range entries {
-	// 	database.UpdateYamlById(db, e.Id, string(rest))
-	// }
-
+	
+	// Update the checklist for all relevant entries
+	// but save the state of the check-points
 	for _, e := range entries {
 		var oldCheck []*checklist.Item
 		var blankCheck []*checklist.Item
 		yaml.Unmarshal([]byte(e.Yaml), &oldCheck)
 		yaml.Unmarshal(rest, &blankCheck)
-		log.Printf("Print out for %s", e.Data)
-		UpdateChecklistYaml(oldCheck, blankCheck)
+
+		var itemsMap = make(map[string]bool)
+		fillHashMap(itemsMap, oldCheck)
+		adoptState(itemsMap, blankCheck)
+
+		var newCheck []byte
+		newCheck, err = yaml.Marshal(blankCheck)
+		if err != nil{
+			log.Fatalf("Marshaling yaml wen't wrong.")
+		}
+		database.UpdateYamlById(db, e.Id, string(newCheck))
 	}
 
 	// Special header for htmx
@@ -261,21 +268,26 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // dissolves the multi-level checklist-struct in a one-dimensional hashmap.
 // Useful when searching for a key:value
-func fillHashMap(itemMap map[string]bool, checklist []*checklist.Item){
-  for _, item := range checklist{
+func fillHashMap(itemMap map[string]bool, checklist []*checklist.Item) {
+	for _, item := range checklist {
 		itemMap[item.Task] = item.Checked
-    if len(item.Children) > 0 {
+		if len(item.Children) > 0 {
 			fillHashMap(itemMap, item.Children)
 		}
-  }
+	}
 }
 
-// The idea is to replace the checklist with the new version, but save the state of the checkpoints
-func UpdateChecklistYaml(oldYaml []*checklist.Item, newYaml []*checklist.Item) {
-	var itemsMap = make(map[string]bool)
-	fillHashMap(itemsMap, oldYaml)
+// adopts checklist.Item.Checked if map-key fits checklist.Item.Task
+func adoptState(itemMap map[string]bool, checklist []*checklist.Item) {
+	for _, item := range checklist {
+		if value, ok := itemMap[item.Task]; ok {
+			item.Checked = value
+		}
+		if len(item.Children) > 0 {
+			adoptState(itemMap, item.Children)
+		}
+	}
 }
-
 
 func init() {
 	handlers.RegisterHandler(&UploadHandler{})
