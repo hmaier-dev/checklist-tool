@@ -13,6 +13,7 @@ import (
 
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
   const port = "8080"
   
   dbArg := flag.String("db", "", "Path to sqlite database")
