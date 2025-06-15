@@ -83,7 +83,12 @@ func (h *HomeHandler) Entries(w http.ResponseWriter, r *http.Request){
 func (h *HomeHandler) Execute(w http.ResponseWriter, r *http.Request){
 	template_name := r.FormValue("template")
 	db := database.Init()
-	template := database.GetChecklistTemplateByName(db, template_name)
+	template, err := database.GetChecklistTemplateByName(db, template_name)
+	if err != nil{
+		html := `<div class='text-red-700'>Da keine Checkliste verfügbar ist, kann kein Eintrag eingelegt werden.</div>`
+		w.Write([]byte(html))
+		return
+	}
 	cols := database.GetAllCustomFieldsForTemplate(db,template_name)
 	data := make(map[string]string)
 	for _, col := range cols{

@@ -50,7 +50,7 @@ func Init() *sql.DB {
 	createStmt := `
 	CREATE TABLE IF NOT EXISTS templates (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
+		name TEXT NOT NULL UNIQUE,
 		empty_yaml TEXT,
 		file TEXT
 	);
@@ -353,14 +353,16 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]ChecklistEntry
 	return all
 }
 
-func GetChecklistTemplateByName(db *sql.DB, template_name string) ChecklistTemplate{
+// Does return a single template because the 'name' is UNIQUE
+func GetChecklistTemplateByName(db *sql.DB, template_name string) (*ChecklistTemplate, error) {
 	selectStmt := `SELECT id, name, empty_yaml FROM templates WHERE name = ?`
 	row := db.QueryRow(selectStmt, template_name)
 	var templateEntry ChecklistTemplate
 	if err := row.Scan(&templateEntry.Id, &templateEntry.Name, &templateEntry.Empty_yaml); err != nil {
-			log.Fatalf("Error scanning row: %s", err)
+			log.Printf("Error scanning row from 'templates': %s", err)
+			return nil, err
 	}
-	return templateEntry
+	return &templateEntry, nil
 }
 
 func DoesPathAlreadyExisit(db *sql.DB, path string)bool{
