@@ -1,0 +1,23 @@
+---
+name: setup devices
+fields: [fullname,ticket,typ]
+desc: ["Name","Ticket Number","Modell"]
+tab_desc_schema: [fullname,typ]
+pdf_name_schema: [date,fullname,typ]
+---
+
+- task: "Add IMEI to MDM."
+  checked: false
+- task: "Start up Device."
+  checked: false
+- task: "Check all programms."
+  checked: false
+  children:
+    - task: "Chrome"
+      checked: false
+    - task: "Mail"
+      checked: false
+    - task: "Some other important programm..."
+      checked: false
+- task: Pack up devices and inform user.
+  checked: false

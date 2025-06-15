@@ -1,0 +1,15 @@
+---
+name: going to work
+fields: [fullname,weekday, hours]
+desc: ["Name","Day of the Week", "Working Hours"]
+tab_desc_schema: [fullname,date]
+pdf_name_schema: [date,fullname]
+---
+
+- task: "Going to work."
+  checked: false
+  children:
+  - task: "Drink coffee."
+    checked: false
+- task: "Leave."
+  checked: false
