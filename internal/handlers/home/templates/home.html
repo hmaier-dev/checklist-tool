@@ -12,11 +12,14 @@
 
 <script>
 function loadEntries() {
+  const selected = document.querySelector('input[name="template"]:checked');
+  if (!selected) return; // Failsafe if nothing is selected
+
   htmx.ajax('GET', '/entries', { 
     target: '#entries',
     swap: 'innerHTML',
     values: {
-      template: document.querySelector('[name="template"]').value
+      template: selected.value
     }
   });
 }
@@ -27,15 +30,19 @@ function loadEntries() {
   </nav>
 
   <div class="p-4 mb-4 max-w-120 bg-gray-200">
-    <select id="templates" name="template" class="w-full" 
-      hx-get="/options" 
-      hx-trigger="change" 
-      hx-target="#prompt"
-      hx-on-htmx-before-on-load="loadEntries()">
-      {{ range .Templates }}
-      <option value="{{ .Name }}" {{ if eq .Name $.Active }}selected{{ end }}>{{ .Name }}</option>
-      {{ end }}
-    </select>
+    {{ range .Templates }}
+    <label class="block">
+      <input type="radio"
+             name="template"
+             value="{{ .Name }}"
+             {{ if eq .Name $.Active }}checked{{ end }}
+             hx-get="/options"
+             hx-trigger="change"
+             hx-target="#prompt"
+             hx-on-htmx-before-on-load="loadEntries()">
+      {{ .Name }}
+    </label>
+    {{ end }}
   </div>
 
   <form id="prompt"
