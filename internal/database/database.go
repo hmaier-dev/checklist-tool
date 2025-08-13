@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -390,14 +391,16 @@ func NewEntry(db *sql.DB, entry ChecklistEntry) sql.Result {
 	return result
 }
 
-func GetEntryByPath(db *sql.DB, path string) ChecklistEntry{
+func GetEntryByPath(db *sql.DB, path string) (*ChecklistEntry, error){
 	selectStmt := `SELECT id, template_id, data, path, yaml, date FROM entries WHERE path = ?`
 	row := db.QueryRow(selectStmt, path)
 	var singleEntry ChecklistEntry
 	if err := row.Scan(&singleEntry.Id, &singleEntry.Template_id, &singleEntry.Data, &singleEntry.Path, &singleEntry.Yaml, &singleEntry.Date); err != nil {
-		log.Fatalf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+		msg := fmt.Sprintf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+		log.Printf(msg)
+		return nil, errors.New(msg)
 	}
-	return singleEntry
+	return *singleEntry, nil
 }
 func GetTemplateNameByID(db *sql.DB, id int) ChecklistTemplate{
 	selectStmt := `SELECT id, name, empty_yaml, file FROM templates WHERE id = ?`

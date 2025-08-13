@@ -44,10 +44,14 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	tmpl := handlers.LoadTemplates(paths)
 
 	db := database.Init()
-	entry := database.GetEntryByPath(db, path)
+	entry, err := database.GetEntryByPath(db, path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 
 	var data map[string]string
-	err := json.Unmarshal([]byte(entry.Data),&data)
+	err = json.Unmarshal([]byte(entry.Data),&data)
 	if err != nil{
 		log.Fatalln("Unmarshaling json from db wen't wrong.")
 		return
