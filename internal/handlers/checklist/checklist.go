@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -168,7 +169,9 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 			if i == len(name_schema) - 1 {
 				pdfName += data[key] + ".pdf"
 			}else{
-				pdfName += data[key] + "_"
+				// Removes all <spaces> in the file name
+				val := strings.ReplaceAll(data[key], " ", "_")
+				pdfName += val + "_"
 			}
 		}
 		var pdfBytes []byte
