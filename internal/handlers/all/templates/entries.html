@@ -1,22 +1,30 @@
  {{ range .Entries }}
-    <a href="/checklist/{{ .Path }}" target="_blank" >
-    <table class="border border-gray-300 rounded-lg overflow-hidden shadow-md mb-3">
-      <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-        <tr>
-          {{ range .Data }}
-          <th class="px-2 py-0 text-left border-b w-[140px]">{{ .Desc }}</th>
-          {{ end }}
-          <th class="px-2 py-0 text-left border-b">Erstellungsdatum</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y bg-gray-200">
-        <tr class="hover:bg-gray-100 text-sm">
-          {{ range .Data }}
-          <td class="px-2 py-1 border-b w-[140px] break-words whitespace-normal">{{ .Value }}</td>
-          {{ end }}
-          <td class="px-2 py-1 border-b">{{ .Date }}</td>
-        </tr>
-      </tbody>
-    </table>
-    </a>
+  {{$id := (printf "table-%s" .Path) }}
+  <table id="{{ $id }}" class="table-fixed border border-gray-300 rounded-lg overflow-hidden shadow-md mb-3 cursor-pointer">
+    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+      <tr>
+        {{ range .Data }}
+        <th class="px-2 py-0 text-left border-b w-[140px]">{{ .Desc }}</th>
+        {{ end }}
+        <th class="px-2 py-0 text-left border-b w-[160px]">Erstellungsdatum</th>
+        <th class="px-2 py-0 text-left border-b w-[32px]"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y bg-gray-200">
+      <tr class="hover:bg-gray-100 text-sm">
+        {{ range .Data }}
+        <td class="px-2 py-1 border-b w-[140px] break-words whitespace-normal">{{ .Value }}</td>
+        {{ end }}
+        <td class="px-2 py-1 border-b">{{ .Date }}</td>
+        <td class="px-2 py-1 border-b"><a href="/checklist/{{ .Path }}" onclick="event.stopPropagation()"><svg class="w-8 h-8 fill-current text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g data-name="13-Arrow Up"><path d="M25 0H7a7 7 0 0 0-7 7v18a7 7 0 0 0 7 7h18a7 7 0 0 0 7-7V7a7 7 0 0 0-7-7zm5 25a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5z"/><path d="M24 7H14v2h7.59L7.29 23.29 8.7 24.7 23 10.41V18h2V8a1 1 0 0 0-1-1z"/></g></svg></a></td>
+      </tr>
+    </tbody>
+  </table>
+  <script>
+    document.getElementById("{{ $id }}").addEventListener("click", (e) => {
+      const path = "/checklist/{{ .Path }}"
+      window.open(path, '_blank').focus();
+    })
+  </script>
 {{ end }}
+
