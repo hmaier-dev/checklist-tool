@@ -26,7 +26,8 @@ build:
   SAVE ARTIFACT ./internal
 
 run:
-  FROM ghcr.io/hmaier-dev/docker-wkhtmltopdf:v0.1
+  FROM debian:bookworm
+  LABEL org.opencontainers.image.source = "https://github.com/hmaier-dev/checklist-tool"
   ARG tag
   WORKDIR /root
   COPY +build/static /root/static/
