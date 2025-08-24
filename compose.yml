@@ -1,0 +1,15 @@
+services:
+  checklist:
+    image: ghcr.io/hmaier-dev/checklist-tool:test
+    pull_policy: never
+    container_name: "checklist-tool"
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    volumes:
+      - ./sqlite.db:/root/sqlite.db
+    depends_on:
+      - gotenberg
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: "gotenberg"
