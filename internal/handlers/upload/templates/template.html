@@ -1,7 +1,6 @@
 {{ define "template.html" }}
 
-{{ range .Templates }}
-<table class="border border-gray-300 rounded-lg overflow-hidden shadow-md">
+<table class="table-fixed border border-gray-300 rounded-lg overflow-hidden shadow-md">
   <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
     <tr>
       <th class="px-2 py-1 text-left border-b w-[100px]">Name</th>
@@ -14,6 +13,7 @@
       <th class="px-2 py-1 text-left border-b w-8"></th>
     </tr>
   </thead>
+{{ range .Templates }}
   <tbody class="divide-y bg-gray-200">
     <tr class="">
       <td class="px-2 py-1 border-b">{{ .Name }}</td>
@@ -92,8 +92,7 @@
       </td>
     </tr>
   </tbody>
-</table>
-<br>
 {{ end }}
+</table>
 
 {{ end }}
