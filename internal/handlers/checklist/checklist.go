@@ -174,16 +174,7 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 				pdfName += val + "_"
 			}
 		}
-		var pdfBytes []byte
-		pdfBytes, err = pdf.Generate(pdfName,bodyBytes)
-		if err != nil{
-			log.Fatalf("Error while generating pdf.\nError: %q \n", err)
-		}
-		// Setting the header before sending the file to the browser
-    w.Header().Set("Content-Type", "application/pdf")
-		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
-    w.Header().Set("Content-Disposition", disposition)
-    _, err = io.Copy(w, bytes.NewReader(pdfBytes))
+		err = pdf.Generate(r,pdfName,bodyBytes)
     if err != nil {
 			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
     }
