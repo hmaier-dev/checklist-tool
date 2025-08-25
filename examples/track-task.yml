@@ -1,0 +1,21 @@
+---
+name: track task
+fields: [worker, task]
+desc: ["Your Name", "Task"]
+tab_desc_schema: [worker]
+pdf_name_schema: [date,worker]
+---
+
+- task: "What task are you doing?"
+  checked: false
+  text: "placeholder"
+  children:
+  - task: "When did you start the task?"
+    checked: false
+    text: ""
+- task: "When did you finish the task?"
+  checked: false
+  text: ""
+- task: "How much time did you need?"
+  checked: false
+
