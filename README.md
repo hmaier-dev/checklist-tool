@@ -56,10 +56,10 @@ Is the place where all the meta-data is stored.
 
 | Key | Data  |
 | --- | --- |
-| fields | Takes a list of keys, which will store user input (need to be the same length as `desc`) |
-| desc | Takes a list of quoted strings, which function as labels for the input fields  (need to be the same length as `fields`) |
-| tab_desc_schema | Defines the browser-tab-description-schema. Values will be separated by `\|` |
-| pdf_name_schema | Defines how the pdf will be named. Values will be separated by `_`. **An extra field is `date`**  which displays the current date when exporting in `yyyyMMdd`-format. |
+| fields | Takes a list of keys, which will store user input (need to be the same length as `desc`). E.g. `fields[2] == desc[2]` |
+| desc | Takes a list of quoted strings, which function as labels for the input fields  (need to be the same length as `fields`) E.g. `desc[1] == fields[1]`|
+| tab_desc_schema | Defines the browser-tab-description-schema. Use the `fields` seperated by `,`. Values will be display separated by `\|` |
+| pdf_name_schema | Defines how the pdf will be named. Use the `fields` seperated by `,`. Values will be display separated by `_`. **An extra field is `date` (only available in this key)** which displays the current date when exporting in `yyyyMMdd`-format. |
 
 ### Yaml
 
