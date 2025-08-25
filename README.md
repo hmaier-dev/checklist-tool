@@ -1,26 +1,34 @@
 ## Development
-To reach reproducibility [`earthly`](https://docs.earthly.dev/) is used to build the project. With 
+To simplifly development on Windows and Linux [`earthly`](https://docs.earthly.dev/) is used to build the project.
 ```cmd
 earthly +run --tag="test"
 ```
-you will output a image called `ghcr.io/hmaier-dev/checklist-tool:test` which is exposed on port 8080. Run it like this:
+The outputs a image called `ghcr.io/hmaier-dev/checklist-tool:test`. Run this image by using the compose stack.
 ```cmd
-# Windows
-docker run --rm --name checklist-tool -v $pwd\sqlite.db:/root/sqlite.db -p 8080:8080 ghcr.io/hmaier-dev/checklist-tool:test
-# Linux
-docker run --rm --name checklist-tool -v $PWD/sqlite.db:/root/sqlite.db -p 8080:8080 ghcr.io/hmaier-dev/checklist-tool:test
+earthly +run --tag="test" && docker compose up
 ```
+A example compose stack is within the root of the project.
 ## Deployment
-A `docker-compose.yml` for the checklist-tool can look like this:
+A `compose.yml` for the checklist-tool can look like this:
 ```yaml
 services:
-    checklist-tool:
-        contaier_name: "checklist-tool"
-    volumes:
-        - ./sqlite.db:/root/sqlite.db
+  checklist:
+    image: ghcr.io/hmaier-dev/checklist-tool:latest
+    container_name: "checklist-tool"
     ports:
-        - "8080:8080"
+      - 8080:8080
+    restart: unless-stopped
+    volumes:
+      - ./sqlite.db:/root/sqlite.db
+    depends_on:
+      - gotenberg
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: "gotenberg"
 ```
+### gotenberg
+The gotenberg-Container is used for the creation of pdfs.
+The checklist-tool can be run without gotenberg, but will throw an error when a checklist gets exported: https://github.com/hmaier-dev/checklist-tool/blob/66159b446c2180e9c846cbad91a53904368872d5/internal/pdf/pdf.go#L13
 
 ## Checklist
 This app uses `yaml` store the checklist itself and a preceding frontmatter to store all meta-data.
@@ -61,7 +69,3 @@ Is the place where all the meta-data is stored.
 ## Motivation
 At work I'm dealing with mobile devices, whose setup require multiple steps I need to keep track of. This is not just for me but also for quality assurance.
 Working with/in PDFs is tireseome in serveral ways. So I decided to write this small project, which should ease my time setup up the devices.
-
-## Deps
-- `wkhtmltopdf`: Creating pdf-documents from html
-- `tailwindcss`: utility-css framework 
