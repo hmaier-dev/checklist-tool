@@ -46,6 +46,10 @@
           hx-vals='{"task": "{{ .Task }}"}'
           {{ if .Checked }}checked{{ end }}> {{ .Task }}
 
+          {{ if .Text }}
+              <input type="text" id="{{ .Task }}-{{ $Path }}" class="border rounded-md bg-white" name="{{ .Task }}-{{ $Path }}" value="{{.Text}}">
+          {{end}}
+
           {{ if .Children }}
               {{ template "renderItems" (arr .Children $Path) }}
           {{ end }}
