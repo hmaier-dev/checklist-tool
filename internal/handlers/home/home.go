@@ -110,13 +110,21 @@ func (h *HomeHandler) Execute(w http.ResponseWriter, r *http.Request){
 	}
 	// Instead of checking the 'path' manually,
 	// use the CONSTRAINT on the column to generate an error
-	result := database.NewEntry(db, entry)
-	if result != nil{
-		html := `<div class='text-emerald-600'>Eintrag erfolgreich erstellt.</div>`
-		w.Write([]byte(html))
-		return
+	err = database.NewEntry(db, entry)
+
+	if err != nil{
+		switch err.Error(){
+		case "UNIQUE constraint failed: entries.path":
+			html := `<div class='text-red-700'>Eintrag ist bereits vorhanden und wurde daher nicht erneut erstellt.</div>`
+			w.Write([]byte(html))
+			return
+		default:
+			html := `<div class='text-red-700'>Ein unbekannter Fehler aufgetreten.</div>`
+			w.Write([]byte(html))
+			return
+		}
 	}else{
-		html := `<div class='text-red-700'>Eintrag nicht erfolgreich erstellt.</div>`
+		html := `<div class='text-emerald-600'>Eintrag erfolgreich erstellt.</div>`
 		w.Write([]byte(html))
 		return
 	}
