@@ -86,7 +86,7 @@ type DescValueView struct {
 }
 
 // Connects the description of a column with it's value for an array of entries.
-func BuildEntriesViewForTemplate(custom_fields []database.CustomField, entries []database.ChecklistEntry) []EntryView{
+func BuildEntriesViewForTemplate(custom_fields []database.CustomField, entries []*database.ChecklistEntry) []EntryView{
 	var result []EntryView	
 	for _, entry := range entries{
 		result = append(result, BuildEntryViewForTemplate(custom_fields, entry))
@@ -96,7 +96,7 @@ func BuildEntriesViewForTemplate(custom_fields []database.CustomField, entries [
 // Connects the description of a column with it's value for a single entry.
 // The DescValueView could also be build by a JOIN() in SQL.
 // Maybe refactor it in the function, to reduce the codebase.
-func BuildEntryViewForTemplate(custom_fields []database.CustomField, entry database.ChecklistEntry) EntryView{
+func BuildEntryViewForTemplate(custom_fields []database.CustomField, entry *database.ChecklistEntry) EntryView{
 		var fieldsMap = make(map[string]string, len(custom_fields))
 		for _, field := range custom_fields{
 			fieldsMap[field.Key] = field.Desc

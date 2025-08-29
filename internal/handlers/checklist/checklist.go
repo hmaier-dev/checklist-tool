@@ -44,10 +44,14 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	tmpl := handlers.LoadTemplates(paths)
 
 	db := database.Init()
-	entry := database.GetEntryByPath(db, path)
+	entry, err := database.GetEntryByPath(db, path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	var data map[string]string
-	err := json.Unmarshal([]byte(entry.Data),&data)
+	err = json.Unmarshal([]byte(entry.Data),&data)
 	if err != nil{
 		log.Fatalln("Unmarshaling json from db wen't wrong.")
 		return
@@ -56,7 +60,6 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	template := database.GetTemplateNameByID(db,entry.Template_id)
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
 	result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
-
 
 	// Build string for browser-tab title
 	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
@@ -106,7 +109,11 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
   
   // Fetch Row from Database
   db := database.Init()
-  entry := database.GetEntryByPath(db, path)
+  entry, err := database.GetEntryByPath(db, path)
+	if err != nil {
+		http.Error(w,err.Error(), http.StatusInternalServerError)
+		return
+	}
 
   var oldItems []*Item
   err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
@@ -118,7 +125,7 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
       return
   }
   database.UpdateYamlByPath(db, path, string(yamlBytes))
-	fmt.Fprint(w,[]byte{})
+	w.Write([]byte{})
 }
 
 func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
@@ -126,9 +133,9 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		tmpl := handlers.LoadTemplates([]string{"checklist/templates/print.html"})
 
 		db := database.Init()
-		entry := database.GetEntryByPath(db, path)
+		entry, err := database.GetEntryByPath(db, path)
 		var items []Item
-		err := yaml.Unmarshal([]byte(entry.Yaml), &items)
+		err = yaml.Unmarshal([]byte(entry.Yaml), &items)
 
 		template := database.GetTemplateNameByID(db,entry.Template_id)
 		custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)

@@ -332,7 +332,7 @@ func GetAllCustomFieldsForTemplate(db *sql.DB, template_name string)[]CustomFiel
 	return all
 }
 
-func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]ChecklistEntry{
+func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]*ChecklistEntry{
 	selectStmt := `SELECT e.*
 								FROM entries e
 								JOIN templates t ON e.template_id = t.id
@@ -342,14 +342,14 @@ func GetAllEntriesForChecklist(db *sql.DB, template_name string)[]ChecklistEntry
 	if err != nil{
 		log.Fatalf("Error while running '%s' \n Error: %q \n", selectStmt, err)
 	}
-	var all []ChecklistEntry
+	var all []*ChecklistEntry
 	for rows.Next() {
 		var entry ChecklistEntry
 		if err := rows.Scan(&entry.Id, &entry.Template_id, &entry.Data, &entry.Path, &entry.Yaml, &entry.Date); err != nil {
 					 log.Fatalf("Error scanning row: %s", err)
 					 return nil
 		}
-		all = append(all, entry)
+		all = append(all, &entry)
 	}
 	return all
 }
