@@ -379,26 +379,33 @@ func DoesPathAlreadyExisit(db *sql.DB, path string)bool{
 	return true
 }
 
-func NewEntry(db *sql.DB, entry ChecklistEntry) sql.Result {
+func NewEntry(db *sql.DB, entry ChecklistEntry) error {
 	insertStmt := `INSERT INTO entries (template_id, data, path, yaml, date) VALUES (?, ?, ?, ?, ?)`
-	result, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml, entry.Date)
+	_, err := db.Exec(insertStmt, entry.Template_id, entry.Data, entry.Path, entry.Yaml, entry.Date)
 	if err != nil {
 		log.Printf(`Error while inserting a new entry into 'entries'.\n
 		Error: %q \n
 		Data: %q \n`, err, entry)
-		return nil
+		return err
 	}
-	return result
+	return nil
 }
 
-func GetEntryByPath(db *sql.DB, path string) ChecklistEntry{
+func GetEntryByPath(db *sql.DB, path string) (*ChecklistEntry, error){
 	selectStmt := `SELECT id, template_id, data, path, yaml, date FROM entries WHERE path = ?`
 	row := db.QueryRow(selectStmt, path)
 	var singleEntry ChecklistEntry
-	if err := row.Scan(&singleEntry.Id, &singleEntry.Template_id, &singleEntry.Data, &singleEntry.Path, &singleEntry.Yaml, &singleEntry.Date); err != nil {
-		log.Fatalf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+	err := row.Scan(&singleEntry.Id, &singleEntry.Template_id, &singleEntry.Data, &singleEntry.Path, &singleEntry.Yaml, &singleEntry.Date);
+	if err != nil {
+		log.Printf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+		switch err.Error(){
+			case "sql: no rows in result set":
+				return nil, errors.New("No checklist found for this path.")
+			default:
+				return nil, errors.New("Unexpected error.")
+		}
 	}
-	return singleEntry
+	return &singleEntry, nil
 }
 func GetTemplateNameByID(db *sql.DB, id int) ChecklistTemplate{
 	selectStmt := `SELECT id, name, empty_yaml, file FROM templates WHERE id = ?`
