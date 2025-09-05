@@ -9,23 +9,7 @@ earthly +run --tag="test" && docker compose up
 ```
 A example compose stack is within the root of the project.
 ## Deployment
-A `compose.yml` for the checklist-tool can look like this:
-```yaml
-services:
-  checklist:
-    image: ghcr.io/hmaier-dev/checklist-tool:latest
-    container_name: "checklist-tool"
-    ports:
-      - 8080:8080
-    restart: unless-stopped
-    volumes:
-      - ./sqlite.db:/root/sqlite.db
-    depends_on:
-      - gotenberg
-  gotenberg:
-    image: gotenberg/gotenberg:8
-    container_name: "gotenberg"
-```
+A example `compose.yml` can be found under the root of this project.
 ### gotenberg
 The gotenberg-Container is used for the creation of pdfs.
 The checklist-tool can be run without gotenberg, but will throw an error when a checklist gets exported: https://github.com/hmaier-dev/checklist-tool/blob/66159b446c2180e9c846cbad91a53904368872d5/internal/pdf/pdf.go#L13
