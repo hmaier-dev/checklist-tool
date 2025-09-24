@@ -98,8 +98,9 @@ func FormatToPDFSchema(entries []database.PdfNamingSchemaEntry) string {
 func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
 	var templates = []string{
 		"upload/templates/upload.html",
-		"nav.html",
 		"upload/templates/template.html",
+		"nav.html",
+		"header.html",
 	}
 	db := database.Init()
 	template_entries := database.GetAllTemplates(db)

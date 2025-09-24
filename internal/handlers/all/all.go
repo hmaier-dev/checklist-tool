@@ -28,6 +28,7 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 		"all/templates/all.html",
 		"all/templates/entries.html",
 		"nav.html",
+		"header.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()

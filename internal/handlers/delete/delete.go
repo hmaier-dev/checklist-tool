@@ -30,6 +30,7 @@ func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
 		"delete/templates/delete.html",
 		"delete/templates/entries.html",
 		"nav.html",
+		"header.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
 	db := database.Init()

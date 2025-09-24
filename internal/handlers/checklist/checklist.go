@@ -41,6 +41,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	paths := []string{
 		"checklist/templates/checklist.html",
 		"nav.html",
+		"header.html",
 	}
 	tmpl := handlers.LoadTemplates(paths)
 
