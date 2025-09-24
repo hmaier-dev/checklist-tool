@@ -6,7 +6,7 @@ require (
 	github.com/adrg/frontmatter v0.2.0
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/gorilla/mux v1.8.1
-	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/starwalkn/gotenberg-go-client/v8 v8.11.0
 	gopkg.in/yaml.v3 v3.0.1
 )
