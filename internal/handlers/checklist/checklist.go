@@ -42,6 +42,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		"checklist/templates/checklist.html",
 		"nav.html",
 		"header.html",
+		"last-visited.html",
 	}
 	tmpl := handlers.LoadTemplates(paths)
 
@@ -203,7 +204,6 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
     }
 }
-
 func changeCheckedStatus(newItem Item, oldChecklist []*Item){
   for _, item := range oldChecklist{
     if newItem.Task == item.Task{

@@ -72,6 +72,27 @@ func Nav(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+// Works together with 'last-visited.html'
+func History(w http.ResponseWriter, r *http.Request){
+	// When lastPages is not set, currentPage is the first page to save into history
+	lastPages := r.URL.Query().Get("lastPages")
+	currentPage := r.URL.Query().Get("currentPage")
+	var history = ""
+	if lastPages == ""{
+		history += lastPages
+	}
+	history += currentPage
+
+	tmpl := LoadTemplates([]string{"breadcrumb-history.html"})
+	err := tmpl.Execute(w, map[string]any{
+		"History": history,
+	})
+	if err != nil{
+		log.Fatalf("Something went wrong executing the 'nav.html' template.\n %q \n", err)
+	}
+}
+
+
 type EntryView struct{
 	TemplateName string
 	Date string
