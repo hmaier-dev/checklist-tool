@@ -1,19 +1,22 @@
 {{ define "options.html" }}
 
-{{ range .Inputs }}
-<label for='{{ .Key }}'>{{ .Desc }}</label>
-  <input class='border bg-white relative float-right focus:ring-blue-300'
-  type='text' id='{{ .Key }}' name='{{ .Key }}' required>
-  <br>
-  <br>
-{{ end }}
+<fieldset class="kern-fieldset">
+<legend class="kern-label kern-label--large">
+  Angaben
+</legend>
+<div class="kern-fieldset__body">
+  {{ range .Inputs }}
+  <div class="kern-form-input">
+    <label class="kern-label" for="{{ .Key }}">{{ .Desc }}</label>
+    <input class="kern-form-input__input" id="{{ .Key }}" name="{{ .Key }}" type="text">
+  </div>
+  {{ end }}
+<div>
+</fieldset>
 
-<button class="mr-8 mb-4 px-10 py-3
-  text-white bg-blue-600 font-semibold
-  rounded relative float-right
-  hover:bg-blue-700 focus:ring-4
-  focus:ring-blue-300" type="submit">Submit</button>
-<br><br>
-<div id="feedback"></div>
+<button class="kern-btn kern-btn--primary">
+<span class="kern-label">Erstellen</span>
+<span class="kern-icon kern-icon--arrow-forward" aria-hidden="true"></span>
+</button>
 
 {{ end }}

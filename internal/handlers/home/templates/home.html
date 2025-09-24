@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-kern-theme="light">
 <head>
   {{ template "header.html" . }}
   <title>Neuen Eintrag erstellen</title>
@@ -42,7 +42,7 @@ function loadEntries() {
   </div>
 
   <form id="prompt"
-        class="p-4 mb-4 max-w-120 bg-gray-200" 
+        class="max-w-120" 
         hx-post="/new" 
         hx-trigger="submit"
         hx-include="[name='template']"
@@ -50,6 +50,8 @@ function loadEntries() {
         hx-on-htmx-before-on-load="loadEntries()">
     {{ template "options.html" . }}
   </form>
+
+  <hr class="kern-divider" aria-hidden="true" />
 
   <div id="user_msg" class="hidden p-4 mb-4 max-w-120 bg-gray-200"></div>
   <script>
