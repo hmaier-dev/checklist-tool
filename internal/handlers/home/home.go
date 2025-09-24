@@ -32,9 +32,10 @@ func (h *HomeHandler)	Routes(router *mux.Router){
 func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
 	var templates = []string{
 		"home/templates/home.html",
-		"nav.html",
 		"home/templates/entries.html",
 		"home/templates/options.html",
+		"nav.html",
+		"header.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
 	// This needs to be called here, to set ?template=
