@@ -8,6 +8,11 @@ The outputs a image called `ghcr.io/hmaier-dev/checklist-tool:test`. Run this im
 earthly +run --tag="test" && docker compose up
 ```
 A example compose stack is within the root of the project.
+
+Use this command to run it raw without `earthly`
+```bash
+go build -x -v -p 4 -o ./bin/cltool main.go && tailwindcss -i ./static/base.css -o ./static/style.css && ./bin/cltool -db=sqlite.db
+```
 ## Deployment
 A example `compose.yml` can be found under the root of this project.
 ### gotenberg
