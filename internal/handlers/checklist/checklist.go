@@ -40,6 +40,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
   path := mux.Vars(r)["id"]
 	paths := []string{
 		"checklist/templates/checklist.html",
+		"nav.html",
 	}
 	tmpl := handlers.LoadTemplates(paths)
 
@@ -80,6 +81,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		"EntryView": result,
 		"Items": items,
 		"Path": path,
+    "Nav" : handlers.NavList,
   })
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
