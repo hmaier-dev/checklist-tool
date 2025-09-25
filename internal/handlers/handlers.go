@@ -78,8 +78,9 @@ func Nav(w http.ResponseWriter, r *http.Request) {
 // so can get created or get appended.
 // Is called from within 'history.html'
 func HistoryBreadcrumb(w http.ResponseWriter, r *http.Request) {
-
-	lastPages, err := appendHistory(r)
+	localStorage := r.FormValue("lastPages")
+	var lastPages []string
+	err := json.Unmarshal([]byte(localStorage),&lastPages)
 	if err != nil{
 		log.Fatalf("%q", err)
 	}
@@ -138,7 +139,6 @@ func History(w http.ResponseWriter, r *http.Request) {
 	if err != nil{
 		log.Fatalf("%q", err)
 	}
-	log.Println("Sended to client: ", lastPages)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(lastPages); err != nil {
 		http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
@@ -155,13 +155,19 @@ func appendHistory(r *http.Request) ([]string, error){
 	}
 	split := strings.Split(u.Path, "/")
 	currentPath := split[len(split)-1]
+	var lastPages = make([]string, 0)
 
-	var lastPages = make([]string, 0) 
 	localStorage := r.FormValue("lastPages")
-	log.Println("LocalStorage: ", localStorage)
-	log.Println("LocalStorage Len: ", len(localStorage))
 	if len(localStorage) == 0{
 		lastPages = append(lastPages, currentPath)		
+	}
+	if len(localStorage) > 1{
+		var data []string
+		err = json.Unmarshal([]byte(localStorage),&data)
+		for _, p := range data{
+			lastPages = append(lastPages, p)
+		}
+		lastPages = append(lastPages, currentPath)
 	}
 	return lastPages, nil
 }

@@ -2,24 +2,26 @@
 <div id="lastPages"></div>
 <script>
 
-var hist = localStorage.getItem('lastPages');
-fetch(`/history-data`, {
+const data = new FormData();
+data.append('lastPages', localStorage.getItem('lastPages'));
+
+fetch('/history-data', {
   method: "POST",
-  headers: { 'Content-Type': 'application/json' },
-  body: hist
+  body: data
 })
 .then(response => { 
   return response.json();
 })
 .then(data => { 
-  localStorage.setItem('lastPages', data)
+  localStorage.setItem('lastPages', JSON.stringify(data))
+  console.log(localStorage.getItem('lastPages'))
 })
 .then(() => {
   // After the update generate the breadcrumb html
   htmx.ajax('POST', '/history-breadcrumb', { 
     target: '#lastPages',
     swap: 'innerHTML',
-    values: { lastPages: hist }
+    values: { lastPages: localStorage.getItem('lastPages')}
     });
 });
 
