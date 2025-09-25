@@ -1,22 +1,27 @@
 {{ define "history.html" }}
-<div id="lastPages" ></div>
+<div id="lastPages"></div>
 <script>
-if(localStorage.getItem('lastPages') == null){
-  htmx.ajax('GET', '/history', { 
+
+var hist = localStorage.getItem('lastPages');
+fetch(`/history-data`, {
+  method: "POST",
+  headers: { 'Content-Type': 'application/json' },
+  body: hist
+})
+.then(response => { 
+  return response.json();
+})
+.then(data => { 
+  localStorage.setItem('lastPages', data)
+})
+.then(() => {
+  // After the update generate the breadcrumb html
+  htmx.ajax('POST', '/history-breadcrumb', { 
     target: '#lastPages',
     swap: 'innerHTML',
-    afterSwap: console.log("received response")
-  })
-}else{
-  var hist = localStorage.getItem('lastPages');
-  htmx.ajax('GET', '/history', { 
-    target: '#lastPages',
-    swap: 'innerHTML',
-    afterSwap: console.log("received response"),
-    values: {
-      lastPages: hist,
-    }
-  })
-}
+    values: { lastPages: hist }
+    });
+});
+
 </script>
 {{ end }}

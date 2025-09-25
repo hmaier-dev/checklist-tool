@@ -1,6 +1,11 @@
 {{ define "breadcrumb-history.html" }}
 
+<p>Als letztes besucht:</p>
 {{ range .History }}
+<div><a href="/checklist/{{ .Path }}">{{ .TabDescription }}</a></div>
 {{ end }}
+
+<script>
+</script>
 
 {{ end }}

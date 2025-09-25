@@ -77,31 +77,12 @@ func Nav(w http.ResponseWriter, r *http.Request) {
 // By reading the header of the GET-request, we get the path of the currentPage
 // so can get created or get appended.
 // Is called from within 'history.html'
-func History(w http.ResponseWriter, r *http.Request) {
+func HistoryBreadcrumb(w http.ResponseWriter, r *http.Request) {
 
-	// You could also use 'Referer' but this field is optional
-	// HX-Variable will be present, because this request is done with HTMX
-	currentUrl := r.Header.Get("Hx-Current-Url")
-	u, err := url.Parse(currentUrl)
-	if err != nil {
-		log.Fatalln("Something wen't wrong when parsing the URL received on /history...")
+	lastPages, err := appendHistory(r)
+	if err != nil{
+		log.Fatalf("%q", err)
 	}
-	split := strings.Split(u.Path, "/")
-	currentPath := split[len(split)-1]
-	fmt.Println(currentPath)
-
-	// When lastPages is not set, currentPath is the first page to save into history
-	localStorage := r.URL.Query().Get("lastPages")
-	var lastPages []string
-	if localStorage != ""{
-		err = json.Unmarshal([]byte(localStorage),&lastPages)
-		if err != nil{
-			fmt.Printf("Error while unmarshaling list from localStorage: %q", err)
-		}
-	}else{
-		lastPages = append(lastPages, currentPath)		
-	}
-	
 	// To build the TabDescription for each breadcrumb, we need the database
 	db := database.Init()
 	var entries []*database.ChecklistEntry
@@ -124,7 +105,7 @@ func History(w http.ResponseWriter, r *http.Request) {
 		complete_schema := database.GetTabDescriptionsByID(db, entry.Template_id)
 		// The schema just have the keys, but we want the data which is in entry.Data
 		var data map[string]string
-		err = json.Unmarshal([]byte(entry.Data),&data)
+		err := json.Unmarshal([]byte(entry.Data),&data)
 		if err != nil{
 			log.Fatalln("Unmarshaling json from db wen't wrong.")
 			return
@@ -132,7 +113,7 @@ func History(w http.ResponseWriter, r *http.Request) {
 		// This inner loop combines the different db-entries for the TabDescription
 		var result string
 		for i, t := range complete_schema{
-			if i == len(entries)-1 {
+			if i == len(complete_schema)-1 {
 				result += data[t.Value]
 			} else {
 				result += data[t.Value] + " | "
@@ -144,12 +125,47 @@ func History(w http.ResponseWriter, r *http.Request) {
 	tmpl := LoadTemplates([]string{"breadcrumb-history.html"})
 	err = tmpl.Execute(w, map[string]any{
 		"History": history,
-		"LocalStorge": lastPages,
 	})
 	if err != nil {
-		log.Fatalf("Something went wrong executing the 'nav.html' template.\n %q \n", err)
+		log.Fatalf("Something went while building the breadcrumb history...\n %q \n", err)
 	}
 }
+
+// Returns the history as marshaled json.
+// history is ordered ascending (from new to old)
+func History(w http.ResponseWriter, r *http.Request) {
+	lastPages, err := appendHistory(r)
+	if err != nil{
+		log.Fatalf("%q", err)
+	}
+	log.Println("Sended to client: ", lastPages)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(lastPages); err != nil {
+		http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
+		return
+	}
+}
+
+func appendHistory(r *http.Request) ([]string, error){
+	currentUrl := r.Header.Get("Referer")
+	// When lastPages is not set, currentPath is the first page to save into history
+	u, err := url.Parse(currentUrl)
+	if err != nil {
+		return nil, fmt.Errorf("Something wen't wrong when parsing the URL received on /history...")
+	}
+	split := strings.Split(u.Path, "/")
+	currentPath := split[len(split)-1]
+
+	var lastPages = make([]string, 0) 
+	localStorage := r.FormValue("lastPages")
+	log.Println("LocalStorage: ", localStorage)
+	log.Println("LocalStorage Len: ", len(localStorage))
+	if len(localStorage) == 0{
+		lastPages = append(lastPages, currentPath)		
+	}
+	return lastPages, nil
+}
+
 
 type EntryView struct {
 	TemplateName string

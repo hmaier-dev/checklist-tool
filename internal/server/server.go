@@ -25,7 +25,10 @@ func NewServer() *Server {
   sub := router.PathPrefix("/").Subrouter()
 
   sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
-  sub.HandleFunc("/history", handlers.History).Methods("GET")
+	// Because the paths stored client-side are very long
+	// POST requests are used to handle them
+  sub.HandleFunc("/history-breadcrumb", handlers.HistoryBreadcrumb).Methods("POST")
+  sub.HandleFunc("/history-data", handlers.History).Methods("POST")
 
 	for _, h := range handlers.GetHandlers() {
 		// Link the routes declared in sub-handlers to *mux.Router
