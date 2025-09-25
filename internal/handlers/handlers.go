@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -124,8 +125,9 @@ func HistoryBreadcrumb(w http.ResponseWriter, r *http.Request) {
 		}
 		history = append(history, struct{Path string; TabDescription string}{Path: entry.Path, TabDescription: result})
 	}
-
+	slices.Reverse(history)
 	tmpl := LoadTemplates([]string{"breadcrumb-history.html"})
+
 	err = tmpl.Execute(w, map[string]any{
 		"History": history,
 	})
@@ -295,6 +297,9 @@ func LoadTemplates(paths []string) *template.Template {
 	}
 	funcMap := template.FuncMap{
 		"arr": func(item ...any) []any { return item },
+		"last": func(x int, a any) bool {
+				return x == reflect.ValueOf(a).Len() - 1
+		},
 	}
 	// add funcMap to base-template
 	first := filepath.Base(full[0])
