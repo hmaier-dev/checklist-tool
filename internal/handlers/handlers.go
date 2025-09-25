@@ -90,9 +90,10 @@ func HistoryBreadcrumb(w http.ResponseWriter, r *http.Request) {
 	for _, path := range lastPages{
 		e, err	:= database.GetEntryByPath(db, path)
 		if err != nil {
-			log.Fatalf("Error while getting an entry by it's path. Is the path '%s' existent?\n Error: %q", path, err)
+			log.Printf("The path '%s' is not existent? We are skipping it.", path )
+		}else{
+			entries = append(entries, e)
 		}
-		entries = append(entries, e)
 	}
 	var history = []struct {
 		// Is the path to navigate to
@@ -161,11 +162,16 @@ func appendHistory(r *http.Request) ([]string, error){
 	if len(localStorage) == 0{
 		lastPages = append(lastPages, currentPath)		
 	}
+	db := database.Init()
 	if len(localStorage) > 1{
 		var data []string
 		err = json.Unmarshal([]byte(localStorage),&data)
 		for _, p := range data{
-			lastPages = append(lastPages, p)
+		  _, err:= database.GetEntryByPath(db, p)
+			if err == nil{
+				// This path was found in the database
+				lastPages = append(lastPages, p)
+			}
 		}
 		lastPages = append(lastPages, currentPath)
 	}

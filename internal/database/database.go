@@ -397,7 +397,7 @@ func GetEntryByPath(db *sql.DB, path string) (*ChecklistEntry, error){
 	var singleEntry ChecklistEntry
 	err := row.Scan(&singleEntry.Id, &singleEntry.Template_id, &singleEntry.Data, &singleEntry.Path, &singleEntry.Yaml, &singleEntry.Date);
 	if err != nil {
-		log.Printf("Error scanning row: %s. \n Query: %s", err, selectStmt)
+		// log.Printf("Error scanning row: %s. \n Query: %s", err, selectStmt)
 		switch err.Error(){
 			case "sql: no rows in result set":
 				return nil, errors.New("No checklist found for this path.")
