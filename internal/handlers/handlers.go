@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -138,7 +139,7 @@ func HistoryBreadcrumb(w http.ResponseWriter, r *http.Request) {
 func History(w http.ResponseWriter, r *http.Request) {
 	lastPages, err := appendHistory(r)
 	if err != nil{
-		log.Fatalf("%q", err)
+		log.Fatalf("Couldn't append the history.\n Error: %q", err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(lastPages); err != nil {
@@ -147,35 +148,39 @@ func History(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Returns []string in ascending order (from oldest to newest)
 func appendHistory(r *http.Request) ([]string, error){
 	currentUrl := r.Header.Get("Referer")
-	// When lastPages is not set, currentPath is the first page to save into history
 	u, err := url.Parse(currentUrl)
 	if err != nil {
 		return nil, fmt.Errorf("Something wen't wrong when parsing the URL received on /history...")
 	}
 	split := strings.Split(u.Path, "/")
 	currentPath := split[len(split)-1]
-	var lastPages = make([]string, 0)
-
 	localStorage := r.FormValue("lastPages")
+	// Set the currentPath as the oldest page
 	if len(localStorage) == 0{
-		lastPages = append(lastPages, currentPath)		
+		return []string{currentPath}, nil
 	}
+	// from oldest to newest
+	var history []string
+	err = json.Unmarshal([]byte(localStorage),&history)
+	// No entry should be duplicated
+	if !slices.Contains(history, currentPath){
+		history = append(history, currentPath)	
+	}
+	// We need a db connection to check whether pre-existent paths in the browsers storage, are still in the database.
+	// If a path is present in the browser but not in database, building the breadcrumb would fail
 	db := database.Init()
-	if len(localStorage) > 1{
-		var data []string
-		err = json.Unmarshal([]byte(localStorage),&data)
-		for _, p := range data{
-		  _, err:= database.GetEntryByPath(db, p)
-			if err == nil{
-				// This path was found in the database
-				lastPages = append(lastPages, p)
-			}
+	var clean []string
+	for _, p := range history{
+		_, err:= database.GetEntryByPath(db, p)
+		if err == nil{
+			// This path was found in the database
+			clean = append(clean, p)
 		}
-		lastPages = append(lastPages, currentPath)
 	}
-	return lastPages, nil
+	return clean, nil
 }
 
 
