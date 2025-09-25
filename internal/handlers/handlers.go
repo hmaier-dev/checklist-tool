@@ -162,13 +162,16 @@ func appendHistory(r *http.Request) ([]string, error){
 	if len(localStorage) == 0{
 		return []string{currentPath}, nil
 	}
-	// from oldest to newest
+	// From oldest to newest
 	var history []string
-	err = json.Unmarshal([]byte(localStorage),&history)
-	// No entry should be duplicated
-	if !slices.Contains(history, currentPath){
-		history = append(history, currentPath)	
+	err = json.Unmarshal([]byte(localStorage), &history)
+	// Change history order, the newest must be last!
+	for i, h := range history{
+		if h == currentPath{
+			history = append(history[:i], history[i+1:]...)
+		}
 	}
+	history = append(history, currentPath)
 	// We need a db connection to check whether pre-existent paths in the browsers storage, are still in the database.
 	// If a path is present in the browser but not in database, building the breadcrumb would fail
 	db := database.Init()
@@ -179,6 +182,10 @@ func appendHistory(r *http.Request) ([]string, error){
 			// This path was found in the database
 			clean = append(clean, p)
 		}
+	}
+	// Limit the list on 10 items
+	if len(clean) > 10{
+		return clean[:10], nil
 	}
 	return clean, nil
 }
