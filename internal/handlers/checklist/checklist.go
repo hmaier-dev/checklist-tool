@@ -42,7 +42,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		"checklist/templates/checklist.html",
 		"nav.html",
 		"header.html",
-		"last-visited.html",
+		"history.html",
 	}
 	tmpl := handlers.LoadTemplates(paths)
 

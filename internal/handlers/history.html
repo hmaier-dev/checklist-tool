@@ -1,15 +1,10 @@
-{{ define "last-visited.html" }}
-<script>
-
+{{ define "history.html" }}
 <div id="lastPages"></div>
-
+<script>
 if(localStorage.getItem('lastPages') == null){
   htmx.ajax('GET', '/history', { 
     target: '#lastPages',
-    swap: 'innerHTML',
-    values: {
-      currentPage: window.location.href
-    }
+    swap: 'innerHTML'
   })
 }else{
   var hist = localStorage.getItem('lastPages');
@@ -18,12 +13,8 @@ if(localStorage.getItem('lastPages') == null){
     swap: 'innerHTML',
     values: {
       lastPages: hist,
-      currentPage: window.location.href,
     }
   })
 }
-
 </script>
-
-
 {{ end }}
