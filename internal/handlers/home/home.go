@@ -52,7 +52,6 @@ func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
 	inputs := database.GetAllCustomFieldsForTemplate(db, active)
 	err := tmpl.Execute(w, map[string]any{
 		"Active": active,
-    "Nav" : handlers.NavList,
 		"Templates": all,
 		"Inputs": inputs,
 		"Entries": entries_view,

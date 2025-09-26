@@ -1,7 +1,8 @@
 {{ define "nav.html" }}
 
-{{ range .Nav }}
-<a href="{{ .Path }}" class="text-blue-700 font-semibold hover:text-blue-500 underline hover:no-underline pr-5">{{ .Name }}</a>
-{{ end }}
+<a href="/" class="text-blue-700 font-semibold hover:text-blue-500 underline hover:no-underline pr-5">Neue Einträge</a>
+<a href="/all" class="text-blue-700 font-semibold hover:text-blue-500 underline hover:no-underline pr-5">Alle Checklisten</a>
+<a href="/delete" class="text-blue-700 font-semibold hover:text-blue-500 underline hover:no-underline pr-5">Checklisten löschen</a>
+<a href="/upload" class="text-blue-700 font-semibold hover:text-blue-500 underline hover:no-underline pr-5">Checklisten verwalten</a>
 
 {{ end }}

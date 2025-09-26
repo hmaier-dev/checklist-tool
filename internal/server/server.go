@@ -24,7 +24,6 @@ func NewServer() *Server {
 	router := mux.NewRouter()
   sub := router.PathPrefix("/").Subrouter()
 
-  sub.HandleFunc("/nav", handlers.Nav).Methods("GET")
 	// Because the paths stored client-side are very long
 	// POST requests are used to handle them
   sub.HandleFunc("/history-breadcrumb", handlers.HistoryBreadcrumb).Methods("POST")

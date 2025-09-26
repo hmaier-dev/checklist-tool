@@ -41,41 +41,6 @@ func GetHandlers() []DisplayHandler {
 	return handlerRegistry
 }
 
-type NavItem struct {
-	Name string
-	Path string
-}
-
-// Declaring the navbar
-var NavList []NavItem = []NavItem{
-	{
-		Name: "Neue Einträge",
-		Path: "/",
-	},
-	{
-		Name: "Alle Einträge",
-		Path: "/all",
-	},
-	{
-		Name: "Einträge löschen",
-		Path: "/delete",
-	},
-	{
-		Name: "Checklisten verwalten",
-		Path: "/upload",
-	},
-}
-
-func Nav(w http.ResponseWriter, r *http.Request) {
-	tmpl := LoadTemplates([]string{"nav.html"})
-	err := tmpl.Execute(w, map[string]any{
-		"Nav": NavList,
-	})
-	if err != nil {
-		log.Fatalf("Something went wrong executing the 'nav.html' template.\n %q \n", err)
-	}
-}
-
 // By reading the header of the GET-request, we get the path of the currentPage
 // so can get created or get appended.
 // Is called from within 'history.html'

@@ -39,7 +39,6 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 		view = append(view, tmp)
 	}
 	err := tmpl.Execute(w, map[string]any{
-    "Nav" : handlers.NavList,
 		"Entries": view,
   })
 

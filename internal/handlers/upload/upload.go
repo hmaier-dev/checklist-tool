@@ -99,8 +99,8 @@ func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
 	var templates = []string{
 		"upload/templates/upload.html",
 		"upload/templates/template.html",
-		"nav.html",
 		"header.html",
+		"nav.html",
 	}
 	db := database.Init()
 	template_entries := database.GetAllTemplates(db)
@@ -121,7 +121,6 @@ func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
 	tmpl := handlers.LoadTemplates(templates)
 	err := tmpl.Execute(w, map[string]any{
 		"Templates": all,
-		"Nav":       handlers.NavList,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
