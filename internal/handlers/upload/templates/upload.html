@@ -7,7 +7,29 @@
 <body class="bg-slate-300 p-5">
 
   {{ template "nav.html" . }}
+  
+  <div class="rounded-md border border-blue-500 bg-blue-50 p-4 text-blue-900 mb-4 max-w-150" role="alert">
+  <div class="flex items-center mb-2">
+    <!-- Info icon -->
+    <svg class="h-5 w-5 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm.93 12.388a.93.93 0 1 1-1.86 0 .93.93 0 0 1 1.86 0zm-.93-9.8a.93.93 0 0 1 .93.93v4.646a.93.93 0 0 1-1.86 0V3.518a.93.93 0 0 1 .93-.93z"/>
+    </svg>
+    <span class="font-semibold text-lg">Information</span>
+  </div>
+  <p class="mb-3 text-sm">
+    Auf dieser Seite können neue Checklisten-Vorlagen hochgeladen werden.
+    Außerdem können die vorhandenen Vorlagen angepasst werden.
+    Wie genau man in einer <code>checklist.yml</code> Veränderung vornimmt, kann man in der README nachlesen.
+  </p>
+  <a href="https://github.com/hmaier-dev/checklist-tool?tab=readme-ov-file#checklist" class="inline-flex items-center font-medium text-blue-600 hover:underline">
+    Git-Repository
+    <svg class="h-4 w-4 ml-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  </a>
 
+</div>
+  
   <form action="/upload" method="POST" enctype="multipart/form-data" class="p-4 mb-4 max-w-150 bg-gray-200">
 
     <p>Upload a new checklist written in YAML.</p>
