@@ -6,9 +6,7 @@
 </head>
 <body class="bg-slate-300 p-5">
 
-  <nav id="navbar" class="flex mb-5">
-    {{ template "nav.html" . }}
-  </nav>
+  {{ template "nav.html" . }}
 
   <form action="/upload" method="POST" enctype="multipart/form-data" class="p-4 mb-4 max-w-150 bg-gray-200">
 
