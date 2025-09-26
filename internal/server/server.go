@@ -9,7 +9,7 @@ import (
 
 	// blank import for handlers. They initalize theirself by init()
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/delete"
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/home"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/new"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/upload"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/all"

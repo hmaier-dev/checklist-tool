@@ -1,4 +1,4 @@
-package home
+package new
 
 import (
 	"crypto/sha256"
@@ -16,12 +16,12 @@ import (
 )
 
 
-type HomeHandler struct{}
+type NewHandler struct{}
 
-var _ handlers.ActionHandler = (*HomeHandler)(nil)
+var _ handlers.ActionHandler = (*NewHandler)(nil)
 
 // Sets / and all its subroutes
-func (h *HomeHandler)	Routes(router *mux.Router){
+func (h *NewHandler)	Routes(router *mux.Router){
 	router.HandleFunc("/", h.Display).Methods("GET")
 	router.HandleFunc("/entries", h.Entries).Methods("GET")
 	router.HandleFunc("/options", h.Options).Methods("GET")
@@ -29,11 +29,11 @@ func (h *HomeHandler)	Routes(router *mux.Router){
 }
 
 // Return html to http.ResponseWriter for /
-func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
+func (h *NewHandler) Display(w http.ResponseWriter, r *http.Request){
 	var templates = []string{
-		"home/templates/home.html",
-		"home/templates/entries.html",
-		"home/templates/options.html",
+		"new/templates/new.html",
+		"new/templates/entries.html",
+		"new/templates/options.html",
 		"nav.html",
 		"header.html",
 	}
@@ -63,11 +63,11 @@ func (h *HomeHandler) Display(w http.ResponseWriter, r *http.Request){
   }
 }
 // Loads entries per template for /
-func (h *HomeHandler) Entries(w http.ResponseWriter, r *http.Request){
+func (h *NewHandler) Entries(w http.ResponseWriter, r *http.Request){
 	template_name := r.URL.Query().Get("template")
 	db := database.Init()
 	entries := database.GetAllEntriesForChecklist(db, template_name)
-	tmpl := handlers.LoadTemplates([]string{"home/templates/entries.html"})
+	tmpl := handlers.LoadTemplates([]string{"new/templates/entries.html"})
 	// building a map to access the descriptions by column names
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
 	result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
@@ -80,7 +80,7 @@ func (h *HomeHandler) Entries(w http.ResponseWriter, r *http.Request){
 }
 
 // Runs when submit-button on / is pressed
-func (h *HomeHandler) Execute(w http.ResponseWriter, r *http.Request){
+func (h *NewHandler) Execute(w http.ResponseWriter, r *http.Request){
 	template_name := r.FormValue("template")
 	db := database.Init()
 	template, err := database.GetChecklistTemplateByName(db, template_name)
@@ -131,11 +131,11 @@ func (h *HomeHandler) Execute(w http.ResponseWriter, r *http.Request){
 }
 
 // Return the custom inputs fields per template
-func (h *HomeHandler) Options(w http.ResponseWriter, r *http.Request){
+func (h *NewHandler) Options(w http.ResponseWriter, r *http.Request){
 	template_name := r.URL.Query().Get("template")
 	db := database.Init()
 	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
-	tmpl := handlers.LoadTemplates([]string{"home/templates/options.html"})
+	tmpl := handlers.LoadTemplates([]string{"new/templates/options.html"})
 	err := tmpl.Execute(w, map[string]any{
 		"Inputs": custom_fields,
 	})
@@ -163,5 +163,5 @@ func generatePath(data map[string]string) string{
 }
 
 func init(){
-	handlers.RegisterHandler(&HomeHandler{})
+	handlers.RegisterHandler(&NewHandler{})
 }
