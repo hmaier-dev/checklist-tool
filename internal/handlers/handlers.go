@@ -94,7 +94,8 @@ func HistoryBreadcrumb(w http.ResponseWriter, r *http.Request) {
 	tmpl := LoadTemplates([]string{"breadcrumb-history.html"})
 
 	err = tmpl.Execute(w, map[string]any{
-		"History": history,
+		// do not display the newest
+		"History": history[1:],
 	})
 	if err != nil {
 		log.Fatalf("Something went while building the breadcrumb history...\n %q \n", err)
@@ -150,9 +151,10 @@ func appendHistory(r *http.Request) ([]string, error){
 			clean = append(clean, p)
 		}
 	}
-	// Limit the list on 10 items
-	if len(clean) > 10{
-		return clean[:10], nil
+	// Limit the list 
+	if len(clean) > 9{
+		// drop the oldest item
+		return clean[1:], nil
 	}
 	return clean, nil
 }
