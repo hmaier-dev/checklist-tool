@@ -85,7 +85,7 @@ func (h *NewHandler) Execute(w http.ResponseWriter, r *http.Request){
 	db := database.Init()
 	template, err := database.GetChecklistTemplateByName(db, template_name)
 	if err != nil{
-		html := `<div class='text-red-700'>Da keine Checkliste verfügbar ist, kann kein Eintrag eingelegt werden.</div>`
+		html := `<div class='text-red-700'>Da keine Checkliste verfügbar ist, kann kein Eintrag angelegt werden.</div>`
 		w.Write([]byte(html))
 		return
 	}
