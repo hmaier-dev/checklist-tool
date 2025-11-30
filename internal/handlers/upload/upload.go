@@ -32,12 +32,12 @@ type TemplatesView struct {
 	PDF_Schema  string
 }
 
-// Sets / and all its subroutes
+// Sets /upload and all its subroutes
 func (h *UploadHandler) Routes(router *mux.Router) {
 	router.HandleFunc("/upload", h.Display).Methods("Get")
 	router.HandleFunc("/upload", h.Execute).Methods("POST")
 	sub := router.PathPrefix("/checklist").Subrouter()
-	sub.HandleFunc("/delete", h.Delete).Methods("POST")
+	router.HandleFunc("/upload/delete", h.Delete).Methods("POST")
 	sub.HandleFunc(`/download/{id:\d*}`, h.Download).Methods("GET")
 	sub.HandleFunc("/update", h.Update).Methods("POST")
 }
@@ -166,6 +166,31 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	template_id := r.FormValue("id")
+	// When deleting a checklist, all relics should be deleted.
+	// Reason is, to keep the db-tables small and clean.
+
+	db := database.Init()
+	tx, err := db.Begin()
+	del := database.DeleteChecklistTemplate{db, tx, template_id}
+
+	// Clean all meta-data tables
+	del.CustomFields()
+	del.TabDescSchema()
+	del.PdfNameSchema()
+	// Remove all entries from the active list
+	del.AllEntries()
+	// Template for the checklist itself. It won't be able for selection.
+	del.Itself()
+
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("Error while deleting a template, with alls its relics.\n Error: %q \n", err)
+		http.Error(w, "Error while deleting.", http.StatusInternalServerError)
+	}
+	// Special header for htmx
+	w.Header().Set("HX-Redirect", "/upload")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // Handles request to /checklist/download/<template_id>

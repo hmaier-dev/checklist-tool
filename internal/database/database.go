@@ -283,7 +283,6 @@ func UpdateDataById(db *sql.DB, id int, data string){
 	}
 }
 
-
 // Row in 'templates'-table
 type ChecklistTemplate struct {
 	Id         int
@@ -539,5 +538,53 @@ func DeleteEntryByPath(db *sql.DB, path string){
 	_, err := db.Exec(deleteStmt,path)
 	if err != nil{
 		log.Fatalf("Error while running %s \n", deleteStmt)
+	}
+}
+
+
+type DeleteChecklistTemplate struct{
+	Db *sql.DB
+	Tx *sql.Tx
+	Id string
+}
+
+func (del *DeleteChecklistTemplate) CustomFields(){
+	q := `DELETE FROM custom_fields WHERE template_id = ?`
+	_, err := del.Db.Exec(q, del.Id)
+	if err != nil{
+		del.Tx.Rollback()
+		log.Fatalf("Error: %q \n", err)
+	}
+}
+func (del *DeleteChecklistTemplate) TabDescSchema(){
+	q := `DELETE FROM tab_desc_schema WHERE template_id = ?`
+	_, err := del.Db.Exec(q, del.Id)
+	if err != nil{
+		del.Tx.Rollback()
+		log.Fatalf("Error: %q \n", err)
+	}
+}
+func (del *DeleteChecklistTemplate) PdfNameSchema(){
+	q := `DELETE FROM pdf_name_schema WHERE template_id = ?`
+	_, err := del.Db.Exec(q, del.Id)
+	if err != nil{
+		del.Tx.Rollback()
+		log.Fatalf("Error: %q \n", err)
+	}
+}
+func (del *DeleteChecklistTemplate) AllEntries(){
+	q := `DELETE FROM entries WHERE template_id = ?`
+	_, err := del.Db.Exec(q, del.Id)
+	if err != nil{
+		del.Tx.Rollback()
+		log.Fatalf("Error: %q \n", err)
+	}
+}
+func (del *DeleteChecklistTemplate) Itself(){
+	q := `DELETE FROM templates WHERE id = ?`
+	_, err := del.Db.Exec(q, del.Id)
+	if err != nil{
+		del.Tx.Rollback()
+		log.Fatalf("Error: %q \n", err)
 	}
 }

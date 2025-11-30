@@ -24,7 +24,8 @@
       <!---Delete---->
       <td class="px-2 py-2 border-b">
         <a
-          hx-post="/checklist/delete/"
+          hx-post="/upload/delete"
+          hx-vals='{"id": "{{ .Id }}"}'
           hx-confirm="Do you really want to delete this checklist? All entry will be deleted."
           hx-swap="none"
           aria-label="Delete"
