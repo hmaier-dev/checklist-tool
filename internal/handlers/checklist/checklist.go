@@ -146,18 +146,6 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 		custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
 		result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
 
-		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, map[string]any{
-			"Items": items,
-			"EntryView": result,
-			"Date": time.Now().Format("02.01.2006, 15:04:05"),
-		})
-		bodyBytes, err := io.ReadAll(&buf)
-		if err != nil {
-			http.Error(w, "Failed to read request body", http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close() // Close the body after reading
 		
 		var data map[string]string
 		err = json.Unmarshal([]byte(entry.Data), &data)
@@ -186,6 +174,21 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 				pdfName += val + "_"
 			}
 		}
+
+		var buf bytes.Buffer
+		err = tmpl.Execute(&buf, map[string]any{
+			"Title": pdfName,
+			"Items": items,
+			"EntryView": result,
+			"Date": time.Now().Format("02.01.2006, 15:04:05"),
+		})
+		bodyBytes, err := io.ReadAll(&buf)
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+
+		defer r.Body.Close() // Close the body after reading
 		// Reponse from gotenberg api
 		response, err := pdf.Generate(r, pdfName, bodyBytes)
     if err != nil {
