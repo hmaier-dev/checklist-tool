@@ -44,7 +44,7 @@
       <li>
         <input class="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring focus:ring-blue-300"
           type="checkbox"
-          hx-post="/checklist/update/{{ $Path }}" hx-trigger="change"
+          hx-post="/checklist/update/check/{{ $Path }}" hx-trigger="change"
           name="checked"
           value="true"
           hx-vals='{"task": "{{ .Task }}"}'
@@ -54,7 +54,7 @@
                  type="text" 
                  name="text"
                  value="{{ .Text }}"
-                 hx-post="/checklist/update/{{ $Path }}" 
+                 hx-post="/checklist/update/text/{{ $Path }}" 
                  hx-trigger="change"
                  hx-vals='{"task": "{{ .Task }}"}'
                  >{{ end }}

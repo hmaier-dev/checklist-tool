@@ -33,7 +33,8 @@ var _ handlers.DisplayHandler = (*ChecklistHandler)(nil)
 func (h *ChecklistHandler)	Routes(router *mux.Router){
 	router.HandleFunc(`/checklist/{id:\w*}`, h.Display).Methods("GET")
 	sub := router.PathPrefix("/checklist").Subrouter()
-	sub.HandleFunc(`/update/{id:\w*}`, h.Update).Methods("POST")
+	sub.HandleFunc(`/update/check/{id:\w*}`, h.UpdateCheckedState).Methods("POST")
+	sub.HandleFunc(`/update/text/{id:\w*}`, h.UpdateText).Methods("POST")
 	sub.HandleFunc(`/print/{id:\w*}`, h.Print).Methods("GET")
 	sub.HandleFunc("/delete", h.Delete).Methods("POST")
 }
@@ -92,25 +93,24 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
   }
 }
 
-func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
+func (h *ChecklistHandler) UpdateCheckedState(w http.ResponseWriter, r *http.Request){
 	path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-  
   var checked bool = false
   // if ["checked"] isset
   if _, ok := r.Form["checked"]; ok{
     checked = true
   }
-	text := r.Form.Get("text")
-  alteredItem := Item{
-    Task: r.Form.Get("task"),
-		Text: &text,
-    Checked: checked,
-  }
+	var alteredItem Item
+	alteredItem = Item{
+		Task: r.Form.Get("task"),
+		Text: nil,
+		Checked: checked,
+	}
   // Fetch Row from Database
   db := database.Init()
   entry, err := database.GetEntryByPath(db, path)
@@ -118,10 +118,41 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
 		http.Error(w,err.Error(), http.StatusInternalServerError)
 		return
 	}
-
   var oldItems []*Item
   err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
-  alterChecklistItem(alteredItem, oldItems)
+  alterCheckedState(alteredItem, oldItems)
+  yamlBytes, err := yaml.Marshal(oldItems)
+
+  if err != nil {
+      log.Println("Error marshaling Yaml: ", err)
+      return
+  }
+  database.UpdateYamlByPath(db, path, string(yamlBytes))
+	w.Write([]byte{})
+}
+func (h *ChecklistHandler) UpdateText(w http.ResponseWriter, r *http.Request){
+	path :=  mux.Vars(r)["id"]
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+	text :=  r.Form.Get("text")
+	var alteredItem Item
+	alteredItem = Item{
+		Task: r.Form.Get("task"),
+		Text: &text,
+	}
+  // Fetch Row from Database
+  db := database.Init()
+  entry, err := database.GetEntryByPath(db, path)
+	if err != nil {
+		http.Error(w,err.Error(), http.StatusInternalServerError)
+		return
+	}
+  var oldItems []*Item
+  err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
+  updateTextState(alteredItem, oldItems)
   yamlBytes, err := yaml.Marshal(oldItems)
 
   if err != nil {
@@ -219,21 +250,30 @@ func (h *ChecklistHandler) Delete(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func alterChecklistItem(newItem Item, checklistSlice []*Item){
+func alterCheckedState(newItem Item, checklistSlice []*Item){
   for _, item := range checklistSlice{
 		// The first occurence of a task is altered.
 		// This way 'Item.Task' should be unique. Otherwise it cannot get altered.
     if newItem.Task == item.Task{
-      item.Checked = newItem.Checked
-			// Only update the item, if .Text has been set before
-			if item.Text != nil {
-				item.Text = newItem.Text
-			}
+				item.Checked = newItem.Checked
       return
     }
 		// Go into the lower levels
     if len(item.Children) > 0 {
-			alterChecklistItem(newItem, item.Children)
+			alterCheckedState(newItem, item.Children)
+		}
+  }
+}
+
+func updateTextState(newItem Item, checklistSlice []*Item){
+  for _, item := range checklistSlice{
+    if newItem.Task == item.Task{
+			*item.Text = *newItem.Text
+      return
+    }
+		// Go into the lower levels
+    if len(item.Children) > 0 {
+			updateTextState(newItem, item.Children)
 		}
   }
 }
