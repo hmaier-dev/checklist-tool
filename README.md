@@ -34,6 +34,7 @@ pdf_name_schema: [date,fullname,typ]
 
 - task: "Auf Arbeit kommen."
   checked: false
+  text: "Setze diesen Schlüssel, um ein Textfeld anzuzeigen."
   children:
   - task: "Kaffee trinken."
     checked: false
