@@ -213,8 +213,11 @@ func alterChecklistItem(newItem Item, checklistSlice []*Item){
 		// The first occurence of a task is altered.
 		// This way 'Item.Task' should be unique. Otherwise it cannot get altered.
     if newItem.Task == item.Task{
-      item.Checked = newItem.Checked     
-			item.Text = newItem.Text
+      item.Checked = newItem.Checked
+			// Only update the item, if .Text has been set before
+			if item.Text != nil {
+				item.Text = newItem.Text
+			}
       return
     }
 		// Go into the lower levels
