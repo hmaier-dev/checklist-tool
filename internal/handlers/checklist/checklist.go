@@ -106,11 +106,12 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
   }else{
     checked = false
   }
+	text := r.Form.Get("text")
   alteredItem := Item{
     Task: r.Form.Get("task"),
+		Text: &text,
     Checked: checked,
   }
-  
   // Fetch Row from Database
   db := database.Init()
   entry, err := database.GetEntryByPath(db, path)
@@ -121,7 +122,7 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
 
   var oldItems []*Item
   err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
-  changeCheckedStatus(alteredItem, oldItems)
+  alterChecklistItem(alteredItem, oldItems)
   yamlBytes, err := yaml.Marshal(oldItems)
 
   if err != nil {
@@ -204,19 +205,21 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
     }
 }
-func changeCheckedStatus(newItem Item, oldChecklist []*Item){
-  for _, item := range oldChecklist{
+func alterChecklistItem(newItem Item, checklistSlice []*Item){
+  for _, item := range checklistSlice{
+		// The first occurence of a task is altered.
+		// This way 'Item.Task' should be unique. Otherwise it cannot get altered.
     if newItem.Task == item.Task{
       item.Checked = newItem.Checked     
+			item.Text = newItem.Text
       return
     }
+		// Go into the lower levels
     if len(item.Children) > 0 {
-			changeCheckedStatus(newItem, item.Children)
+			alterChecklistItem(newItem, item.Children)
 		}
   }
 }
-
-
 
 func init(){
 	handlers.RegisterHandler(&ChecklistHandler{})

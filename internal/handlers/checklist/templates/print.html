@@ -99,6 +99,11 @@
 
             {{ end }}
             {{ .Task }}
+            {{ if .Text }}
+            <input class="border-black border"
+                   disabled
+                   value="{{ .Text }}">
+            {{ end }}
             {{ if .Children }}
                 {{ template "renderItems" .Children }}
             {{ end }}
