@@ -19,10 +19,11 @@ import (
 
 // Single checkpoint of the list
 type Item struct {
-	Task     string           `yaml:"task"`
-	Checked  bool             `yaml:"checked"`
+	Task     string  `yaml:"task"`
+	Checked  bool    `yaml:"checked"`
+	Text     *string `yaml:"text"` // this needs to be a pointer, because that way {{ if .Text }} displays input fields, even with an empty string
 	Children []*Item `yaml:"children,omitempty"`
-	Path     string           `yaml:"Path"`
+	Path     string  `yaml:"Path"`
 }
 
 type ChecklistHandler struct{}
