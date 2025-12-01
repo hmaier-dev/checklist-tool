@@ -99,12 +99,10 @@ func (h *ChecklistHandler) Update(w http.ResponseWriter, r *http.Request){
 		return
 	}
   
-  var checked bool
+  var checked bool = false
   // if ["checked"] isset
   if _, ok := r.Form["checked"]; ok{
     checked = true
-  }else{
-    checked = false
   }
 	text := r.Form.Get("text")
   alteredItem := Item{
