@@ -35,6 +35,7 @@ func (h *ChecklistHandler)	Routes(router *mux.Router){
 	sub := router.PathPrefix("/checklist").Subrouter()
 	sub.HandleFunc(`/update/{id:\w*}`, h.Update).Methods("POST")
 	sub.HandleFunc(`/print/{id:\w*}`, h.Print).Methods("GET")
+	sub.HandleFunc("/delete", h.Delete).Methods("POST")
 }
 
 func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
@@ -206,6 +207,18 @@ func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
 			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
     }
 }
+
+func (h *ChecklistHandler) Delete(w http.ResponseWriter, r *http.Request){
+	path := r.FormValue("path")
+	db := database.Init()
+	defer db.Close()
+	database.DeleteEntryByPath(db,path)
+
+	// Special header for htmx
+	w.Header().Set("HX-Redirect", "/all")
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func alterChecklistItem(newItem Item, checklistSlice []*Item){
   for _, item := range checklistSlice{
 		// The first occurence of a task is altered.
