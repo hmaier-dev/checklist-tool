@@ -130,6 +130,22 @@ func (h *ChecklistHandler) UpdateCheckedState(w http.ResponseWriter, r *http.Req
   database.UpdateYamlByPath(db, path, string(yamlBytes))
 	w.Write([]byte{})
 }
+
+func alterCheckedState(newItem Item, checklistSlice []*Item){
+  for _, item := range checklistSlice{
+		// The first occurence of a task is altered.
+		// This way 'Item.Task' should be unique. Otherwise it cannot get altered.
+    if newItem.Task == item.Task{
+				item.Checked = newItem.Checked
+      return
+    }
+		// Go into the lower levels
+    if len(item.Children) > 0 {
+			alterCheckedState(newItem, item.Children)
+		}
+  }
+}
+
 func (h *ChecklistHandler) UpdateText(w http.ResponseWriter, r *http.Request){
 	path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
@@ -161,6 +177,19 @@ func (h *ChecklistHandler) UpdateText(w http.ResponseWriter, r *http.Request){
   }
   database.UpdateYamlByPath(db, path, string(yamlBytes))
 	w.Write([]byte{})
+}
+
+func updateTextState(newItem Item, checklistSlice []*Item){
+  for _, item := range checklistSlice{
+    if newItem.Task == item.Task{
+			*item.Text = *newItem.Text
+      return
+    }
+		// Go into the lower levels
+    if len(item.Children) > 0 {
+			updateTextState(newItem, item.Children)
+		}
+  }
 }
 
 func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
@@ -250,33 +279,7 @@ func (h *ChecklistHandler) Delete(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func alterCheckedState(newItem Item, checklistSlice []*Item){
-  for _, item := range checklistSlice{
-		// The first occurence of a task is altered.
-		// This way 'Item.Task' should be unique. Otherwise it cannot get altered.
-    if newItem.Task == item.Task{
-				item.Checked = newItem.Checked
-      return
-    }
-		// Go into the lower levels
-    if len(item.Children) > 0 {
-			alterCheckedState(newItem, item.Children)
-		}
-  }
-}
 
-func updateTextState(newItem Item, checklistSlice []*Item){
-  for _, item := range checklistSlice{
-    if newItem.Task == item.Task{
-			*item.Text = *newItem.Text
-      return
-    }
-		// Go into the lower levels
-    if len(item.Children) > 0 {
-			updateTextState(newItem, item.Children)
-		}
-  }
-}
 
 func init(){
 	handlers.RegisterHandler(&ChecklistHandler{})
