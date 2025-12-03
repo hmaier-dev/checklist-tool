@@ -13,6 +13,15 @@ Use this command to run it raw without `earthly`
 ```bash
 go build -x -v -p 4 -o ./bin/cltool main.go && tailwindcss -i ./static/base.css -o ./static/style.css && ./bin/cltool -db=sqlite.db
 ```
+### SQL
+All changes to the database schema/queries are done in the sql-files in root (`schema.sql` and `query.sql`). After making changes, you need to run
+```bash
+sqlc generate
+```
+from the project-root which contains the config file `sqlc.yml`.
+>[!WARNING]
+> Please beware that `sqlc` does not run any migrations. You can break existing databases by adjusting your schema.
+
 ## Deployment
 A example `compose.yml` can be found under the root of this project.
 ### gotenberg
