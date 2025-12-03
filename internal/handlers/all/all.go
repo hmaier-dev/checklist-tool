@@ -1,6 +1,7 @@
 package all
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -11,19 +12,29 @@ import (
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/server"
 )
 
-type AllHandler struct{}
+type AllHandler struct{
+	Router *mux.Router	
+	DB *sql.DB
+}
 
 var _ handlers.DisplayHandler = (*AllHandler)(nil)
 
+func (h *AllHandler) New(srv *server.Server){
+	h.Router = srv.Router	
+	h.DB = srv.DB
+}
+
 // Sets /delete and all subroutes
-func (h *AllHandler)	Routes(router *mux.Router){
-	router.HandleFunc("/all", h.Display).Methods("GET")
+func (h *AllHandler) Routes(){
+	h.Router.HandleFunc("/all", h.Display).Methods("GET")
 }
 
 // Return rendered html for GET to /delete
-func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
+func (h *AllHandler) Display(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	var templates = []string{
 		"all/templates/all.html",
 		"all/templates/entries.html",
@@ -31,14 +42,14 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 		"header.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
-	db := database.Init()
 	var view []handlers.EntryView	
-	all := database.GetAllEntriesPlusTemplateName(db)
+	query := database.New(h.DB)
+	all, err := query.GetAllEntriesPlusTemplateName(ctx)
 	for _, a := range all{
-		tmp := ViewForTemplate(db, a)
+		tmp := h.ViewForTemplate(ctx, a)
 		view = append(view, tmp)
 	}
-	err := tmpl.Execute(w, map[string]any{
+	err = tmpl.Execute(w, map[string]any{
 		"Entries": view,
   })
 
@@ -50,7 +61,7 @@ func (h *AllHandler)	Display(w http.ResponseWriter, r *http.Request){
 
 // TODO: Get the 'Template Name' from the template_id found in the database entry. Right now the information is redundant...
 // Maybe connect the template_name and template_id over a JOIN()?
-func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers.EntryView{
+func (h *AllHandler) ViewForTemplate(ctx context.Context, entry database.GetAllEntriesPlusTemplateNameRow) handlers.EntryView{
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(entry.Data), &dataMap)
 		if err != nil{
@@ -58,7 +69,8 @@ func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers
 		}
 		var length int = len(dataMap)
 		var viewMap []handlers.DescValueView = make([]handlers.DescValueView, length)
-		custom_fields := database.GetAllCustomFieldsForTemplate(db,entry.TemplateName)
+		query := database.New(h.DB)
+		custom_fields, err := query.GetCustomFieldsByTemplateName(ctx, entry.TemplateName)
 		var count int = 0
 		// Use the order from the database-table 'custom_fields'
 		for _, field := range custom_fields{
@@ -73,8 +85,14 @@ func ViewForTemplate(db *sql.DB, entry database.EntryPlusChecklistName) handlers
 			}
 			count += 1
 		}
+		var t time.Time
+		if entry.Date.Valid{
+			t = time.Unix(entry.Date.Int64,0)		
+		}else{
+			t = time.Time{}
+		}
 		return handlers.EntryView{
-			Date: time.Unix(entry.Date,0).Format("02.01.2006 15:04:05"),
+			Date: t.Format("02.01.2006 15:04:05"),
 			Path: entry.Path,
 			Data: viewMap,
 		}
