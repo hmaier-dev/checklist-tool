@@ -4,20 +4,30 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"database/sql"
 
 	"github.com/gorilla/mux"
 
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/server"
 )
 
-type DeleteHandler struct{}
+type DeleteHandler struct{
+	Router *mux.Router
+	DB *sql.DB
+}
 
 var _ handlers.ActionHandler = (*DeleteHandler)(nil)
 
+func (h *DeleteHandler) New(srv *server.Server){
+	h.Router = srv.Router	
+	h.DB = srv.DB
+}
+
 // Sets /delete and all subroutes
-func (h *DeleteHandler)	Routes(router *mux.Router){
-	sub := router.PathPrefix("/delete").Subrouter()
+func (h *DeleteHandler)	Routes(){
+	sub := h.Router.PathPrefix("/delete").Subrouter()
 	sub.HandleFunc("", h.Display).Methods("GET")
 	sub.HandleFunc("/entries", h.Entries).Methods("GET")
 	sub.HandleFunc("", h.Execute).Methods("POST")
@@ -26,6 +36,7 @@ func (h *DeleteHandler)	Routes(router *mux.Router){
 
 // Return rendered html for GET to /delete
 func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	var templates = []string{
 		"delete/templates/delete.html",
 		"delete/templates/entries.html",
@@ -33,13 +44,13 @@ func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
 		"header.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
-	db := database.Init()
-	entries := database.GetAllEntriesPlusTemplateName(db)
+	q := database.New(h.DB)
+	entries, err := q.GetAllEntriesPlusTemplateName(ctx)
 	var view []handlers.EntryView = make([]handlers.EntryView, len(entries))
 	for i, entry := range entries{
-		view[i] = handlers.ViewForEntry(db, entry)
+		view[i] = handlers.ViewForEntry(h.DB, ctx, entry)
 	}
-	err := tmpl.Execute(w, map[string]any{
+	err = tmpl.Execute(w, map[string]any{
 		"Entries": view,
   })
 
@@ -52,17 +63,24 @@ func (h *DeleteHandler)	Display(w http.ResponseWriter, r *http.Request){
 
 // Returns all entries for a 'template' into deleteEntries.html
 func (h *DeleteHandler)	Entries(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	var templates = []string{
 		"delete/templates/entries.html",
 	}
   tmpl := handlers.LoadTemplates(templates)
-	db := database.Init()
-	entries := database.GetAllEntriesPlusTemplateName(db)
+	q := database.New(h.DB)
+	entries, err := q.GetAllEntriesPlusTemplateName(ctx)
+	if err != nil{
+		msg := "Couldn't load all entries plus template name."
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
+		return
+	}
 	var view []handlers.EntryView = make([]handlers.EntryView, len(entries))
 	for i, entry := range entries{
-		view[i] = handlers.ViewForEntry(db, entry)
+		view[i] = handlers.ViewForEntry(h.DB, ctx, entry)
 	}
-	err := tmpl.Execute(w, map[string]any{
+	err = tmpl.Execute(w, map[string]any{
 		"Entries": view,
 	})
 	if err != nil{
@@ -72,10 +90,10 @@ func (h *DeleteHandler)	Entries(w http.ResponseWriter, r *http.Request){
 
 // Removes entry from 'entries'-table by the 'path'-column
 func (h *DeleteHandler)	Execute(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	path := r.FormValue("path")
-	db := database.Init()
-	defer db.Close()
-	database.DeleteEntryByPath(db,path)
+	q := database.New(h.DB)
+	q.DeleteEntryByPath(ctx,path)
 
 	// Special header for htmx
 	w.Header().Set("HX-Redirect", "/delete")

@@ -2,34 +2,46 @@ package new
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sort"
 	"time"
 
 	"github.com/btcsuite/btcutil/base58"
-
 	"github.com/gorilla/mux"
+
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/server"
 )
 
 
-type NewHandler struct{}
+type NewHandler struct{
+	Router *mux.Router	
+	DB *sql.DB
+}
 
-var _ handlers.ActionHandler = (*NewHandler)(nil)
+var _ handlers.DisplayHandler = (*NewHandler)(nil)
+
+func (h *NewHandler) New(srv *server.Server){
+	h.Router = srv.Router	
+	h.DB = srv.DB
+}
 
 // Sets / and all its subroutes
-func (h *NewHandler)	Routes(router *mux.Router){
-	router.HandleFunc("/", h.Display).Methods("GET")
-	router.HandleFunc("/entries", h.Entries).Methods("GET")
-	router.HandleFunc("/options", h.Options).Methods("GET")
-	router.HandleFunc("/new", h.Execute).Methods("POST")
+func (h *NewHandler)	Routes(){
+	h.Router.HandleFunc("/", h.Display).Methods("GET")
+	h.Router.HandleFunc("/entries", h.Entries).Methods("GET")
+	h.Router.HandleFunc("/options", h.Options).Methods("GET")
+	h.Router.HandleFunc("/new", h.Execute).Methods("POST")
 }
 
 // Return html to http.ResponseWriter for /
 func (h *NewHandler) Display(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	var templates = []string{
 		"new/templates/new.html",
 		"new/templates/entries.html",
@@ -40,77 +52,91 @@ func (h *NewHandler) Display(w http.ResponseWriter, r *http.Request){
   tmpl := handlers.LoadTemplates(templates)
 	// This needs to be called here, to set ?template=
 	// to the first template if none is set.
-	db := database.Init()
-	all := database.GetAllTemplates(db)
+	q := database.New(h.DB)
+	all, err := q.GetAllTemplates(ctx)
+	if err != nil{
+		msg := "Couldn't load all templates"
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
+	}
 	active := ""
 	if len(all) > 0 {
 		active = all[0].Name
 	}
-	entries_raw := database.GetAllEntriesForChecklist(db, active)
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, active)
-	entries_view := handlers.BuildEntriesViewForTemplate(custom_fields,entries_raw)
-	inputs := database.GetAllCustomFieldsForTemplate(db, active)
-	err := tmpl.Execute(w, map[string]any{
+	entriesActiveTemplate, err := q.GetEntriesByTemplateName(ctx, active)
+	customFields, err := q.GetCustomFieldsByTemplateName(ctx, active)
+	entriesView := handlers.BuildEntriesViewForTemplate(customFields, entriesActiveTemplate)
+
+	err = tmpl.Execute(w, map[string]any{
 		"Active": active,
 		"Templates": all,
-		"Inputs": inputs,
-		"Entries": entries_view,
+		"Inputs": customFields,
+		"Entries": entriesView,
   })
 
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Fatal("", err)
   }
 }
 // Loads entries per template for /
 func (h *NewHandler) Entries(w http.ResponseWriter, r *http.Request){
-	template_name := r.URL.Query().Get("template")
-	db := database.Init()
-	entries := database.GetAllEntriesForChecklist(db, template_name)
+	ctx := r.Context()
+	templateName := r.URL.Query().Get("template")
+	q := database.New(h.DB)
+	entries, err := q.GetEntriesByTemplateName(ctx, templateName)
 	tmpl := handlers.LoadTemplates([]string{"new/templates/entries.html"})
 	// building a map to access the descriptions by column names
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
-	result := handlers.BuildEntriesViewForTemplate(custom_fields, entries)
-	err := tmpl.Execute(w, map[string]any{
+	customFields, err := q.GetCustomFieldsByTemplateName(ctx, templateName)
+	result := handlers.BuildEntriesViewForTemplate(customFields, entries)
+	err = tmpl.Execute(w, map[string]any{
 		"Entries": result,
 	})
 	if err != nil{
-
+		msg := fmt.Sprintf("Couldn't load entries for template: '%s'.", templateName)
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
 	}
 }
 
 // Runs when submit-button on / is pressed
 func (h *NewHandler) Execute(w http.ResponseWriter, r *http.Request){
-	template_name := r.FormValue("template")
-	db := database.Init()
-	template, err := database.GetChecklistTemplateByName(db, template_name)
+	ctx := r.Context()
+	templateName := r.FormValue("template")
+	q := database.New(h.DB)
+	template, err := q.GetTemplateByName(ctx, templateName)
+	//TODO: check if no template in db trigger this
 	if err != nil{
 		html := `<div class='text-red-700'>Da keine Checkliste verfügbar ist, kann kein Eintrag angelegt werden.</div>`
 		w.Write([]byte(html))
 		return
 	}
-	cols := database.GetAllCustomFieldsForTemplate(db,template_name)
+	cols, err := q.GetCustomFieldsByTemplateName(ctx,templateName)
 	data := make(map[string]string)
 	for _, col := range cols{
+		// Only read keys from the form,
+		// which have been specified in 'custom_fields' database schema.
+		// That way, no invalid data can be passed
 		key := col.Key
 		value := r.FormValue(key)
 		data[key] = value
 	}
 	json, err := json.Marshal(data)
 	if err != nil{
-		log.Fatalf("Error while marshaling json.\n Error: %q \n", err)
+		msg := fmt.Sprintf("Error while marshaling json.\n Error: %q \n", err)
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
 	}
 	path := generatePath(data)
-	entry := database.ChecklistEntry{
-		Template_id: template.Id,
+	params := database.InsertEntryParams{
+		TemplateID: template.ID,
 		Data: string(json),
 		Path: path,
-		Yaml: template.Empty_yaml,
-		Date: time.Now().Unix(),
+		Yaml: template.EmptyYaml,
+		Date: sql.NullInt64{Valid: true, Int64: time.Now().Unix()},
 	}
 	// Instead of checking the 'path' manually,
 	// use the CONSTRAINT on the column to generate an error
-	err = database.NewEntry(db, entry)
+	err = q.InsertEntry(ctx, params)
 
 	if err != nil{
 		switch err.Error(){
@@ -132,15 +158,23 @@ func (h *NewHandler) Execute(w http.ResponseWriter, r *http.Request){
 
 // Return the custom inputs fields per template
 func (h *NewHandler) Options(w http.ResponseWriter, r *http.Request){
-	template_name := r.URL.Query().Get("template")
-	db := database.Init()
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, template_name)
+	ctx := r.Context()
+	templateName := r.URL.Query().Get("template")
+	q := database.New(h.DB)
+	customFields, err := q.GetCustomFieldsByTemplateName(ctx, templateName)
+	if err != nil{
+		msg := fmt.Sprintf("Couldn't get template '%s' for rendering options", templateName)
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
+	}
 	tmpl := handlers.LoadTemplates([]string{"new/templates/options.html"})
-	err := tmpl.Execute(w, map[string]any{
-		"Inputs": custom_fields,
+	err = tmpl.Execute(w, map[string]any{
+		"Inputs": customFields,
 	})
 	if err != nil{
-		log.Fatalf("Can't execute 'entries'-template.\n %#v \n", err)
+		msg := "Couldn't render options template."
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
 	}
 }
 

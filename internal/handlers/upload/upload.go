@@ -10,21 +10,32 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"database/sql"
 
 	"github.com/adrg/frontmatter"
+	"gopkg.in/yaml.v3"
 	"github.com/gorilla/mux"
+
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
+	"github.com/hmaier-dev/checklist-tool/internal/server"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
-	"gopkg.in/yaml.v3"
 )
 
-type UploadHandler struct{}
+type UploadHandler struct{
+	Router *mux.Router
+	DB *sql.DB
+}
 
 var _ handlers.DisplayHandler = (*UploadHandler)(nil)
 
+func (h *UploadHandler) New(srv *server.Server){
+	h.Router = srv.Router	
+	h.DB = srv.DB
+}
+
 type TemplatesView struct {
-	Id          int
+	Id          int64
 	Name        string
 	Columns     string
 	Description string
@@ -33,11 +44,11 @@ type TemplatesView struct {
 }
 
 // Sets /upload and all its subroutes
-func (h *UploadHandler) Routes(router *mux.Router) {
-	router.HandleFunc("/upload", h.Display).Methods("Get")
-	router.HandleFunc("/upload", h.Execute).Methods("POST")
-	sub := router.PathPrefix("/checklist").Subrouter()
-	router.HandleFunc("/upload/delete", h.Delete).Methods("POST")
+func (h *UploadHandler) Routes() {
+	h.Router.HandleFunc("/upload", h.Display).Methods("Get")
+	h.Router.HandleFunc("/upload", h.Execute).Methods("POST")
+	sub := h.Router.PathPrefix("/checklist").Subrouter()
+	h.Router.HandleFunc("/upload/delete", h.Delete).Methods("POST")
 	sub.HandleFunc(`/download/{id:\d*}`, h.Download).Methods("GET")
 	sub.HandleFunc("/update", h.Update).Methods("POST")
 }
@@ -69,7 +80,7 @@ func FormatWithDescriptionWithCommas(fields []database.CustomField) string {
 }
 
 // Format to Tab Schema
-func FormatToTabSchema(entries []database.TabDescriptionSchemaEntry) string {
+func FormatToTabSchema(entries []database.TabDescSchema) string {
 	var result string
 	for i, t := range entries {
 		if i == len(entries)-1 {
@@ -82,7 +93,7 @@ func FormatToTabSchema(entries []database.TabDescriptionSchemaEntry) string {
 }
 
 // Format to PDF Schema
-func FormatToPDFSchema(entries []database.PdfNamingSchemaEntry) string {
+func FormatToPDFSchema(entries []database.PdfNameSchema) string {
 	var result string
 	for i, t := range entries {
 		if i == len(entries)-1 {
@@ -96,21 +107,32 @@ func FormatToPDFSchema(entries []database.PdfNamingSchemaEntry) string {
 
 // Return html to http.ResponseWriter for /
 func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var templates = []string{
 		"upload/templates/upload.html",
 		"upload/templates/template.html",
 		"header.html",
 		"nav.html",
 	}
-	db := database.Init()
-	template_entries := database.GetAllTemplates(db)
-	var all = make([]TemplatesView, len(template_entries))
-	for i, t := range template_entries {
-		cols := database.GetAllCustomFieldsForTemplate(db, t.Name)
-		tab := database.GetTabDescriptionsByID(db, t.Id)
-		pdf := database.GetPdfNamingByID(db, t.Id)
+	q := database.New(h.DB)
+	allTemplates, err := q.GetAllTemplates(ctx)
+	if err != nil{
+		msg := "Couldn't fetch all templates from database."
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
+	}
+	var all = make([]TemplatesView, len(allTemplates))
+	for i, t := range allTemplates {
+		cols, err := q.GetCustomFieldsByTemplateName(ctx, t.Name)
+		tab, err := q.GetTabDescriptionsByTemplateID(ctx, t.ID)
+		pdf, err := q.GetPdfNamingByTemplateID(ctx, t.ID)
+		if err != nil{
+			msg := fmt.Sprintf("Error while fetching the database. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+		}
 		all[i] = TemplatesView{
-			Id:          t.Id,
+			Id:          t.ID,
 			Name:        t.Name,
 			Columns:     FormatWithColumnsWithCommas(cols),
 			Description: FormatWithDescriptionWithCommas(cols),
@@ -119,18 +141,27 @@ func (h *UploadHandler) Display(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	tmpl := handlers.LoadTemplates(templates)
-	err := tmpl.Execute(w, map[string]any{
+	err = tmpl.Execute(w, map[string]any{
 		"Templates": all,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Fatal("", err)
+		return
 	}
 
 }
 
+type FrontMatter struct{
+	Name string 							`yaml:"name"`
+	Fields []string 					`yaml:"fields"`
+	Desc []string 						`yaml:"desc"`
+	Tab_desc_schema []string 	`yaml:"tab_desc_schema"`
+	Pdf_name_schema []string 	`yaml:"pdf_name_schema"`
+}
+
 // Runs when submit-button on / is pressed
 func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	r.ParseMultipartForm(1 << 20)
 	file, header, err := r.FormFile("yaml")
 	if err != nil {
@@ -138,10 +169,10 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	}
 	var buf bytes.Buffer
 	io.Copy(&buf, file)
-	file_contents := buf.String()
-	var matter database.FrontMatter
+	fileContents := buf.String()
+	var matter FrontMatter
 	// splits the file into the yaml frontmatter and the rest of the file
-	rest, err := frontmatter.Parse(strings.NewReader(file_contents), &matter)
+	rest, err := frontmatter.Parse(strings.NewReader(fileContents), &matter)
 	if err != nil {
 		http.Error(w, "Error while parsing frontmatter", http.StatusBadRequest)
 		log.Printf("Error while parsing frontmatter.\n %q\n", err)
@@ -154,34 +185,117 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	db := database.Init()
-	err = database.NewChecklistTemplate(db, matter, string(rest), file_contents)
+	// I'm gonna do several exec-queries. Afterwards they are gonna be used TOGETHER in the same context.
+	// If one fails, all changes should be rolled back. That way the data keeps consitent.
+	tx, err := h.DB.BeginTx(ctx, nil)
+	if err != nil{
+		http.Error(w,"Database error.",http.StatusInternalServerError)
+	}
+	defer func(){
+		if err != nil{
+			rbErr := tx.Rollback()
+			if rbErr != nil{
+				log.Printf("Rollback error: %v", rbErr)	
+			}
+		}
+	}()
+	qtx := database.New(h.DB).WithTx(tx)
+	
+	id, err := qtx.InsertNewChecklistTemplate(ctx, database.InsertNewChecklistTemplateParams{
+		Name: matter.Name,
+		EmptyYaml: sql.NullString{String: string(rest)},
+		File: sql.NullString{String: fileContents},
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+		// Add custom input fields including description
+	for i := range matter.Fields{
+		arg := database.InsertCustomFieldParams{
+			TemplateID: id,
+			Key: matter.Fields[i],
+			Desc: matter.Desc[i],
+		}
+		err := qtx.InsertCustomField(ctx, arg)
+		if err != nil{
+			msg := fmt.Sprintf("Error while inserting frontmatter values into 'custom_fields'. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+			return
+		}
+	}
 
+	// These column names tell the application later which,
+	// which value from database.Entry.Data (json-slice) should be displayed
+
+	// Add column names for browser tab description.
+	for _, t := range matter.Tab_desc_schema{
+		arg := database.InsertTabDescSchemaParams{
+			TemplateID: id,
+			Value: t,
+		}
+		err := qtx.InsertTabDescSchema(ctx, arg)
+		if err != nil{
+			msg := fmt.Sprintf("Error while inserting frontmatter values into 'tab_desc_schema'. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+			return
+		}
+	}
+	// Add column names for pdf name schema
+	for _, p := range matter.Pdf_name_schema{
+		arg := database.InsertPdfNameSchemaParams{
+			TemplateID: id,
+			Value: p,
+		}
+		err := qtx.InsertPdfNameSchema(ctx, arg)
+		if err != nil{
+			msg := fmt.Sprintf("Error while inserting frontmatter values into 'tab_desc_schema'. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+			return
+		}
+	}
+	
+	tx.Commit()
 	http.Redirect(w, r, "/upload", http.StatusSeeOther)
 }
 
 func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	template_id := r.FormValue("id")
+	ctx := r.Context()
+	idStr := r.FormValue("id")
+	// For deleting we need 'id' as int64
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
 	// When deleting a checklist, all relics should be deleted.
 	// Reason is, to keep the db-tables small and clean.
-
-	db := database.Init()
-	tx, err := db.Begin()
-	del := database.DeleteChecklistTemplate{db, tx, template_id}
+	tx, err := h.DB.BeginTx(ctx, nil)
+	if err != nil{
+		http.Error(w,"Database error.",http.StatusInternalServerError)
+	}
+	defer func(){
+		if err != nil{
+			rbErr := tx.Rollback()
+			if rbErr != nil{
+				log.Printf("Rollback error: %v", rbErr)	
+			}
+		}
+	}()
+	qtx := database.New(h.DB).WithTx(tx)
+	qtx.DeleteTemplateByID(ctx, id)
 
 	// Clean all meta-data tables
-	del.CustomFields()
-	del.TabDescSchema()
-	del.PdfNameSchema()
+	qtx.DeleteCustomFieldsByTemplateID(ctx, id)
+	qtx.DeleteTabDescSchemaByTemplateID(ctx, id)
+	qtx.DeletePdfNameSchemaByTemplateID(ctx, id)
 	// Remove all entries from the active list
-	del.AllEntries()
+	qtx.DeleteEntriesByTemplateID(ctx, id)
 	// Template for the checklist itself. It won't be able for selection.
-	del.Itself()
+	qtx.DeleteTemplateByID(ctx, id)
 
 	err = tx.Commit()
 	if err != nil {
@@ -193,30 +307,42 @@ func (h *UploadHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Handles request to /checklist/download/<template_id>
+// Handles request to /checklist/download/<templateId>
 // and return the raw checklist including the frontmatter as text/yaml
 func (h *UploadHandler) Download(w http.ResponseWriter, r *http.Request) {
-	template_id := mux.Vars(r)["id"]
-	// type conversion
-	id, err := strconv.Atoi(template_id)
+	ctx := r.Context()
+	templateIdStr := mux.Vars(r)["id"]
+	// database needs int64
+	templateId, err := strconv.ParseInt(templateIdStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Cannot get template id is not an integer.", http.StatusBadRequest)
+		http.Error(w, "'id' is weird.", http.StatusBadRequest)
 		return
 	}
-	db := database.Init()
-	template := database.GetTemplateNameByID(db, id)
+	q := database.New(h.DB)
+	template, err := q.GetTemplateById(ctx, templateId)
 	// Setting the header before sending the file to the browser
 	w.Header().Set("Content-Type", "text/yaml")
 	filename := time.Now().Format("20060102") + "_" + template.Name + ".yml"
 	disposition := fmt.Sprintf("attachment; filename=%s", filename)
 	w.Header().Set("Content-Disposition", disposition)
-	_, err = io.Copy(w, strings.NewReader(template.File))
+	var f string
+	if template.File.Valid{
+		f = template.File.String
+	}else{
+		http.Error(w, "Couldn't download file. It is NULL.", http.StatusBadRequest)
+		return
+	}
+	_, err = io.Copy(w, strings.NewReader(f))
 	if err != nil {
-		log.Fatalf("Couldn't send yaml file to browser.\nError: %q \n", err)
+		msg := "Couldn't send yaml file to browser."
+		log.Printf("%s\nError: %q \n", msg, err)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
 	}
 }
 
 func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	r.ParseMultipartForm(1 << 20)
 	file, header, err := r.FormFile("yaml")
 	if err != nil {
@@ -224,10 +350,10 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	var buf bytes.Buffer
 	io.Copy(&buf, file)
-	file_contents := buf.String()
-	var matter database.FrontMatter
+	fileContents := buf.String()
+	var matter FrontMatter
 	// splits the file into the yaml frontmatter and the rest of the file
-	rest, err := frontmatter.Parse(strings.NewReader(file_contents), &matter)
+	rest, err := frontmatter.Parse(strings.NewReader(fileContents), &matter)
 	if err != nil {
 		http.Error(w, "Error while parsing frontmatter", http.StatusBadRequest)
 		log.Printf("Error while parsing frontmatter.\n %q\n", err)
@@ -240,15 +366,101 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	db := database.Init()
-	defer db.Close()
-	// Updating tables with new data from the frontmatter
-	err = database.UpdateChecklistTemplate(db, matter, string(rest), file_contents)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Fatal(err)
+	tx, err := h.DB.Begin()
+	if err != nil{
+		http.Error(w,"Database error.",http.StatusInternalServerError)
 	}
-	entries := database.GetAllEntriesForChecklist(db, matter.Name)
+	defer func(){
+		if err != nil{
+			rbErr := tx.Rollback()
+			if rbErr != nil{
+				log.Printf("Rollback error: %v", rbErr)	
+			}
+		}
+	}()
+	qtx := database.New(h.DB).WithTx(tx)
+	// Updating tables with new data from the frontmatter
+	// err = database.UpdateChecklistTemplate(ctx, matter, string(rest), fileContents)
+	
+	// The templateName gets declared in the frontmatter
+	id, err := qtx.GetTemplateIdByName(ctx, matter.Name)
+	if err == sql.ErrNoRows{
+		msg := fmt.Sprintf("No template with the name '%s' exists. I can't get updated.", matter.Name)
+		http.Error(w, msg, http.StatusBadRequest)
+	}
+	fl := len(matter.Fields)
+	dl := len(matter.Desc)
+	if fl != dl{
+		msg := "Amount of fields and descriptions are uneven."
+		http.Error(w, msg, http.StatusBadRequest)
+	}
+
+	// The following code should be as functions, but am very lazy...
+
+	qtx.DeleteCustomFieldsByTemplateID(ctx, id)
+	for i := range matter.Fields{
+		arg := database.InsertCustomFieldParams{
+			TemplateID: id,
+			Key: matter.Fields[i],
+			Desc: matter.Desc[i],
+		}
+		err := qtx.InsertCustomField(ctx, arg)
+		if err != nil{
+			msg := fmt.Sprintf("Error while inserting frontmatter values into 'custom_fields'. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Updating the tab-desc-schema by deleting and inserting
+	qtx.DeleteTabDescSchemaByTemplateID(ctx, id)
+	for _, t := range matter.Tab_desc_schema{
+		arg := database.InsertTabDescSchemaParams{
+			TemplateID: id,
+			Value: t,
+		}
+		err := qtx.InsertTabDescSchema(ctx, arg)
+		if err != nil{
+			msg := fmt.Sprintf("Error while inserting frontmatter values into 'tab_desc_schema'. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+			return
+		}
+	}
+	
+	// Updating the pdf-schema by deleting and inserting
+	qtx.DeletePdfNameSchemaByTemplateID(ctx, id)
+	for _, p := range matter.Pdf_name_schema{
+		arg := database.InsertPdfNameSchemaParams{
+			TemplateID: id,
+			Value: p,
+		}
+		err := qtx.InsertPdfNameSchema(ctx, arg)
+		if err != nil{
+			msg := fmt.Sprintf("Error while inserting frontmatter values into 'tab_desc_schema'. \n Error: %v\n", err)
+			log.Println(msg)
+			http.Error(w,msg,http.StatusInternalServerError)
+			return
+		}
+	}
+	
+	arg := database.UpdateTemplateByIdParams{
+		EmptyYaml: sql.NullString{String: string(rest)},
+		File: sql.NullString{String: fileContents},
+		ID: id,
+	}
+	qtx.UpdateTemplateById(ctx, arg)
+
+
+
+	entries, err := qtx.GetEntriesByTemplateName(ctx, matter.Name)
+	if err != nil{
+		msg := fmt.Sprintf("Couldn't return entries for template: '%s'.\n Error: %v\n", matter.Name, err)
+		log.Println(msg)
+		http.Error(w,msg,http.StatusInternalServerError)
+		return
+	}
 	// Update dataMap for concerning entries
 	for _, e := range entries {
 		var dataMap map[string]string
@@ -261,17 +473,28 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 				dataMap[c] = ""
 			}
 		}
-		json, err := json.Marshal(dataMap)
-		database.UpdateDataById(db, e.Id, string(json))
-	}
+		j, err := json.Marshal(dataMap)
+		arg := database.UpdateDataByIdParams{
+			Data: string(j),
+			ID: e.ID,
+		}
+		qtx.UpdateDataById(ctx, arg)
 
+	}
 	
 	// Update the checklist for all relevant entries
 	// but save the state of the check-points
 	for _, e := range entries {
 		var oldCheck []*checklist.Item
 		var blankCheck []*checklist.Item
-		yaml.Unmarshal([]byte(e.Yaml), &oldCheck)
+		var y string
+		if e.Yaml.Valid{
+			y = e.Yaml.String
+		}else{
+			log.Println("'yaml'-field in database was NULL.")
+			return
+		}
+		yaml.Unmarshal([]byte(y), &oldCheck)
 		yaml.Unmarshal(rest, &blankCheck)
 
 		var itemsMap = make(map[string]bool)
@@ -283,9 +506,14 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		if err != nil{
 			log.Fatalf("Marshaling yaml wen't wrong.")
 		}
-		database.UpdateYamlById(db, e.Id, string(newCheck))
+		arg := database.UpdateYamlByIdParams{
+			Yaml: sql.NullString{Valid: true, String: string(newCheck)},
+			ID: e.ID,
+		}
+		qtx.UpdateYamlById(ctx, arg)
 	}
 
+	tx.Commit()
 	// Special header for htmx
 	w.Header().Set("HX-Redirect", "/upload")
 	w.WriteHeader(http.StatusNoContent)

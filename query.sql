@@ -1,20 +1,39 @@
--- name: CreateTemplate :one
+-- name: InsertNewChecklistTemplate :one
 INSERT INTO templates (name, empty_yaml, file)
 VALUES (?, ?, ?)
 RETURNING id;
+
+-- name: InsertCustomField :exec
+INSERT INTO custom_fields (template_id, key, desc)
+VALUES (?, ?, ?);
+
+-- name: InsertTabDescSchema :exec
+INSERT INTO tab_desc_schema (template_id, value)
+VALUES (?, ?);
+
+-- name: InsertPdfNameSchema :exec
+INSERT INTO pdf_name_schema (template_id, value)
+VALUES (?, ?);
 
 -- name: GetTemplateByName :one
 SELECT id, name, empty_yaml, file
 FROM templates
 WHERE name = ?;
 
+-- name: GetTemplateById :one
+SELECT id, name, empty_yaml, file
+FROM templates
+WHERE id = ?;
+
 -- name: GetAllTemplates :many
 SELECT id, name, empty_yaml, file
 FROM templates;
 
--- name: InsertCustomField :exec
-INSERT INTO custom_fields (template_id, key, desc)
-VALUES (?, ?, ?);
+-- name: GetTemplateIdByName :one
+SELECT id FROM templates where name = ?;
+
+-- name: UpdateTemplateById :exec
+UPDATE templates SET empty_yaml = ?, file = ? WHERE id = ?;
 
 -- name: GetCustomFieldsByTemplateName :many
 SELECT cf.id, cf.template_id, cf.key, cf.desc
@@ -22,18 +41,10 @@ FROM custom_fields cf
 JOIN templates t ON cf.template_id = t.id
 WHERE t.name = ?;
 
--- name: InsertTabDescSchema :exec
-INSERT INTO tab_desc_schema (template_id, value)
-VALUES (?, ?);
-
 -- name: GetTabDescriptionsByTemplateID :many
 SELECT id, template_id, value
 FROM tab_desc_schema
 WHERE template_id = ?;
-
--- name: InsertPdfNameSchema :exec
-INSERT INTO pdf_name_schema (template_id, value)
-VALUES (?, ?);
 
 -- name: GetPdfNamingByTemplateID :many
 SELECT id, template_id, value
@@ -53,6 +64,19 @@ WHERE path = ?;
 SELECT id, template_id, data, path, yaml, date
 FROM entries;
 
+-- name: GetEntriesByTemplateName :many
+SELECT
+    entries.id,
+    entries.template_id,
+    entries.data,
+    entries.path,
+    entries.yaml,
+    entries.date
+FROM entries
+JOIN templates ON entries.template_id = templates.id
+WHERE templates.name = ?
+ORDER BY entries.date DESC;
+
 -- name: GetAllEntriesPlusTemplateName :many
 SELECT
     entries.id,
@@ -64,6 +88,9 @@ SELECT
 FROM entries
 JOIN templates ON entries.template_id = templates.id
 ORDER BY entries.date DESC;
+
+-- name: GetTemplateNameById :one
+SELECT name FROM templates WHERE id = ?;
 
 -- name: UpdateYamlByPath :exec
 UPDATE entries

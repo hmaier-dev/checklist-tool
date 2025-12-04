@@ -2,6 +2,7 @@ package checklist
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,6 +15,7 @@ import (
 	"github.com/hmaier-dev/checklist-tool/internal/database"
 	"github.com/hmaier-dev/checklist-tool/internal/handlers"
 	"github.com/hmaier-dev/checklist-tool/internal/pdf"
+	"github.com/hmaier-dev/checklist-tool/internal/server"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,13 +28,21 @@ type Item struct {
 	Path     string  `yaml:"Path"`
 }
 
-type ChecklistHandler struct{}
+type ChecklistHandler struct{
+	Router *mux.Router	
+	DB *sql.DB
+}
 
 var _ handlers.DisplayHandler = (*ChecklistHandler)(nil)
 
-func (h *ChecklistHandler)	Routes(router *mux.Router){
-	router.HandleFunc(`/checklist/{id:\w*}`, h.Display).Methods("GET")
-	sub := router.PathPrefix("/checklist").Subrouter()
+func (h *ChecklistHandler) New(srv *server.Server){
+	h.Router = srv.Router	
+	h.DB = srv.DB
+}
+
+func (h *ChecklistHandler) Routes(){
+	h.Router.HandleFunc(`/checklist/{id:\w*}`, h.Display).Methods("GET")
+	sub := h.Router.PathPrefix("/checklist").Subrouter()
 	sub.HandleFunc(`/update/check/{id:\w*}`, h.UpdateCheckedState).Methods("POST")
 	sub.HandleFunc(`/update/text/{id:\w*}`, h.UpdateText).Methods("POST")
 	sub.HandleFunc(`/print/{id:\w*}`, h.Print).Methods("GET")
@@ -40,17 +50,18 @@ func (h *ChecklistHandler)	Routes(router *mux.Router){
 }
 
 func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
   path := mux.Vars(r)["id"]
 	paths := []string{
 		"checklist/templates/checklist.html",
 		"nav.html",
 		"header.html",
-		"history.html",
+		"history/templates/history.html",
 	}
 	tmpl := handlers.LoadTemplates(paths)
 
-	db := database.Init()
-	entry, err := database.GetEntryByPath(db, path)
+	q := database.New(h.DB)
+	entry, err := q.GetEntryByPath(ctx, path)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,12 +74,12 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	
-	template := database.GetTemplateNameByID(db,entry.Template_id)
-	custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
-	result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
+	templateName, err := q.GetTemplateNameById(ctx, entry.TemplateID)
+	customFields, err := q.GetCustomFieldsByTemplateName(ctx, templateName)
+	result := handlers.BuildEntryViewForTemplate(customFields, &entry)
 
 	// Build string for browser-tab title
-	tab_desc_schema := database.GetTabDescriptionsByID(db, template.Id)
+	tab_desc_schema, err := q.GetTabDescriptionsByTemplateID(ctx, entry.TemplateID)
 	var tab_desc string
 	for i, desc := range tab_desc_schema{
 		key := desc.Value
@@ -79,9 +90,15 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 		}
 	}
 	var items []*Item
-	yaml.Unmarshal([]byte(entry.Yaml), &items)
+	var y string
+	if entry.Yaml.Valid{
+		y = entry.Yaml.String
+	}else{
+		http.Error(w, "Checklist couldn't get rendered. 'yaml'-field wasn't valid.", http.StatusInternalServerError)
+	}
+	yaml.Unmarshal([]byte(y), &items)
 	err = tmpl.Execute(w, map[string]any{
-		"TemplateName": template.Name,
+		"TemplateName": templateName,
 		"TabDescription": tab_desc,
 		"EntryView": result,
 		"Items": items,
@@ -94,6 +111,7 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 }
 
 func (h *ChecklistHandler) UpdateCheckedState(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
 	if err != nil {
@@ -112,22 +130,35 @@ func (h *ChecklistHandler) UpdateCheckedState(w http.ResponseWriter, r *http.Req
 		Checked: checked,
 	}
   // Fetch Row from Database
-  db := database.Init()
-  entry, err := database.GetEntryByPath(db, path)
+	q := database.New(h.DB)
+  entry, err := q.GetEntryByPath(ctx, path)
 	if err != nil {
 		http.Error(w,err.Error(), http.StatusInternalServerError)
 		return
 	}
   var oldItems []*Item
-  err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
+	var y string
+	if entry.Yaml.Valid{
+		y = entry.Yaml.String
+	}else{
+		msg := "Checkpoint state couldn't get updated. 'yaml'-field wasn't valid."
+		log.Println(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
+	}
+  err = yaml.Unmarshal([]byte(y), &oldItems)
   alterCheckedState(alteredItem, oldItems)
   yamlBytes, err := yaml.Marshal(oldItems)
-
   if err != nil {
       log.Println("Error marshaling Yaml: ", err)
       return
   }
-  database.UpdateYamlByPath(db, path, string(yamlBytes))
+	
+	arg := database.UpdateYamlByPathParams{
+		Yaml: sql.NullString{Valid: true, String: string(yamlBytes)},
+		Path: path,
+	}
+
+  q.UpdateYamlByPath(ctx, arg)
 	w.Write([]byte{})
 }
 
@@ -147,6 +178,7 @@ func alterCheckedState(newItem Item, checklistSlice []*Item){
 }
 
 func (h *ChecklistHandler) UpdateText(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	path :=  mux.Vars(r)["id"]
 	err := r.ParseForm()
 	if err != nil {
@@ -159,15 +191,22 @@ func (h *ChecklistHandler) UpdateText(w http.ResponseWriter, r *http.Request){
 		Task: r.Form.Get("task"),
 		Text: &text,
 	}
-  // Fetch Row from Database
-  db := database.Init()
-  entry, err := database.GetEntryByPath(db, path)
+	q := database.New(h.DB)
+  entry, err := q.GetEntryByPath(ctx, path)
 	if err != nil {
 		http.Error(w,err.Error(), http.StatusInternalServerError)
 		return
 	}
   var oldItems []*Item
-  err = yaml.Unmarshal([]byte(entry.Yaml), &oldItems)
+	var y string
+	if entry.Yaml.Valid{
+		y = entry.Yaml.String
+	}else{
+		msg := "Text field couldn't get updated. 'yaml'-field wasn't valid."
+		log.Println(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
+	}
+  err = yaml.Unmarshal([]byte(y), &oldItems)
   updateTextState(alteredItem, oldItems)
   yamlBytes, err := yaml.Marshal(oldItems)
 
@@ -175,7 +214,13 @@ func (h *ChecklistHandler) UpdateText(w http.ResponseWriter, r *http.Request){
       log.Println("Error marshaling Yaml: ", err)
       return
   }
-  database.UpdateYamlByPath(db, path, string(yamlBytes))
+
+	arg := database.UpdateYamlByPathParams{
+		Yaml: sql.NullString{Valid: true, String: string(yamlBytes)},
+		Path: path,
+	}
+
+  q.UpdateYamlByPath(ctx, arg)
 	w.Write([]byte{})
 }
 
@@ -193,92 +238,98 @@ func updateTextState(newItem Item, checklistSlice []*Item){
 }
 
 func (h *ChecklistHandler) Print(w http.ResponseWriter, r *http.Request){
-		path :=  mux.Vars(r)["id"]
-		tmpl := handlers.LoadTemplates([]string{"checklist/templates/print.html"})
+	ctx := r.Context()
+	path :=  mux.Vars(r)["id"]
+	tmpl := handlers.LoadTemplates([]string{"checklist/templates/print.html"})
 
-		db := database.Init()
-		entry, err := database.GetEntryByPath(db, path)
-		var items []Item
-		err = yaml.Unmarshal([]byte(entry.Yaml), &items)
+	q := database.New(h.DB)
+	entry, err := q.GetEntryByPath(ctx, path)
+	var items []Item
+	var y string
+	if entry.Yaml.Valid{
+		y = entry.Yaml.String
+	}else{
+		msg := "Couldn't render the document. 'yaml'-field wasn't valid."
+		log.Println(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
+	}
+	err = yaml.Unmarshal([]byte(y), &items)
 
-		template := database.GetTemplateNameByID(db,entry.Template_id)
-		custom_fields := database.GetAllCustomFieldsForTemplate(db, template.Name)
-		result := handlers.BuildEntryViewForTemplate(custom_fields, entry)
-
-		
-		var data map[string]string
-		err = json.Unmarshal([]byte(entry.Data), &data)
-		if err != nil{
-			log.Fatalln("Unmarshaling json from db wen't wrong.")
-			return
+	templateName, err := q.GetTemplateNameById(ctx, entry.TemplateID)
+	customFields, err := q.GetCustomFieldsByTemplateName(ctx, templateName)
+	result := handlers.BuildEntryViewForTemplate(customFields, &entry)
+	
+	var data map[string]string
+	err = json.Unmarshal([]byte(entry.Data), &data)
+	if err != nil{
+		log.Fatalln("Unmarshaling json from db wen't wrong.")
+		return
+	}
+	if data == nil {
+		log.Fatalln("Error: data map is nil after unmarshaling.")
+	return
+	}
+	
+	// Build pdf_name_schema from entry.Data
+	// Add date to the data-map because it is an extra field in the db and not present in entry.Data
+	nameSchema, err := q.GetPdfNamingByTemplateID(ctx, entry.TemplateID)
+	data["date"] = time.Now().Format("20060102")
+	var pdfName string
+	for i, desc := range nameSchema{
+		key := desc.Value
+		if i == len(nameSchema) - 1 {
+			pdfName += data[key] + ".pdf"
+		}else{
+			// Removes all <spaces> in the file name
+			val := strings.ReplaceAll(data[key], " ", "_")
+			pdfName += val + "_"
 		}
-		if data == nil {
-			log.Fatalln("Error: data map is nil after unmarshaling.")
-    return
-		}
-		// Build filename of pdf
-		name_schema := database.GetPdfNamingByID(db, template.Id)
-		
-		// Build pdf name schema from entry.Data
-		// Add date to the data-map because it is an extra field in the db and not present in entry.Data
-		data["date"] = time.Now().Format("20060102")
-		var pdfName string
-		for i, desc := range name_schema{
-			key := desc.Value
-			if i == len(name_schema) - 1 {
-				pdfName += data[key] + ".pdf"
-			}else{
-				// Removes all <spaces> in the file name
-				val := strings.ReplaceAll(data[key], " ", "_")
-				pdfName += val + "_"
-			}
-		}
+	}
 
-		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, map[string]any{
-			"Title": pdfName,
-			"Items": items,
-			"EntryView": result,
-			"Date": time.Now().Format("02.01.2006, 15:04:05"),
-		})
-		bodyBytes, err := io.ReadAll(&buf)
-		if err != nil {
-			http.Error(w, "Failed to read request body", http.StatusBadRequest)
-			return
-		}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, map[string]any{
+		"Title": pdfName,
+		"Items": items,
+		"EntryView": result,
+		"Date": time.Now().Format("02.01.2006, 15:04:05"),
+	})
+	bodyBytes, err := io.ReadAll(&buf)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
 
-		defer r.Body.Close() // Close the body after reading
-		// Reponse from gotenberg api
-		response, err := pdf.Generate(r, pdfName, bodyBytes)
-    if err != nil {
-			log.Printf("Couldn't send pdf to browser.\nError: %q \n", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return 
-    }
-		defer response.Body.Close()
+	defer r.Body.Close() // Close the body after reading
+	// Reponse from gotenberg api
+	response, err := pdf.Generate(r, pdfName, bodyBytes)
+	if err != nil {
+		log.Printf("Couldn't send pdf to browser.\nError: %q \n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return 
+	}
+	defer response.Body.Close()
 
-		// Setting the header before sending the file to the browser
-    w.Header().Set("Content-Type", "application/pdf")
-		disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
-    w.Header().Set("Content-Disposition", disposition)
+	// Setting the header before sending the file to the browser
+	w.Header().Set("Content-Type", "application/pdf")
+	disposition := fmt.Sprintf("attachment; filename=%s", pdfName)
+	w.Header().Set("Content-Disposition", disposition)
 
-    _, err = io.Copy(w, response.Body)
-    if err != nil {
-			log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
-    }
+	_, err = io.Copy(w, response.Body)
+	if err != nil {
+		log.Fatalf("Couldn't send pdf to browser.\nError: %q \n", err)
+	}
 }
 
 func (h *ChecklistHandler) Delete(w http.ResponseWriter, r *http.Request){
+	ctx := r.Context()
 	path := r.FormValue("path")
-	db := database.Init()
-	defer db.Close()
-	database.DeleteEntryByPath(db,path)
+	q := database.New(h.DB)
+	q.DeleteEntryByPath(ctx,path)
 
 	// Special header for htmx
 	w.Header().Set("HX-Redirect", "/all")
 	w.WriteHeader(http.StatusNoContent)
 }
-
 
 
 func init(){

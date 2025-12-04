@@ -10,25 +10,6 @@ import (
 	"database/sql"
 )
 
-const createTemplate = `-- name: CreateTemplate :one
-INSERT INTO templates (name, empty_yaml, file)
-VALUES (?, ?, ?)
-RETURNING id
-`
-
-type CreateTemplateParams struct {
-	Name      string
-	EmptyYaml sql.NullString
-	File      sql.NullString
-}
-
-func (q *Queries) CreateTemplate(ctx context.Context, arg CreateTemplateParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createTemplate, arg.Name, arg.EmptyYaml, arg.File)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
 const deleteCustomFieldsByTemplateID = `-- name: DeleteCustomFieldsByTemplateID :exec
 DELETE FROM custom_fields
 WHERE template_id = ?
@@ -256,6 +237,50 @@ func (q *Queries) GetCustomFieldsByTemplateName(ctx context.Context, name string
 	return items, nil
 }
 
+const getEntriesByTemplateName = `-- name: GetEntriesByTemplateName :many
+SELECT
+    entries.id,
+    entries.template_id,
+    entries.data,
+    entries.path,
+    entries.yaml,
+    entries.date
+FROM entries
+JOIN templates ON entries.template_id = templates.id
+WHERE templates.name = ?
+ORDER BY entries.date DESC
+`
+
+func (q *Queries) GetEntriesByTemplateName(ctx context.Context, name string) ([]Entry, error) {
+	rows, err := q.db.QueryContext(ctx, getEntriesByTemplateName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Entry
+	for rows.Next() {
+		var i Entry
+		if err := rows.Scan(
+			&i.ID,
+			&i.TemplateID,
+			&i.Data,
+			&i.Path,
+			&i.Yaml,
+			&i.Date,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEntryByPath = `-- name: GetEntryByPath :one
 SELECT id, template_id, data, path, yaml, date
 FROM entries
@@ -334,6 +359,24 @@ func (q *Queries) GetTabDescriptionsByTemplateID(ctx context.Context, templateID
 	return items, nil
 }
 
+const getTemplateById = `-- name: GetTemplateById :one
+SELECT id, name, empty_yaml, file
+FROM templates
+WHERE id = ?
+`
+
+func (q *Queries) GetTemplateById(ctx context.Context, id int64) (Template, error) {
+	row := q.db.QueryRowContext(ctx, getTemplateById, id)
+	var i Template
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.EmptyYaml,
+		&i.File,
+	)
+	return i, err
+}
+
 const getTemplateByName = `-- name: GetTemplateByName :one
 SELECT id, name, empty_yaml, file
 FROM templates
@@ -350,6 +393,28 @@ func (q *Queries) GetTemplateByName(ctx context.Context, name string) (Template,
 		&i.File,
 	)
 	return i, err
+}
+
+const getTemplateIdByName = `-- name: GetTemplateIdByName :one
+SELECT id FROM templates where name = ?
+`
+
+func (q *Queries) GetTemplateIdByName(ctx context.Context, name string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTemplateIdByName, name)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getTemplateNameById = `-- name: GetTemplateNameById :one
+SELECT name FROM templates WHERE id = ?
+`
+
+func (q *Queries) GetTemplateNameById(ctx context.Context, id int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getTemplateNameById, id)
+	var name string
+	err := row.Scan(&name)
+	return name, err
 }
 
 const insertCustomField = `-- name: InsertCustomField :exec
@@ -390,6 +455,25 @@ func (q *Queries) InsertEntry(ctx context.Context, arg InsertEntryParams) error 
 		arg.Date,
 	)
 	return err
+}
+
+const insertNewChecklistTemplate = `-- name: InsertNewChecklistTemplate :one
+INSERT INTO templates (name, empty_yaml, file)
+VALUES (?, ?, ?)
+RETURNING id
+`
+
+type InsertNewChecklistTemplateParams struct {
+	Name      string
+	EmptyYaml sql.NullString
+	File      sql.NullString
+}
+
+func (q *Queries) InsertNewChecklistTemplate(ctx context.Context, arg InsertNewChecklistTemplateParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, insertNewChecklistTemplate, arg.Name, arg.EmptyYaml, arg.File)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const insertPdfNameSchema = `-- name: InsertPdfNameSchema :exec
@@ -435,6 +519,21 @@ type UpdateDataByIdParams struct {
 
 func (q *Queries) UpdateDataById(ctx context.Context, arg UpdateDataByIdParams) error {
 	_, err := q.db.ExecContext(ctx, updateDataById, arg.Data, arg.ID)
+	return err
+}
+
+const updateTemplateById = `-- name: UpdateTemplateById :exec
+UPDATE templates SET empty_yaml = ?, file = ? WHERE id = ?
+`
+
+type UpdateTemplateByIdParams struct {
+	EmptyYaml sql.NullString
+	File      sql.NullString
+	ID        int64
+}
+
+func (q *Queries) UpdateTemplateById(ctx context.Context, arg UpdateTemplateByIdParams) error {
+	_, err := q.db.ExecContext(ctx, updateTemplateById, arg.EmptyYaml, arg.File, arg.ID)
 	return err
 }
 
