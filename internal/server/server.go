@@ -1,36 +1,24 @@
 package server
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/hmaier-dev/checklist-tool/internal/handlers"
 
-	// blank import for handlers. They initalize theirself by init()
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/delete"
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/new"
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/checklist"
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/upload"
-	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/all"
 )
-
 
 type Server struct {
 	Router *mux.Router
+	DB *sql.DB
 }
 
-func NewServer() *Server {
+func NewServer(db *sql.DB) *Server {
 	router := mux.NewRouter()
-  sub := router.PathPrefix("/").Subrouter()
-
-	// Because the paths stored client-side are very long POST requests are used to handle them
-  sub.HandleFunc("/history-breadcrumb", handlers.HistoryBreadcrumb).Methods("POST")
-  sub.HandleFunc("/history-data", handlers.History).Methods("POST")
-
-	for _, h := range handlers.GetHandlers() {
-		// Link the routes declared in sub-handlers to *mux.Router
-		h.Routes(router)
+	srv := &Server{
+		Router: router,
+		DB: db,
 	}
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
@@ -42,5 +30,5 @@ func NewServer() *Server {
 		return nil
 	})
 
-	return &Server{Router: router}
+	return srv
 }
