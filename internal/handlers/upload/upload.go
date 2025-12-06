@@ -159,7 +159,8 @@ type FrontMatter struct{
 	Pdf_name_schema []string 	`yaml:"pdf_name_schema"`
 }
 
-// Runs when submit-button on / is pressed
+// Runs when submit-button is pressed
+// Actual upload happens here!
 func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	r.ParseMultipartForm(1 << 20)
@@ -203,8 +204,8 @@ func (h *UploadHandler) Execute(w http.ResponseWriter, r *http.Request) {
 	
 	id, err := qtx.InsertNewChecklistTemplate(ctx, database.InsertNewChecklistTemplateParams{
 		Name: matter.Name,
-		EmptyYaml: sql.NullString{String: string(rest)},
-		File: sql.NullString{String: fileContents},
+		EmptyYaml: sql.NullString{String: string(rest), Valid: true},
+		File: sql.NullString{String: fileContents, Valid: true},
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

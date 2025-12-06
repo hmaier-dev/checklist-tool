@@ -94,7 +94,9 @@ func (h *ChecklistHandler) Display(w http.ResponseWriter, r *http.Request){
 	if entry.Yaml.Valid{
 		y = entry.Yaml.String
 	}else{
-		http.Error(w, "Checklist couldn't get rendered. 'yaml'-field wasn't valid.", http.StatusInternalServerError)
+		log.Printf("%#v \n", entry.Yaml)
+		http.Error(w, "Checklist will not render correctly. 'yaml'-field wasn't valid.", http.StatusInternalServerError)
+		return
 	}
 	yaml.Unmarshal([]byte(y), &items)
 	err = tmpl.Execute(w, map[string]any{
