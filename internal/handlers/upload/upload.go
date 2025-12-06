@@ -380,9 +380,7 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	qtx := database.New(h.DB).WithTx(tx)
-	// Updating tables with new data from the frontmatter
-	// err = database.UpdateChecklistTemplate(ctx, matter, string(rest), fileContents)
-	
+
 	// The templateName gets declared in the frontmatter
 	id, err := qtx.GetTemplateIdByName(ctx, matter.Name)
 	if err == sql.ErrNoRows{
@@ -447,8 +445,8 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	arg := database.UpdateTemplateByIdParams{
-		EmptyYaml: sql.NullString{String: string(rest)},
-		File: sql.NullString{String: fileContents},
+		EmptyYaml: sql.NullString{String: string(rest), Valid: true},
+		File: sql.NullString{String: fileContents, Valid: true},
 		ID: id,
 	}
 	qtx.UpdateTemplateById(ctx, arg)
