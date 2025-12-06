@@ -16,6 +16,7 @@ deps:
 build:
   FROM +deps
   COPY +tailwindcss/tailwindcss /usr/local/bin/tailwindcss
+  COPY schema.sql ./
   COPY *.go ./
   COPY --dir internal/ static/ ./
   RUN --mount=type=cache,id=go-build-cache,target=/root/.cache/go-build \
