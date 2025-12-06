@@ -23,6 +23,7 @@ import (
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/delete"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/new"
 	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/upload"
+	_ "github.com/hmaier-dev/checklist-tool/internal/handlers/history"
 )
 
 //go:embed schema.sql
