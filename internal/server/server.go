@@ -21,14 +21,15 @@ func NewServer(db *sql.DB) *Server {
 		DB: db,
 	}
   router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	return srv
+}
 
+func (s *Server) LogRoutes(){
 	// logs all routes when starting after they go defined
-	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+	s.Router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		path, _ := route.GetPathTemplate()
 		method, _ := route.GetMethods()
 		log.Println(method, path)
 		return nil
 	})
-
-	return srv
 }

@@ -69,6 +69,8 @@ func main() {
 		IdleTimeout: 10 * time.Second,
 	}
 
+	srv.LogRoutes()
+
 	go func() {
 		log.Printf("Starting tool on %s \n", addr)
 		// http.ErrServerClosed is returned form httpServer.Shutdown
