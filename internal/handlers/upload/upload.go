@@ -451,16 +451,17 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	qtx.UpdateTemplateById(ctx, arg)
 
-
-
+	// After updating the checklist-template itself and all concerning meta-data tables,
+	// now we update the already existing entries for this template
 	entries, err := qtx.GetEntriesByTemplateName(ctx, matter.Name)
+
 	if err != nil{
 		msg := fmt.Sprintf("Couldn't return entries for template: '%s'.\n Error: %v\n", matter.Name, err)
 		log.Println(msg)
 		http.Error(w,msg,http.StatusInternalServerError)
 		return
 	}
-	// Update dataMap for concerning entries
+	// Update dataMap ('entry.Data' json-arry) for all concerning entries
 	for _, e := range entries {
 		var dataMap map[string]string
 		err := json.Unmarshal([]byte(e.Data), &dataMap)
@@ -496,7 +497,8 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 		yaml.Unmarshal([]byte(y), &oldCheck)
 		yaml.Unmarshal(rest, &blankCheck)
 
-		var itemsMap = make(map[string]bool)
+		var itemsMap = make(map[string]*checklist.Item)
+		//
 		fillHashMap(itemsMap, oldCheck)
 		adoptState(itemsMap, blankCheck)
 
@@ -520,9 +522,13 @@ func (h *UploadHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // dissolves the multi-level checklist-struct in a one-dimensional hashmap.
 // Useful when searching for a key:value
-func fillHashMap(itemMap map[string]bool, checklist []*checklist.Item) {
-	for _, item := range checklist {
-		itemMap[item.Task] = item.Checked
+func fillHashMap(itemMap map[string]*checklist.Item, items []*checklist.Item) {
+	for _, item := range items {
+		val := checklist.Item{
+			Checked: item.Checked,
+			Text: item.Text,
+		}
+		itemMap[item.Task] = &val
 		if len(item.Children) > 0 {
 			fillHashMap(itemMap, item.Children)
 		}
@@ -530,10 +536,11 @@ func fillHashMap(itemMap map[string]bool, checklist []*checklist.Item) {
 }
 
 // adopts checklist.Item.Checked if map-key fits checklist.Item.Task
-func adoptState(itemMap map[string]bool, checklist []*checklist.Item) {
+func adoptState(itemMap map[string]*checklist.Item, checklist []*checklist.Item) {
 	for _, item := range checklist {
 		if value, ok := itemMap[item.Task]; ok {
-			item.Checked = value
+			item.Checked = value.Checked
+			item.Text = value.Text
 		}
 		if len(item.Children) > 0 {
 			adoptState(itemMap, item.Children)
