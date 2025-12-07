@@ -48,16 +48,19 @@
           name="checked"
           value="true"
           hx-vals='{"task": "{{ .Task }}"}'
-          {{ if .Checked }}checked{{ end }}> {{ .Task }}
+          {{ if .Checked }}checked{{ end }}
+          > 
+          {{ .Task }}
           {{ if .Text }}
-          <input class="border-black border"
+          <input class="border-black border w-[275px]"
                  type="text" 
                  name="text"
                  value="{{ .Text }}"
                  hx-post="/checklist/update/text/{{ $Path }}" 
                  hx-trigger="change"
                  hx-vals='{"task": "{{ .Task }}"}'
-                 >{{ end }}
+                 >
+          {{ end }}
 
           {{ if .Children }}
               {{ template "renderItems" (arr .Children $Path) }}
