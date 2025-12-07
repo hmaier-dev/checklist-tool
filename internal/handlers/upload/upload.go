@@ -540,7 +540,12 @@ func adoptState(itemMap map[string]*checklist.Item, checklist []*checklist.Item)
 	for _, item := range checklist {
 		if value, ok := itemMap[item.Task]; ok {
 			item.Checked = value.Checked
-			item.Text = value.Text
+			// Reversed logic
+			// When the new value is not nil, but the old value was nil
+			// Otherwise, don't overwritte the existing value
+			if value.Text != nil && item.Text == nil{
+				item.Text = value.Text
+			}
 		}
 		if len(item.Children) > 0 {
 			adoptState(itemMap, item.Children)
